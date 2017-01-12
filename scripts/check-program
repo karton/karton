@@ -1,0 +1,20 @@
+#!/bin/sh
+
+PROGRAM="$1"
+if [ -z "$PROGRAM" ]; then
+    echo "Which program?" >&2
+    exit 1
+fi
+
+ERR_MSG="$2"
+if [ -z "$ERR_MSG" ]; then
+    ERR_MSG="You need to install “${PROGRAM}”."
+fi
+
+which "$PROGRAM" > /dev/null 2>&1
+if [ $? == 0 ]; then
+    exit 0
+else
+    echo "$ERR_MSG" >&2
+    exit 1
+fi
