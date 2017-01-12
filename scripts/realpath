@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# OS X doesn't have realpath nor readlink -f, so we use this script instead.
+
+if [ $# != 1 -o "$1" = "-h" -o "$1" = "--help" ]; then
+    echo "$0 RELATIVE_PATH" >&2
+    echo >&2
+    echo "Converts a relative path to an absolute one."
+    exit 1
+fi
+
+RELATIVE_PATH="$1"
+
+(
+cd `dirname "$1"`
+echo $PWD/`basename "$1"`
+)
