@@ -5,3 +5,5 @@
 *.rej
 *.bak
 *.py[co]
+
+logos/out/*
