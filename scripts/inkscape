@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# The inkscape script on OS X does a cd to the inkscape directory, so we need
+# to guess which of the arguents are paths and make them absolute.
+
+SCRIPTS_DIR=`dirname $0`
+
+# For OS X.
+# If you installed it in another path then plase add its path to $PATH.
+PATH="$PATH:/Applications/Inkscape.app/Contents/Resources/bin"
+
+"$SCRIPTS_DIR"/check-program inkscape || exit 1
+
+new_args=()
+
+for arg in "$@"; do
+    # Extracts --foo from an argument like --foo=bar (or an empty string if
+    # this is not an option).
+    option=$(echo "$arg" | sed 's,\(--[^=]*=\).*,\1,')
+    if [ "$option" = "$arg" ]; then
+        option=''
+    fi
+
+    # Extracts bar from an argument like --foo=bar or the whole string if
+    # this is not an option.
+    value=$(echo "$arg" | sed 's,--[^=]*=,,')
+    # It's a path if it's a file that exists or if there's a “/” in it.
+    if [[ "$value" == */* || -e "$value" ]]; then
+        value=$("$SCRIPTS_DIR"/realpath "$value")
+    fi
+
+    new_args+=("$option""$value")
+done
+
+inkscape "${new_args[@]}"
