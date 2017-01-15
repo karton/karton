@@ -7,6 +7,8 @@
 import argparse
 import collections
 
+import runtime
+
 from log import die, info, verbose, get_verbose, set_verbose
 
 
@@ -81,10 +83,14 @@ def do_build(parsed_args):
     pass
 
 
-def run_karton():
+def run_karton(session):
     '''
     Runs Karton.
+
+    session - a runtime.Session instance.
     '''
+
+    assert session
 
     parser = ArgumentParser(description='Manages semi-persistent Docker containers.')
     subparsers = parser.add_subparsers(dest='command', metavar='COMMAND')
@@ -224,17 +230,19 @@ def run_karton():
     command.callback(parsed_args)
 
 
-def main():
+def main(session):
     '''
     Runs Karton as a command, i.e. taking care or dealing with keyboard interrupts,
     unexpected exceptions, etc.
 
     If you need to run Karton as part of another program or from unit tests, use
     run_karton instead.
+
+    session - a runtime.Session instance.
     '''
 
     try:
-        run_karton()
+        run_karton(session)
     except KeyboardInterrupt:
         info('\nInterrupted.')
         raise SystemExit(1)
@@ -251,4 +259,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(runtime.Session.default_session())
