@@ -7,10 +7,7 @@
 import argparse
 import collections
 
-import logging
-
-# For practicality.
-from logging import die, info, verbose
+from log import die, info, verbose, get_verbose, set_verbose
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -216,7 +213,7 @@ def run_karton():
     # Now actually parse the command line.
     parsed_args = parser.parse_args()
 
-    logging.set_verbose(parsed_args.verbose)
+    set_verbose(parsed_args.verbose)
 
     command = all_commands.get(parsed_args.command)
     if command is None:
@@ -244,7 +241,7 @@ def main():
     except Exception as exc: # pylint: disable=broad-except
         # We print the backtrace only if verbose logging is enabled.
         msg = 'Internal error!\nGot exception: "%s".\n' % exc
-        if logging.get_verbose():
+        if get_verbose():
             verbose(msg)
             raise
         else:
