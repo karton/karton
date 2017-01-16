@@ -7,6 +7,7 @@
 import argparse
 import collections
 
+import container
 import runtime
 
 from log import die, info, verbose, get_verbose, set_verbose
@@ -59,27 +60,27 @@ class SharedArgument(object):
 CommandInfo = collections.namedtuple('CommandInfo', ['name', 'subparser', 'callback'])
 
 
-def do_run(parsed_args):
+def do_run(parsed_args, image):
     pass
 
 
-def do_shell(parsed_args):
+def do_shell(parsed_args, image):
     pass
 
 
-def do_start(parsed_args):
+def do_start(parsed_args, image):
     pass
 
 
-def do_stop(parsed_args):
+def do_stop(parsed_args, image):
+    pass
+
+
+def do_build(parsed_args, image):
     pass
 
 
 def do_status(parsed_args):
-    pass
-
-
-def do_build(parsed_args):
     pass
 
 
@@ -105,6 +106,29 @@ def run_karton(session):
             callback=callback)
         return command_subparser
 
+    def add_image_command(command_name, image_callback, *args, **kwargs):
+        def callback(callback_parsed_args):
+            if parsed_args.image_name is None:
+                die('You need to specify wich image to target with the "-i" option '
+                    '(or the longer form, "--image").')
+
+            image_config = session.config.image_with_name(parsed_args.image_name)
+            if image_config is None:
+                die('The image "%s" doesn\'t exist.' % parsed_args.image_name)
+
+            image = container.Image(session, image_config)
+            image_callback(parsed_args, image)
+
+        command_subparser = add_command(command_name, callback, *args, **kwargs)
+
+        command_subparser.add_argument(
+            '-i',
+            '--image',
+            dest='image_name',
+            help='name of the image to target')
+
+        return command_subparser
+
     def add_to_every_command(*args, **kwargs):
         for command in all_commands.itervalues():
             command.subparser.add_argument(*args, **kwargs)
@@ -127,7 +151,7 @@ def run_karton(session):
         )
 
     # "run" command.
-    run_parser = add_command(
+    run_parser = add_image_command(
         'run',
         do_run,
         help='run a  program in the container',
@@ -142,7 +166,7 @@ def run_karton(session):
     SharedArgument.add_group_to_parser(run_parser, cd_args)
 
     # "shell" command.
-    shell_parser = add_command(
+    shell_parser = add_image_command(
         'shell',
         do_shell,
         help='start a shell in the container',
@@ -151,7 +175,7 @@ def run_karton(session):
     SharedArgument.add_group_to_parser(shell_parser, cd_args)
 
     # "start" command.
-    add_command(
+    add_image_command(
         'start',
         do_start,
         help='if not running, start the container',
@@ -160,7 +184,7 @@ def run_karton(session):
         'the container automatically.')
 
     # "stop" command.
-    add_command(
+    add_image_command(
         'stop',
         do_stop,
         help='stop the container if running',
@@ -175,7 +199,7 @@ def run_karton(session):
         'programs running in it.')
 
     # "build" command.
-    add_command(
+    add_image_command(
         'build',
         do_build,
         help='build the image for the container',
