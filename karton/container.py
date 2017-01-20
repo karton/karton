@@ -48,7 +48,8 @@ class Image(object):
 
         builder = dockerfile.Builder(self._image_config.image_name,
                                      self._image_config.path,
-                                     dest_path)
+                                     dest_path,
+                                     self._session.host_system)
 
         try:
             builder.generate()

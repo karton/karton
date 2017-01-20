@@ -41,12 +41,13 @@ class DefinitionProperties(object):
     Instructions on how to generate the image and what to include in it.
     '''
 
-    def __init__(self, image_name, definition_file_path):
+    def __init__(self, image_name, definition_file_path, host_system):
         '''
         Initializes a DefinitionProperties instance.
         '''
         self._image_name = image_name
         self._definition_file_path = definition_file_path
+        self._host_system = host_system
 
         self._distro = 'ubuntu'
         self._packages = []
@@ -80,7 +81,7 @@ class Builder(object):
     Builds a Dockerfile and related files.
     '''
 
-    def __init__(self, image_name, src_dir, dst_dir):
+    def __init__(self, image_name, src_dir, dst_dir, host_system):
         '''
         Initializes a Builds instance.
 
@@ -91,6 +92,7 @@ class Builder(object):
         self._image_name = image_name
         self._src_dir = src_dir
         self._dst_dir = dst_dir
+        self._host_system = host_system
 
     def generate(self):
         '''
@@ -148,7 +150,7 @@ class Builder(object):
                 'accept a single argument of type "DefinitionProperties".' % definition_path)
 
         # Execute it.
-        props = DefinitionProperties(self._image_name, definition_path)
+        props = DefinitionProperties(self._image_name, definition_path, self._host_system)
 
         try:
             setup_image(props)
