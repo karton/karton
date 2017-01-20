@@ -2,11 +2,40 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+import getpass
 import os
+import socket
 import tempfile
 
 import configuration
 import dockerctl
+
+
+class HostSystem(object):
+    '''
+    Various information about the host system.
+    '''
+
+    @property
+    def username(self):
+        '''
+        The username (on the host).
+        '''
+        return getpass.getuser()
+
+    @property
+    def user_home(self):
+        '''
+        The home directory for the current user (on the host).
+        '''
+        return os.path.expanduser('~')
+
+    @property
+    def hostname(self):
+        '''
+        The hostname of the host.
+        '''
+        return socket.gethostname()
 
 
 class Session(object):
@@ -17,7 +46,7 @@ class Session(object):
 
     DEFAULT_CONFIGURATION_FILE = os.path.join(os.path.expanduser('~'), '.karton.cfg')
 
-    def __init__(self, data_dir, config, docker):
+    def __init__(self, data_dir, host_system, config, docker):
         '''
         Initializes a Session object.
 
@@ -26,6 +55,7 @@ class Session(object):
         docker - a dockerctl.Docker instance.
         '''
         self._data_dir = data_dir
+        self._host_system = host_system
         self._config = config
         self._docker = docker
 
@@ -35,6 +65,7 @@ class Session(object):
         # care of dealing with multiple users.
         return Session(
             os.path.join(tempfile.gettempdir(), 'karton'),
+            HostSystem(),
             configuration.GlobalConfig(Session.DEFAULT_CONFIGURATION_FILE),
             dockerctl.Docker())
 
@@ -46,6 +77,13 @@ class Session(object):
         Note that this directory may or may not exist.
         '''
         return self._data_dir
+
+    @property
+    def host_system(self):
+        '''
+        The runtime.HostSystem object for the session.
+        '''
+        return self._host_system
 
     @property
     def config(self):
