@@ -9,8 +9,6 @@ except ImportError:
     # Python 3.
     import configparser
 
-import os
-
 from log import info
 
 
@@ -49,14 +47,6 @@ class ImageConfig(object):
         The path to the dictory where the image definition and files are stored.
         '''
         return self._parser.get(self._section_name, 'path')
-
-    @property
-    def definition_file(self):
-        '''
-        The path to the definition file (which defines what the image contains
-        and how it's built).
-        '''
-        return os.path.join(self.path, 'definition.py')
 
 
 class GlobalConfig(object):
