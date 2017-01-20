@@ -5,6 +5,7 @@
 import imp
 import inspect
 import os
+import re
 import shutil
 import textwrap
 import traceback
@@ -41,6 +42,8 @@ class DefinitionProperties(object):
     Instructions on how to generate the image and what to include in it.
     '''
 
+    _eval_regex = re.compile(r'\$\(([a-zA-Z0-9._-]*)\)')
+
     def __init__(self, image_name, definition_file_path, host_system):
         '''
         Initializes a DefinitionProperties instance.
@@ -53,6 +56,30 @@ class DefinitionProperties(object):
         self._packages = []
 
         self.maintainer = None
+
+        self._eval_map = {
+            'host.username': lambda: self._host_system.username,
+            'host.userhome': lambda: self._host_system.user_home,
+            'host.hostname': lambda: self._host_system.hostname,
+            }
+
+    def eval(self, in_string):
+        '''
+        Replaces variables in in_string and returns the new string.
+
+        FIXME: Document the variable syntanx and valid variables.
+        '''
+        def eval_cb(match):
+            var_name = match.group(1)
+            replacement_cb = self._eval_map.get(var_name)
+            if replacement_cb is None:
+                raise DefinitionError(
+                    self._definition_file_path,
+                    'The variable "$(%s)" is not valid (in string "%s").' %
+                    (var_name, match.string))
+            return replacement_cb()
+
+        return self._eval_regex.sub(eval_cb, in_string)
 
     @property
     def image_name(self):
