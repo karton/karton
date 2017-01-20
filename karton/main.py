@@ -270,7 +270,7 @@ def main(session):
     except KeyboardInterrupt:
         info('\nInterrupted.')
         raise SystemExit(1)
-    except Exception as exc: # pylint: disable=broad-except
+    except Exception as exc:
         # We print the backtrace only if verbose logging is enabled.
         msg = 'Internal error!\nGot exception: "%s".\n' % exc
         if get_verbose():
