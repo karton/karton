@@ -77,7 +77,7 @@ def do_stop(parsed_args, image):
 
 
 def do_build(parsed_args, image):
-    pass
+    image.command_build()
 
 
 def do_status(parsed_args):
