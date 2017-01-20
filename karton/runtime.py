@@ -3,8 +3,10 @@
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
 import os
+import tempfile
 
 import configuration
+import dockerctl
 
 
 class Session(object):
@@ -15,17 +17,35 @@ class Session(object):
 
     DEFAULT_CONFIGURATION_FILE = os.path.join(os.path.expanduser('~'), '.karton.cfg')
 
-    def __init__(self, config):
+    def __init__(self, data_dir, config, docker):
         '''
         Initializes a Session object.
 
+        data_dir - the path to a directory where to store working files.
         config - a configuration.GlobalConfig instance.
+        docker - a dockerctl.Docker instance.
         '''
+        self._data_dir = data_dir
         self._config = config
+        self._docker = docker
 
     @staticmethod
     def default_session():
-        return Session(configuration.GlobalConfig(Session.DEFAULT_CONFIGURATION_FILE))
+        # FIXME: We should not use a directory in the temp dir and we should take
+        # care of dealing with multiple users.
+        return Session(
+            os.path.join(tempfile.gettempdir(), 'karton'),
+            configuration.GlobalConfig(Session.DEFAULT_CONFIGURATION_FILE),
+            dockerctl.Docker())
+
+    @property
+    def data_dir(self):
+        '''
+        The path to a directory where to store working files.
+
+        Note that this directory may or may not exist.
+        '''
+        return self._data_dir
 
     @property
     def config(self):
@@ -33,3 +53,10 @@ class Session(object):
         The configuration.GlobalConfig object for the session.
         '''
         return self._config
+
+    @property
+    def docker(self):
+        '''
+        The dockerctl.Docker object for the session.
+        '''
+        return self._docker
