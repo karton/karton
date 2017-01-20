@@ -37,6 +37,13 @@ class ImageConfig(object):
             raise ValueError('Missing "path" value for image "%s".' % (self._image_name))
 
     @property
+    def image_name(self):
+        '''
+        The user-visible image name.
+        '''
+        return self._image_name
+
+    @property
     def path(self):
         '''
         The path to the dictory where the image definition and files are stored.
