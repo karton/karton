@@ -93,7 +93,7 @@ class DefinitionProperties(object):
         return self._username
 
     @username.setter
-    def set_username(self, username):
+    def username(self, username):
         # FIXME: check for the validity of the new username
         self._username = username
 
@@ -102,7 +102,7 @@ class DefinitionProperties(object):
         return self._user_home
 
     @user_home.setter
-    def set_user_home(self, user_home):
+    def user_home(self, user_home):
         '''
         Sets the user home directory for the user in the container.
 
@@ -121,7 +121,7 @@ class DefinitionProperties(object):
         return self._distro
 
     @distro.setter
-    def set_distro(self, distro):
+    def distro(self, distro):
         # FIXME: handle tags.
         if distro not in ('ubuntu', 'debian'):
             raise DefinitionError(self._definition_file_path,
