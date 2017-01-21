@@ -54,6 +54,7 @@ class DefinitionProperties(object):
 
         self._distro = 'ubuntu'
         self._packages = []
+        self._additional_archs = []
 
         self.maintainer = None
 
@@ -101,6 +102,10 @@ class DefinitionProperties(object):
                                   'Invalid distibution: "%s".' % distro)
 
         self._distro = distro
+
+    @property
+    def additional_archs(self):
+        return self._additional_archs
 
 
 class Builder(object):
@@ -216,6 +221,18 @@ class Builder(object):
         if props.maintainer:
             emit('MAINTAINER %s' % props.maintainer)
             emit()
+
+        if props.additional_archs:
+            archs_run = ['RUN \\']
+            for i, arch in enumerate(props.additional_archs):
+                if i == len(props.additional_archs) - 1:
+                    cont = ''
+                else:
+                    cont = ' && \\'
+                archs_run.append('    dpkg --add-architecture %s%s' % (arch, cont))
+            archs_run.append('')
+            archs_run.append('')
+            emit('\n'.join(archs_run))
 
         emit(
             r'''
