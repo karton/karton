@@ -284,7 +284,7 @@ class Builder(object):
             % dict(username=props.username))
 
         content = ''.join(lines).strip() + '\n'
-        verbose('The Dockerfile is:\n========%s========' % content)
+        verbose('The Dockerfile is:\n========\n%s========' % content)
 
         with open(os.path.join(self._dst_dir, 'Dockerfile'), 'w') as output:
             output.write(content)
