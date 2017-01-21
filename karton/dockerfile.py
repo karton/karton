@@ -52,6 +52,7 @@ class DefinitionProperties(object):
         self._definition_file_path = definition_file_path
         self._host_system = host_system
 
+        self._username = host_system.username
         self._distro = 'ubuntu'
         self._packages = []
         self._additional_archs = []
@@ -85,6 +86,15 @@ class DefinitionProperties(object):
     @property
     def image_name(self):
         return self._image_name
+
+    @property
+    def username(self):
+        return self._username
+
+    @username.setter
+    def set_username(self, username):
+        # FIXME: check for the validity of the new username
+        self._username = username
 
     @property
     def packages(self):
@@ -264,6 +274,14 @@ class Builder(object):
             RUN \
                 apt-get clean -qq
             ''')
+
+        emit(
+            r'''
+            RUN useradd -m -s /bin/bash %(username)s
+            ENV USER %(username)s
+            USER %(username)s
+            '''
+            % dict(username=props.username))
 
         content = ''.join(lines).strip() + '\n'
         verbose('The Dockerfile is:\n========%s========' % content)
