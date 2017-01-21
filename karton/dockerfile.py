@@ -73,6 +73,19 @@ class DefinitionProperties(object):
             'host.hostname': lambda: self._host_system.hostname,
             }
 
+    def __str__(self):
+        res = [
+            'DefinitionProperties(image_name=%s, definition_file_path=%s, host_system=%s)' %
+            (
+                repr(self._image_name),
+                repr(self._definition_file_path),
+                repr(self._host_system),
+            )
+            ]
+        for prop_name, getter in _g_props_all_properties.iteritems():
+            res.append('    %s = %s' % (prop_name, repr(getter(self))))
+        return '\n'.join(res)
+
     def eval(self, in_string):
         '''
         Replaces variables in in_string and returns the new string.
