@@ -53,6 +53,7 @@ class DefinitionProperties(object):
         self._host_system = host_system
 
         self._username = host_system.username
+        self._user_home = host_system.user_home
         self._distro = 'ubuntu'
         self._packages = []
         self._additional_archs = []
@@ -95,6 +96,21 @@ class DefinitionProperties(object):
     def set_username(self, username):
         # FIXME: check for the validity of the new username
         self._username = username
+
+    @property
+    def user_home(self):
+        return self._user_home
+
+    @user_home.setter
+    def set_user_home(self, user_home):
+        '''
+        Sets the user home directory for the user in the container.
+
+        It's recommended to keep the home directory identical in the host and
+        container. This helps in case any tool write a container path into a
+        file that is later accessed from the host.
+        '''
+        self._user_home = user_home
 
     @property
     def packages(self):
@@ -277,11 +293,17 @@ class Builder(object):
 
         emit(
             r'''
-            RUN useradd -m -s /bin/bash %(username)s
+            RUN \
+                mkdir -p $(dirname %(user_home)s) && \
+                useradd -m -s /bin/bash --home-dir %(user_home)s %(username)s && \
+                chown %(username)s %(user_home)s
             ENV USER %(username)s
             USER %(username)s
             '''
-            % dict(username=props.username))
+            % dict(
+                username=props.username,
+                user_home=props.user_home,
+                ))
 
         content = ''.join(lines).strip() + '\n'
         verbose('The Dockerfile is:\n========\n%s========' % content)
