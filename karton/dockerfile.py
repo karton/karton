@@ -37,6 +37,13 @@ class DefinitionError(Exception):
         return self._definition_file_path
 
 
+_g_props_all_properties = {}
+
+def props_property(fget, *args, **kwargs):
+    _g_props_all_properties[fget.func_name] = fget
+    return property(fget, *args, **kwargs)
+
+
 class DefinitionProperties(object):
     '''
     Instructions on how to generate the image and what to include in it.
@@ -84,11 +91,11 @@ class DefinitionProperties(object):
 
         return self._eval_regex.sub(eval_cb, in_string)
 
-    @property
+    @props_property
     def image_name(self):
         return self._image_name
 
-    @property
+    @props_property
     def username(self):
         return self._username
 
@@ -97,7 +104,7 @@ class DefinitionProperties(object):
         # FIXME: check for the validity of the new username
         self._username = username
 
-    @property
+    @props_property
     def user_home(self):
         return self._user_home
 
@@ -112,11 +119,11 @@ class DefinitionProperties(object):
         '''
         self._user_home = user_home
 
-    @property
+    @props_property
     def packages(self):
         return self._packages
 
-    @property
+    @props_property
     def distro(self):
         return self._distro
 
@@ -129,7 +136,7 @@ class DefinitionProperties(object):
 
         self._distro = distro
 
-    @property
+    @props_property
     def additional_archs(self):
         return self._additional_archs
 
