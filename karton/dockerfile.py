@@ -10,6 +10,9 @@ import shutil
 import textwrap
 import traceback
 
+import dirs
+import pathutils
+
 from log import verbose
 
 
@@ -172,6 +175,9 @@ class Builder(object):
         self._dst_dir = dst_dir
         self._host_system = host_system
 
+        self._copyable_files_dir = os.path.join(self._dst_dir, 'files')
+        pathutils.makedirs(self._copyable_files_dir)
+
     def generate(self):
         '''
         Prepare the directory with the Dockerfile and all the other required
@@ -242,6 +248,20 @@ class Builder(object):
         # And finally generate the docker-related files from the DefinitionProperties.
         self._generate_docker_stuff(props)
 
+    def _make_file_copyable(self, host_file_path):
+        '''
+        Allow the file at path host_file_path (on the host) to be copied to the image by
+        creating a hard link to it from the directory sent to the Docker daemon.
+
+        return value - the path of the hard link, relative to the destination directory.
+        '''
+        # FIXME: what if two files have the same basenames?
+        link_path = os.path.join(self._copyable_files_dir, os.path.basename(host_file_path))
+        os.link(host_file_path, link_path)
+
+        assert link_path.startswith(self._dst_dir)
+        return os.path.relpath(link_path, start=self._dst_dir)
+
     def _generate_docker_stuff(self, props):
         '''
         Generate the Dockerfile file and all the other related files.
@@ -293,6 +313,8 @@ class Builder(object):
                     locales
             ''')
 
+        props.packages.append('python')
+
         if props.packages:
             packages = ' '.join(props.packages)
             emit(
@@ -324,6 +346,14 @@ class Builder(object):
                 username=props.username,
                 user_home=props.user_home,
                 ))
+
+        container_code_path = os.path.join(dirs.root_code_dir(), 'container-code')
+        for container_script in ('session_runner.py',):
+            path = os.path.join(container_code_path, container_script)
+            copyable_path = self._make_file_copyable(path)
+            emit('ADD %s /karton/%s' %
+                 (copyable_path, container_script))
+        emit()
 
         content = ''.join(lines).strip() + '\n'
         verbose('The Dockerfile is:\n========\n%s========' % content)
