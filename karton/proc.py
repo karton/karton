@@ -10,6 +10,7 @@ from log import verbose
 
 
 CalledProcessError = subprocess.CalledProcessError
+STDOUT = subprocess.STDOUT
 
 
 def call(cmd_args, *args, **kwargs):
