@@ -4,6 +4,12 @@
 
 import proc
 
+from log import die, verbose
+
+
+def die_docker_not_running(output):
+    die('Failed to run docker. Is it running?\nProgram output:\n\n%s' % output)
+
 
 class Docker(object):
     '''
@@ -29,3 +35,41 @@ class Docker(object):
         to the arguments.
         '''
         return proc.check_output([self._docker_command] + cmd_args, *args, **kwargs)
+
+    def is_container_running(self, container_id):
+        '''
+        Whether the container with container_id as ID is running or not.
+
+        Note that this method assumes that Docker is running. If not it will call
+        dockerctl.die_docker_not_running
+
+        container_id - the ID of the container to query for its status.
+        return value - True if the container is running, False otherwise.
+        '''
+        verbose('Checking whether container <%s> is running.' % container_id)
+
+        try:
+            output = self.check_output(
+                ['inspect', '--format="{{ .State.Running }}"', container_id],
+                stderr=proc.STDOUT)
+        except proc.CalledProcessError:
+            verbose('Cannot inspect the status of the container.')
+
+            # Did inspect fail just because docker is not running?
+            try:
+                self.check_output(['images'], stderr=proc.STDOUT)
+            except proc.CalledProcessError as exc:
+                die_docker_not_running(exc.output)
+
+            verbose('Docker seems to be running, but we could not inspect the status of the '
+                    'container. Assuming the container is not running.')
+
+            return False
+
+        output = output.strip()
+        if output == 'true':
+            verbose('Container running.')
+            return True
+        else:
+            verbose('Container not running.')
+            return False
