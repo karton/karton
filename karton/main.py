@@ -69,7 +69,7 @@ def do_shell(parsed_args, image):
 
 
 def do_start(parsed_args, image):
-    pass
+    image.command_start()
 
 
 def do_stop(parsed_args, image):
