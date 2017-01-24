@@ -28,4 +28,4 @@ class Docker(object):
         Like subprocess.check_output, but the right command for docker is prepended
         to the arguments.
         '''
-        return proc.call([self._docker_command] + cmd_args, *args, **kwargs)
+        return proc.check_output([self._docker_command] + cmd_args, *args, **kwargs)
