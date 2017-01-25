@@ -169,8 +169,7 @@ class Image(object):
         dest_path = tempfile.mkdtemp(prefix=self._image_config.image_name + '-',
                                      dir=dest_path_base)
 
-        builder = dockerfile.Builder(self._image_config.image_name,
-                                     self._image_config.content_directory,
+        builder = dockerfile.Builder(self._image_config,
                                      dest_path,
                                      self._session.host_system)
 

@@ -251,16 +251,14 @@ class Builder(object):
     Builds a Dockerfile and related files.
     '''
 
-    def __init__(self, image_name, src_dir, dst_dir, host_system):
+    def __init__(self, image_config, dst_dir, host_system):
         '''
         Initializes a Builds instance.
 
-        image_name - the name of the image.
-        src_dir - the directory where the definition file and other files are.
+        image_config - the configuration.ImageConfig instance for the image to build.
         dst_dir - the directory where to put the Dockerfile and related files.
         '''
-        self._image_name = image_name
-        self._src_dir = src_dir
+        self._image_config = image_config
         self._dst_dir = dst_dir
         self._host_system = host_system
 
@@ -277,7 +275,7 @@ class Builder(object):
         '''
 
         # Load the definition file.
-        definition_path = os.path.join(self._src_dir, 'definition.py')
+        definition_path = os.path.join(self._image_config.content_directory, 'definition.py')
 
         try:
             with open(definition_path) as definition_file:
@@ -323,7 +321,9 @@ class Builder(object):
                 'accept a single argument of type "DefinitionProperties".' % definition_path)
 
         # Execute it.
-        props = DefinitionProperties(self._image_name, definition_path, self._host_system)
+        props = DefinitionProperties(self._image_config.image_name,
+                                     definition_path,
+                                     self._host_system)
 
         try:
             setup_image(props)
