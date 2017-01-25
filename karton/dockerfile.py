@@ -348,7 +348,7 @@ class Builder(object):
                 ))
 
         container_code_path = os.path.join(dirs.root_code_dir(), 'container-code')
-        for container_script in ('session_runner.py',):
+        for container_script in ('session_runner.py', 'command_runner.py'):
             path = os.path.join(container_code_path, container_script)
             copyable_path = self._make_file_copyable(path)
             emit('ADD %s /karton/%s' %
