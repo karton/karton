@@ -54,6 +54,10 @@ class DefinitionProperties(object):
 
     _eval_regex = re.compile(r'\$\(([a-zA-Z0-9._-]*)\)')
 
+    SUDO_WITH_PASSWORD = 101
+    SUDO_PASSWORDLESS = 102
+    SUDO_NO = 103
+
     def __init__(self, image_name, definition_file_path, host_system):
         '''
         Initializes a DefinitionProperties instance.
@@ -67,6 +71,7 @@ class DefinitionProperties(object):
         self._distro = 'ubuntu'
         self._packages = []
         self._additional_archs = []
+        self._sudo = DefinitionProperties.SUDO_PASSWORDLESS
 
         self.maintainer = None
 
@@ -155,6 +160,20 @@ class DefinitionProperties(object):
     @props_property
     def additional_archs(self):
         return self._additional_archs
+
+    @props_property
+    def sudo(self):
+        return self._sudo
+
+    @sudo.setter
+    def sudo(self, sudo):
+        if sudo not in (DefinitionProperties.SUDO_PASSWORDLESS,
+                        DefinitionProperties.SUDO_WITH_PASSWORD,
+                        DefinitionProperties.SUDO_NO):
+            raise DefinitionError(self._definition_file_path,
+                                  'Invalid sudo policy value: "%s".' % sudo)
+
+        self._sudo = sudo
 
 
 class Builder(object):
@@ -315,6 +334,9 @@ class Builder(object):
 
         props.packages.append('python')
 
+        if props.sudo != DefinitionProperties.SUDO_NO:
+            props.packages.append('sudo')
+
         if props.packages:
             packages = ' '.join(props.packages)
             emit(
@@ -332,6 +354,35 @@ class Builder(object):
             RUN \
                 apt-get clean -qq
             ''')
+
+        if props.sudo != DefinitionProperties.SUDO_NO:
+            sudoers_path = os.path.join(self._dst_dir, 'sudoers')
+
+            with open(sudoers_path, 'w') as sudoers_file:
+                if props.sudo == DefinitionProperties.SUDO_PASSWORDLESS:
+                    nopasswd = 'NOPASSWD: '
+                else:
+                    nopasswd = ''
+
+                sudoers_file.write(textwrap.dedent(
+                    '''\
+                    root ALL=(ALL) ALL
+                    %(username)s ALL=(ALL) %(nopasswd)sALL
+                    Defaults    env_reset
+                    Defaults    secure_path="%(paths)s"
+                    ''' %
+                    dict(
+                        username=props.username,
+                        nopasswd=nopasswd,
+                        paths='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+                        )
+                    ))
+
+            emit(
+                r'''
+                COPY sudoers /etc/sudoers
+                RUN chmod 440 /etc/sudoers
+                ''')
 
         emit(
             r'''
