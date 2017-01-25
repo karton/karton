@@ -4,6 +4,7 @@
 
 import os
 import tempfile
+import time
 
 import dockerctl
 import dockerfile
@@ -18,6 +19,9 @@ class Image(object):
     '''
     A Karton image.
     '''
+
+    # The basename prefix for the files keeping track of executing commands.
+    _RUNNING_COMMAND_PREFIX = 'running-command-'
 
     def __init__(self, session, image_config):
         '''
@@ -50,6 +54,19 @@ class Image(object):
         Start the image.
         '''
         self.ensure_container_running()
+
+    def command_run(self, cmd_args):
+        '''
+        Run a command in the image.
+
+        This method doesn't return, but raises SystemExit with the exit code of the
+        executed command.
+
+        cmd_args - the command line to execute in the image.
+        '''
+        self.ensure_container_running()
+        exit_code = self.exec_command(cmd_args)
+        raise SystemExit(exit_code)
 
     @property
     def _image_data_dir(self):
@@ -188,3 +205,46 @@ class Image(object):
                     container_file.write(new_container_id)
             else:
                 verbose('Container with ID <%s> already running.' % container_id)
+
+    def exec_command(self, cmd_args):
+        '''
+        Run a command in the (already running) image.
+
+        cmd_args - the command line to execute in the image.
+        return value - the command's exit code.
+        '''
+        container_id = self._get_container_id()
+        assert container_id
+
+        container_dir = '/' # FIXME
+
+        full_args = [
+            'exec',
+            '-it',
+            container_id,
+            '/karton/command_runner.py',
+            container_dir,
+            str(int(time.time())),
+            ]
+        full_args.extend(cmd_args)
+
+        for arg in cmd_args:
+            # I don't think it should happen, but...
+            assert '\0' not in arg
+
+        serialized_data = '\0'.join(cmd_args)
+        serialized_data_basename = self._RUNNING_COMMAND_PREFIX + str(os.getpid())
+        serialized_data_filename = os.path.join(self._image_data_dir, serialized_data_basename)
+        verbose('Registering execution in "%s".' % serialized_data_filename)
+
+        try:
+            with open(serialized_data_filename, 'w') as serialized_data_file:
+                serialized_data_file.write(serialized_data)
+
+            exit_code = self.docker.call(full_args)
+
+        finally:
+            verbose('Command finished, removing "%s".' % serialized_data_filename)
+            os.remove(serialized_data_filename)
+
+        return exit_code

@@ -61,7 +61,7 @@ CommandInfo = collections.namedtuple('CommandInfo', ['name', 'subparser', 'callb
 
 
 def do_run(parsed_args, image):
-    pass
+    image.command_run(parsed_args.remainder)
 
 
 def do_shell(parsed_args, image):
