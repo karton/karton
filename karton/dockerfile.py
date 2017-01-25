@@ -66,6 +66,12 @@ class DefinitionProperties(object):
         self._definition_file_path = definition_file_path
         self._host_system = host_system
 
+        self._shared_home_paths = []
+        self._shared_paths = []
+        self._container_home_path_on_host = os.path.join(host_system.user_home,
+                                                         '.karton',
+                                                         'home-dirs',
+                                                         self._image_name)
         self._username = host_system.username
         self._user_home = host_system.user_home
         self._distro = 'ubuntu'
@@ -112,6 +118,55 @@ class DefinitionProperties(object):
 
         return self._eval_regex.sub(eval_cb, in_string)
 
+    def get_path_mappings(self):
+        '''
+        The list of resources shared between host and guest.
+
+        You should call this only after setting things like the home directory location which
+        could change some of these values.
+
+        return value - a list of tuples; the first element of the tuple is the location of the
+                       share directory or file on the host, the second is the location in the
+                       container.
+        '''
+        resources = [(self.container_home_path_on_host, self.user_home)]
+
+        for rel_path in self._shared_home_paths:
+            host_path = os.path.join(self._host_system.user_home, rel_path)
+            container_path = os.path.join(self.user_home, rel_path)
+            resources.append((host_path, container_path))
+
+        for host_path, container_path in self._shared_paths:
+            resources.append((host_path, container_path))
+
+        return resources
+
+    def share_path_in_home(self, relative_path):
+        '''
+        Share the directory or file at relative_path between host and image.
+
+        relative_path - the path to share at the same location in both host and container;
+                        the path must a subdirectory of the home directory and relative to it.
+        '''
+        self._shared_home_paths.append(relative_path)
+
+    def share_path(self, host_path, container_path=None):
+        '''
+        Share the directory or file at host_path with the container where it will be accessible
+        as container_path.
+
+        If container_path is None, then it will be accessible at the same location in both host
+        and container.
+
+        host_path - the path on the host system of the directory or file to share.
+        container_path - the path in the container where the file or directory will be accessible,
+                         or None to use the same path in both host and container.
+        '''
+        if container_path is None:
+            container_path = host_path
+
+        self._shared_paths.append((host_path, container_path))
+
     @props_property
     def image_name(self):
         return self._image_name
@@ -139,6 +194,21 @@ class DefinitionProperties(object):
         file that is later accessed from the host.
         '''
         self._user_home = user_home
+
+    @props_property
+    def container_home_path_on_host(self):
+        '''
+        The path on the host where to store the content of the container home
+        directory.
+
+        You should not set this to the host home directory to avoid messing up
+        your configuration files.
+        '''
+        return self._container_home_path_on_host
+
+    @container_home_path_on_host.setter
+    def container_home_path_on_host(self, path):
+        self._container_home_path_on_host = path
 
     @props_property
     def packages(self):
