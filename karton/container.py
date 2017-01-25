@@ -170,7 +170,7 @@ class Image(object):
                                      dir=dest_path_base)
 
         builder = dockerfile.Builder(self._image_config.image_name,
-                                     self._image_config.path,
+                                     self._image_config.content_directory,
                                      dest_path,
                                      self._session.host_system)
 

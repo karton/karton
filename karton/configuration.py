@@ -9,7 +9,11 @@ except ImportError:
     # Python 3.
     import configparser
 
-from log import info
+import glob
+import json
+import os
+
+from log import die, verbose
 
 
 class ImageConfig(object):
@@ -17,7 +21,7 @@ class ImageConfig(object):
     Configuration for a single image definition.
     '''
 
-    def __init__(self, parser, section_name, image_name):
+    def __init__(self, image_name, json_config_path):
         '''
         Initializes an ImageConfig instance.
 
@@ -27,12 +31,17 @@ class ImageConfig(object):
                        the image.
         image_name - the user-visible image name.
         '''
-        self._parser = parser
-        self._section_name = section_name
-        self._image_name = image_name
+        verbose('Loading "%s" for image "%s".' % (json_config_path, image_name))
 
-        if not self.path:
-            raise ValueError('Missing "path" value for image "%s".' % (self._image_name))
+        self._image_name = image_name
+        self._json_config_path = json_config_path
+
+        try:
+            with open(self._json_config_path, 'r') as json_file:
+                self._content = json.load(json_file)
+        except IOError as exc:
+            die('Cannot read configuration file "%s" for image "%s": %s.' %
+                (self._json_config_path, self._image_name, exc))
 
     @property
     def image_name(self):
@@ -42,11 +51,11 @@ class ImageConfig(object):
         return self._image_name
 
     @property
-    def path(self):
+    def content_directory(self):
         '''
-        The path to the dictory where the image definition and files are stored.
+        The path to the directory where the image definition and files are stored.
         '''
-        return self._parser.get(self._section_name, 'path')
+        return self._content.get('content-directory')
 
 
 class GlobalConfig(object):
@@ -54,44 +63,41 @@ class GlobalConfig(object):
     Read and write the Karton configuration file.
     '''
 
-    def __init__(self, filename):
+    def __init__(self, config_path):
         '''
         Initializes a GlobalConfig object.
 
         filename - the path for the configuration file (which doesn't need to
                    exist).
         '''
-        self._filename = filename
+        self._config_path = config_path
 
         self._parser = configparser.SafeConfigParser()
-        self._parser.read([filename])
+        main_config_path = os.path.join(self._config_path, 'karton.cfg')
+        self._parser.read([main_config_path])
 
-        self._images = None
+        self._image_paths = None
+        self._images = {}
 
-    def _ensure_images_loaded(self):
+    def _ensure_image_names_loaded(self):
         '''
         Make sure that the configuration of the images has been loaded into
         memory.
         '''
-        if self._images is not None:
+        if self._image_paths is not None:
             return
 
-        self._images = {}
-        image_identifier = 'image:'
+        self._image_paths = {}
 
-        for section in self._parser.sections():
-            if section == 'general':
-                pass
-            elif section.startswith(image_identifier):
-                try:
-                    image_name = section[len(image_identifier):]
-                    image = ImageConfig(self._parser, section, image_name)
-                    self._images[image_name] = image
-                except ValueError as exc:
-                    info('Invalid image definition: %s' % exc.message)
-            else:
-                info('Invalid section "%s" in configuration file "%s" will be ignored.' % \
-                        (section, self._filename))
+        json_extension = '.json'
+        for image_json_config_path in glob.glob(os.path.join(self._config_path,
+                                                             'images',
+                                                             '*' + json_extension)):
+            image_name = os.path.basename(image_json_config_path)
+            assert image_name.endswith(json_extension)
+            image_name = image_name[:-len(json_extension)]
+
+            self._image_paths[image_name] = image_json_config_path
 
     def image_with_name(self, image_name):
         '''
@@ -100,5 +106,19 @@ class GlobalConfig(object):
 
         image_name - the name of the image
         '''
-        self._ensure_images_loaded()
-        return self._images.get(image_name)
+        self._ensure_image_names_loaded()
+
+        image_json_config_path = self._image_paths.get(image_name)
+        if image_json_config_path is None:
+            # This image doesn't exist.
+            return None
+
+        # The image exists.
+        image_config = self._images.get(image_name)
+
+        if image_config is None:
+            # But the configuration isn't loaded yet.
+            image_config = ImageConfig(image_name, image_json_config_path)
+            self._images[image_name] = image_config
+
+        return image_config

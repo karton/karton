@@ -44,7 +44,7 @@ class Session(object):
     for Karton.
     '''
 
-    DEFAULT_CONFIGURATION_FILE = os.path.join(os.path.expanduser('~'), '.karton.cfg')
+    DEFAULT_CONFIGURATION_PATH = os.path.join(os.path.expanduser('~'), '.karton')
 
     def __init__(self, data_dir, host_system, config, docker):
         '''
@@ -66,7 +66,7 @@ class Session(object):
         return Session(
             os.path.join(tempfile.gettempdir(), 'karton'),
             HostSystem(),
-            configuration.GlobalConfig(Session.DEFAULT_CONFIGURATION_FILE),
+            configuration.GlobalConfig(Session.DEFAULT_CONFIGURATION_PATH),
             dockerctl.Docker())
 
     @property
