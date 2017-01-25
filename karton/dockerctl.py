@@ -50,7 +50,7 @@ class Docker(object):
 
         try:
             output = self.check_output(
-                ['inspect', '--format="{{ .State.Running }}"', container_id],
+                ['inspect', '--format={{ .State.Running }}', container_id],
                 stderr=proc.STDOUT)
         except proc.CalledProcessError:
             verbose('Cannot inspect the status of the container.')
