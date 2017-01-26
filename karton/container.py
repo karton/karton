@@ -2,6 +2,7 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+import glob
 import os
 import tempfile
 import time
@@ -67,6 +68,23 @@ class Image(object):
         self.ensure_container_running()
         exit_code = self.exec_command(cmd_args)
         raise SystemExit(exit_code)
+
+    def command_status(self):
+        '''
+        Print the status of the image (whether it's running, which commands are running in
+        it, etc.
+        '''
+        container_id, running_commands = self.status()
+        if container_id is None:
+            info('The container for image "%s" is not running.' % self.image_name)
+            assert not running_commands
+        else:
+            info('The container for image "%s" is running with ID <%s>.' %
+                 (self.image_name, container_id))
+            if running_commands:
+                Image._print_running_commands(running_commands)
+            else:
+                info('No commands are running.')
 
     @property
     def _image_data_dir(self):
@@ -254,3 +272,91 @@ class Image(object):
             os.remove(serialized_data_filename)
 
         return exit_code
+
+    @staticmethod
+    def _check_pid_running(pid):
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            return False
+        else:
+            return True
+
+    @staticmethod
+    def _print_running_commands(running_commands):
+        '''
+        Print a list of running commands.
+
+        running_commands - a dictionary of commands running inside the container, see
+                           _get_running_commands for the content of the dictionary.
+        '''
+        info('These commands are still running:')
+        for pid, args in running_commands.iteritems():
+            # Just for printing, it doesn't need to be perfect.
+            args = [a.replace(' ', r'\ ') for a in args]
+            info(' - %d: %s' % (pid, ' '.join(args)))
+
+    def _get_running_commands(self):
+        '''
+        The commands running in the container.
+
+        return value - a dictionary of PIDs to commands names (the PIDs are of the Karton command
+                       running on the host, not of the program running in the container).
+        '''
+        running_commands_glob = os.path.join(self._image_data_dir,
+                                             self._RUNNING_COMMAND_PREFIX + '*')
+        commands = {}
+
+        for path in glob.glob(running_commands_glob):
+            basename = os.path.basename(path)
+            assert basename.startswith(self._RUNNING_COMMAND_PREFIX)
+
+            pid_string = basename[len(self._RUNNING_COMMAND_PREFIX):]
+            try:
+                pid = int(pid_string)
+            except ValueError:
+                verbose('Invalid running command file with non-numeric PID "%s" at "%s"; '
+                        'ignoring it.' %
+                        (pid_string, path))
+                continue
+
+            try:
+                with open(path, 'r') as cmd_file:
+                    args = cmd_file.read().split('\0')
+            except IOError:
+                # In case the file gets deleted.
+                continue
+
+            if not Image._check_pid_running(pid):
+                verbose('Program "%s" with PID %d is not running, but it\'s still marked as '
+                        'running. It probably crashed.' % (args[0], pid))
+                try:
+                    os.remove(path)
+                except OSError:
+                    verbose('Cannot remove running command file "%s" for non-running command.')
+                continue
+
+            assert pid not in commands
+            commands[pid] = args
+
+        return commands
+
+    def status(self):
+        '''
+        Status of the image.
+
+        return value - a tuple with two items, the first one is the ID of the running container
+                       or None if the container is not running, the second is a dictionary of
+                       PIDs to commands names (the PIDs are of the Karton command running on the
+                       host, not of the program running in the container).
+        '''
+        container_id = self._get_container_id()
+        if container_id is None:
+            return None, []
+
+        running = self.docker.is_container_running(container_id)
+        if not running:
+            verbose('Container <%s> stored, but it\'s not running.' % container_id)
+            return None, []
+
+        return container_id, self._get_running_commands()

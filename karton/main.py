@@ -80,8 +80,8 @@ def do_build(parsed_args, image):
     image.command_build()
 
 
-def do_status(parsed_args):
-    pass
+def do_status(parsed_args, image):
+    image.command_status()
 
 
 def run_karton(session):
@@ -191,7 +191,7 @@ def run_karton(session):
         description='Stops the container. If already not running does nothing.')
 
     # "status" command.
-    add_command(
+    add_image_command(
         'status',
         do_status,
         help='query the status of the container',
