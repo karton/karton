@@ -482,6 +482,9 @@ class Builder(object):
         with open(os.path.join(self._dst_dir, 'Dockerfile'), 'w') as output:
             output.write(content)
 
+        self._image_config.shared_paths = props.get_path_mappings()
+        self._image_config.save()
+
     def cleanup(self):
         '''
         Removes intermediate files created to build the image.

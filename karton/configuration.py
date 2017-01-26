@@ -66,6 +66,21 @@ class ImageConfig(object):
         '''
         return self._content.get('content-directory')
 
+    @property
+    def shared_paths(self):
+        '''
+        A sequence of two-items tuples representing the directories or files shared between
+        host and container.
+
+        The first tuple element is the path on the host, the second one is the path in the
+        container.
+        '''
+        return tuple(self._content.get('shared-paths', ()))
+
+    @shared_paths.setter
+    def shared_paths(self, paths):
+        self._content['shared-paths'] = paths
+
 
 class GlobalConfig(object):
     '''
