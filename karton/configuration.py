@@ -81,6 +81,17 @@ class ImageConfig(object):
     def shared_paths(self, paths):
         self._content['shared-paths'] = paths
 
+    @property
+    def hostname(self):
+        '''
+        The image hostname.
+        '''
+        return self._content.get('hostname', 'missing-hostname-in-configuration')
+
+    @hostname.setter
+    def hostname(self, hostname):
+        self._content['hostname'] = hostname
+
 
 class GlobalConfig(object):
     '''

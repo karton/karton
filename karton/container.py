@@ -150,6 +150,7 @@ class Image(object):
             '--detach',
             '-it',
             '--privileged',
+            '--hostname', self._image_config.hostname,
             ]
 
         for host_path, container_path in self._image_config.shared_paths:

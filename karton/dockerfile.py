@@ -74,6 +74,7 @@ class DefinitionProperties(object):
                                                          self._image_name)
         self._username = host_system.username
         self._user_home = host_system.user_home
+        self._hostname = None
         self._distro = 'ubuntu'
         self._packages = []
         self._additional_archs = []
@@ -213,6 +214,22 @@ class DefinitionProperties(object):
     @props_property
     def packages(self):
         return self._packages
+
+    @props_property
+    def hostname(self):
+        '''
+        The hostname for the container.
+
+        The default value is "IMAGE_NAME-on-HOST-HOSTNAME".
+        '''
+        if self._hostname is not None:
+            return self._hostname
+        else:
+            return self.eval(self.image_name + '-on-$(host.hostname)')
+
+    @hostname.setter
+    def hostname(self, hostname):
+        self._hostname = hostname
 
     @props_property
     def distro(self):
@@ -483,6 +500,7 @@ class Builder(object):
             output.write(content)
 
         self._image_config.shared_paths = props.get_path_mappings()
+        self._image_config.hostname = props.hostname
         self._image_config.save()
 
     def cleanup(self):
