@@ -43,6 +43,15 @@ class ImageConfig(object):
             die('Cannot read configuration file "%s" for image "%s": %s.' %
                 (self._json_config_path, self._image_name, exc))
 
+    def save(self):
+        '''
+        Save the JSON configuration file to disk.
+        '''
+        with open(self._json_config_path, 'w') as json_file:
+            json.dump(self._content, json_file,
+                      indent=4,
+                      separators=(',', ': '))
+
     @property
     def image_name(self):
         '''
