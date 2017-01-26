@@ -150,6 +150,12 @@ class Image(object):
             '--detach',
             '-it',
             '--privileged',
+            ]
+
+        for host_path, container_path in self._image_config.shared_paths:
+            args += ['-v', '%s:%s' % (host_path, container_path)]
+
+        args += [
             self.image_name,
             '/karton/session_runner.py',
             ]
