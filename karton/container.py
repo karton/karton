@@ -2,6 +2,7 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+import errno
 import glob
 import os
 import tempfile
@@ -16,10 +17,30 @@ import proc
 from log import die, info, verbose
 
 
+class CDError(OSError):
+    '''
+    An error raised when Karton cannot change the current directory.
+    '''
+
+    def __init__(self, directory):
+        '''
+        Initialize a CDError.
+
+        directory - the directory (in the container) which cannot be accessed.
+        '''
+        super(CDError, self).__init__(
+            errno.ENOENT,
+            'Host directory "%s" cannot be accessed in the container' % directory)
+
+
 class Image(object):
     '''
     A Karton image.
     '''
+
+    CD_YES = 100
+    CD_NO = 101
+    CD_AUTO = 102
 
     # The basename prefix for the files keeping track of executing commands.
     _RUNNING_COMMAND_PREFIX = 'running-command-'
@@ -87,7 +108,7 @@ class Image(object):
 
         self.force_stop()
 
-    def command_run(self, cmd_args):
+    def command_run(self, cmd_args, cd_mode):
         '''
         Run a command in the image.
 
@@ -97,10 +118,15 @@ class Image(object):
         cmd_args - the command line to execute in the image.
         '''
         self.ensure_container_running()
-        exit_code = self.exec_command(cmd_args)
+
+        try:
+            exit_code = self.exec_command(cmd_args, cd_mode)
+        except CDError as exc:
+            die('%s.' % exc.strerror)
+
         raise SystemExit(exit_code)
 
-    def command_shell(self):
+    def command_shell(self, cd_mode):
         '''
         Run a shell in the image.
 
@@ -108,7 +134,12 @@ class Image(object):
         executed shell.
         '''
         self.ensure_container_running()
-        exit_code = self.exec_command(['bash', '-i'])
+
+        try:
+            exit_code = self.exec_command(['bash', '-i'], cd_mode)
+        except CDError as exc:
+            die('%s.' % exc.strerror)
+
         raise SystemExit(exit_code)
 
     def command_status(self):
@@ -190,6 +221,30 @@ class Image(object):
         except IOError:
             verbose('No stored container ID at "%s".' % self._running_container_id_file_path)
             return None
+
+    def _host_to_container_dir(self, host_dir):
+        '''
+        Given a directory path on the host, return the corresponding path in the container.
+
+        host_dir - a directory path on the host.
+        return value - the corresponding path in the container or None if not available.
+        '''
+        def normalize_dir(dir_name):
+            if dir_name.endswith('/'):
+                return dir_name
+            else:
+                return dir_name + '/'
+
+        host_dir = normalize_dir(host_dir)
+
+        for mounted_host_dir, mounted_container_dir in reversed(self._image_config.shared_paths):
+            mounted_host_dir = normalize_dir(mounted_host_dir)
+            mounted_container_dir = normalize_dir(mounted_container_dir)
+
+            if host_dir.startswith(mounted_host_dir):
+                return host_dir.replace(mounted_host_dir, mounted_container_dir)
+
+        return None
 
     def _run_main_container(self):
         verbose('Starting a new container.')
@@ -297,17 +352,35 @@ class Image(object):
             verbose('Cannot delete running container ID file at "%s": %s.' %
                     (self._running_container_id_file_path, exc))
 
-    def exec_command(self, cmd_args):
+    def exec_command(self, cmd_args, cd_mode=CD_AUTO):
         '''
         Run a command in the (already running) image.
 
         cmd_args - the command line to execute in the image.
         return value - the command's exit code.
         '''
+        assert cd_mode in (Image.CD_YES, Image.CD_NO, Image.CD_AUTO)
+
         container_id = self._get_container_id()
         assert container_id
 
-        container_dir = '/' # FIXME
+        if cd_mode == Image.CD_NO:
+            verbose('Using the home directory as working directory (as requested).')
+            container_dir = None
+        else:
+            host_cwd = os.getcwd()
+            container_dir = self._host_to_container_dir(host_cwd)
+            if container_dir is None:
+                if cd_mode == Image.CD_AUTO:
+                    verbose('Using the home directory as working directory as "%s" is not '
+                            'accessible.' % host_cwd)
+                else:
+                    raise CDError(host_cwd)
+            else:
+                verbose('Using "%s" as working directory in the container.' % container_dir)
+
+        if container_dir is None:
+            container_dir = self._image_config.user_home
 
         full_args = [
             'exec',

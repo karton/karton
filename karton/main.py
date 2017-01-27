@@ -61,11 +61,11 @@ CommandInfo = collections.namedtuple('CommandInfo', ['name', 'subparser', 'callb
 
 
 def do_run(parsed_args, image):
-    image.command_run(parsed_args.remainder)
+    image.command_run(parsed_args.remainder, parsed_args.cd)
 
 
 def do_shell(parsed_args, image):
-    image.command_shell()
+    image.command_shell(parsed_args.cd)
 
 
 def do_start(parsed_args, image):
@@ -139,13 +139,14 @@ def run_karton(session):
             '--no-cd',
             dest='cd',
             action='store_const',
-            const='no',
+            const=container.Image.CD_NO,
+            default=container.Image.CD_YES,
             help='don\'t change the current directory in the container'),
         SharedArgument(
             '--auto-cd',
             dest='cd',
             action='store_const',
-            const='auto',
+            const=container.Image.CD_AUTO,
             help='chanbge the current directory in the container only if the same is available ' \
                 'in both container and host'),
         )
