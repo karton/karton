@@ -92,6 +92,17 @@ class ImageConfig(object):
     def hostname(self, hostname):
         self._content['hostname'] = hostname
 
+    @property
+    def user_home(self):
+        '''
+        The home directory of the main user.
+        '''
+        return self._content.get('user-home', '/')
+
+    @user_home.setter
+    def user_home(self, user_home):
+        self._content['user-home'] = user_home
+
 
 class GlobalConfig(object):
     '''

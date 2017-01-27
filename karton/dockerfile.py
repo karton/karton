@@ -501,6 +501,7 @@ class Builder(object):
 
         self._image_config.shared_paths = props.get_path_mappings()
         self._image_config.hostname = props.hostname
+        self._image_config.user_home = props.user_home
         self._image_config.save()
 
     def cleanup(self):
