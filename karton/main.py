@@ -247,6 +247,12 @@ def run_karton(session):
         help='build the image for the container',
         description='Builds (or rebuilds) the image for the specified container.')
 
+    # "image" command.
+    add_command_with_sub_commands(
+        'image',
+        help='manage images',
+        description='Manages the creation and deletion of images.')
+
     # "help" command.
     def do_help(help_parsed_args):
         command_name = ' '.join(help_parsed_args.topic)
