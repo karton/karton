@@ -100,6 +100,17 @@ class Image(object):
         exit_code = self.exec_command(cmd_args)
         raise SystemExit(exit_code)
 
+    def command_shell(self):
+        '''
+        Run a shell in the image.
+
+        This method doesn't return, but raises SystemExit with the exit code of the
+        executed shell.
+        '''
+        self.ensure_container_running()
+        exit_code = self.exec_command(['bash', '-i'])
+        raise SystemExit(exit_code)
+
     def command_status(self):
         '''
         Print the status of the image (whether it's running, which commands are running in

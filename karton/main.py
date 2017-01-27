@@ -65,7 +65,7 @@ def do_run(parsed_args, image):
 
 
 def do_shell(parsed_args, image):
-    pass
+    image.command_shell()
 
 
 def do_start(parsed_args, image):
