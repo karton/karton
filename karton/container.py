@@ -56,6 +56,37 @@ class Image(object):
         '''
         self.ensure_container_running()
 
+    def command_stop(self, force):
+        '''
+        Stop the image.
+
+        force - if True, the container is stopped even if commands are running in it; if False,
+                then the user is asked in case there are programs running.
+        '''
+        container_id, running_commands = self.status()
+        if container_id is None:
+            info('The container for image "%s" is not running.' % self.image_name)
+            assert not running_commands
+            return
+
+        # This is racy, but it's good enough to avoid having a terminal running something
+        # somewhere and accidentally forgetting to close it when stopping the container.
+        if running_commands and not force:
+            Image._print_running_commands(running_commands)
+            info('')
+            while True:
+                answer = raw_input('Do you really want to stop the container? [Y/N] ')
+                answer = answer.lower()
+                if answer == 'y':
+                    break
+                elif answer == 'n':
+                    info('')
+                    info('Not stopping the container <%s> with running commands.' %
+                         container_id)
+                    return
+
+        self.force_stop()
+
     def command_run(self, cmd_args):
         '''
         Run a command in the image.
@@ -229,6 +260,31 @@ class Image(object):
                     container_file.write(new_container_id)
             else:
                 verbose('Container with ID <%s> already running.' % container_id)
+
+    def force_stop(self):
+        '''
+        Stop the running container (if any), even if commands are currently running in it.
+
+        It's an error to call this if there's no running container.
+        '''
+        container_id = self._get_container_id()
+        assert container_id
+
+        verbose('Stopping container <%s>.' % container_id)
+
+        try:
+            self.docker.check_output(['stop', container_id])
+        except proc.CalledProcessError:
+            verbose('Docker stop command failed.')
+
+        if self.docker.is_container_running(container_id):
+            die('Container <%s> still running.' % container_id)
+
+        try:
+            os.unlink(self._running_container_id_file_path)
+        except OSError as exc:
+            verbose('Cannot delete running container ID file at "%s": %s.' %
+                    (self._running_container_id_file_path, exc))
 
     def exec_command(self, cmd_args):
         '''

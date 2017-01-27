@@ -73,7 +73,7 @@ def do_start(parsed_args, image):
 
 
 def do_stop(parsed_args, image):
-    pass
+    image.command_stop(parsed_args.force)
 
 
 def do_build(parsed_args, image):
@@ -184,11 +184,19 @@ def run_karton(session):
         'the container automatically.')
 
     # "stop" command.
-    add_image_command(
+    stop_command = add_image_command(
         'stop',
         do_stop,
         help='stop the container if running',
-        description='Stops the container. If already not running does nothing.')
+        description='Stops the container. If already not running does nothing. '
+        'If there are commands running in the container, the user is asked before stopping the '
+        'container. Pass "--force" to stop in any case without asking.')
+
+    stop_command.add_argument(
+        '-f',
+        '--force',
+        action='store_true',
+        help='stop the container without asking even if commands are running in it')
 
     # "status" command.
     add_image_command(
