@@ -129,6 +129,39 @@ def run_karton(session):
 
         return command_subparser
 
+    def add_command_with_sub_commands(main_command_name, *args, **kwargs):
+        def do_sub_command(parsed_args):
+            joined_command = main_command_name + ' ' + parsed_args.sub_command
+            sub_command = all_commands.get(joined_command)
+            if sub_command is None:
+                die('Invalid command "%s". This should not happen.' % joined_command)
+            sub_command.callback(parsed_args)
+
+        command_with_sub_commands = add_command(
+            main_command_name,
+            do_sub_command,
+            *args,
+            **kwargs)
+
+        command_subparsers = command_with_sub_commands.add_subparsers(
+            dest='sub_command',
+            metavar='SUB-COMMAND')
+        command_subparsers.karton_main_command_name = main_command_name
+
+        return command_subparsers
+
+    def add_sub_command(command_subparsers, sub_command_name, callback, *args, **kwargs):
+        main_command_name = command_subparsers.karton_main_command_name
+        joined_command = main_command_name + ' ' + sub_command_name
+
+        sub_command_subparser = command_subparsers.add_parser(sub_command_name, *args, **kwargs)
+        all_commands[joined_command] = CommandInfo(
+            name=joined_command,
+            subparser=sub_command_subparser,
+            callback=callback)
+
+        return sub_command_subparser
+
     def add_to_every_command(*args, **kwargs):
         for command in all_commands.itervalues():
             command.subparser.add_argument(*args, **kwargs)
@@ -216,15 +249,15 @@ def run_karton(session):
 
     # "help" command.
     def do_help(help_parsed_args):
-        sub_command_name = help_parsed_args.sub_command
-        if sub_command_name is None:
+        command_name = ' '.join(help_parsed_args.topic)
+        if not command_name:
             parser.print_help()
             return
 
-        command = all_commands.get(sub_command_name)
+        command = all_commands.get(command_name)
         if command is None:
             die('"%s" is not a Karton command. '
-                'Try "karton help" to list the available commands.' % sub_command_name)
+                'Try "karton help" to list the available commands.' % command_name)
 
         command.subparser.print_help()
 
@@ -237,9 +270,9 @@ def run_karton(session):
         'the documentation for that command is shown.')
 
     help_parser.add_argument(
-        'sub_command',
+        'topic',
         metavar='COMMAND',
-        nargs='?',
+        nargs=argparse.REMAINDER,
         help='command you want to know more about')
 
     # Arguments common to everything.
