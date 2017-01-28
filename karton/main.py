@@ -107,7 +107,9 @@ def run_karton(session):
         return command_subparser
 
     def add_image_command(command_name, image_callback, *args, **kwargs):
-        def callback(callback_parsed_args):
+        def callback(callback_parsed_args, callback_session):
+            assert session == callback_session
+
             if parsed_args.image_name is None:
                 die('You need to specify wich image to target with the "-i" option '
                     '(or the longer form, "--image").')
@@ -130,12 +132,15 @@ def run_karton(session):
         return command_subparser
 
     def add_command_with_sub_commands(main_command_name, *args, **kwargs):
-        def do_sub_command(parsed_args):
+        def do_sub_command(parsed_args, callback_session):
+            assert callback_session == session
+
             joined_command = main_command_name + ' ' + parsed_args.sub_command
             sub_command = all_commands.get(joined_command)
             if sub_command is None:
                 die('Invalid command "%s". This should not happen.' % joined_command)
-            sub_command.callback(parsed_args)
+
+            sub_command.callback(parsed_args, session)
 
         command_with_sub_commands = add_command(
             main_command_name,
@@ -254,7 +259,7 @@ def run_karton(session):
         description='Manages the creation and deletion of images.')
 
     # "help" command.
-    def do_help(help_parsed_args):
+    def do_help(help_parsed_args, callback_session):
         command_name = ' '.join(help_parsed_args.topic)
         if not command_name:
             parser.print_help()
@@ -299,7 +304,7 @@ def run_karton(session):
 
     # We don't use argparse's ability to call a callback as we need to do stuff before
     # it's called.
-    command.callback(parsed_args)
+    command.callback(parsed_args, session)
 
 
 def main(session):
