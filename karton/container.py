@@ -159,6 +159,79 @@ class Image(object):
             else:
                 info('No commands are running.')
 
+    @staticmethod
+    def command_image_create(config, image_name, complete_path):
+        '''
+        Create a new image.
+
+        config - a configuration.GlobalConfig instance to which the image should be added.
+        image_name - the name of the new image (which cannot already exist in config).
+        complete_path - the path to the directory containing the image definition (and other
+                        required files); the last component of the path must not exist, while
+                        the path leading to it must already exist.
+        '''
+        # Python splits the paths differently from other tools. If we make sure that path doesn't
+        # contain a trailing slash, then we can split properly between leading path and trailing
+        # component.
+        verbose('Creating an image called "%s" at "%s".' % (image_name, complete_path))
+
+        while complete_path.endswith(os.sep):
+            complete_path = complete_path[:-1]
+
+        existing_path = os.path.dirname(complete_path)
+        if not os.path.isdir(existing_path):
+            die('The path for creating an image should be in the form '
+                '"EXISTING-PATH/NEW-IMAGE-DIRECTORY". "%s" is not an existing directory.' %
+                existing_path)
+
+        if os.path.exists(complete_path):
+            die('The path for creating an image should be in the form '
+                '"EXISTING-PATH/NEW-IMAGE-DIRECTORY", where "NEW-IMAGE-DIRECTORY" must not exist, '
+                'but "%s" already exists.' %
+                complete_path)
+
+        if config.image_with_name(image_name) is not None:
+            die('An image called "%s" already exist.' % image_name)
+
+        try:
+            os.mkdir(complete_path)
+        except OSError as exc:
+            die('Cannot create "%s": %s.' % (complete_path, exc))
+
+        with open(os.path.join(complete_path, 'definition.py'), 'w') as definition_file:
+            definition_file.write(dockerfile.get_default_definition_file(image_name))
+
+        config.add_image(image_name, complete_path)
+
+    @staticmethod
+    def command_image_import(config, image_name, existing_dir_path):
+        '''
+        Create a new image from an exiting definition file.
+
+        config - a configuration.GlobalConfig instance to which the image should be added.
+        image_name - the name of the new image (which cannot already exist in config).
+        existing_dir_path - the path to the directory containing the image definition (and other
+                            required files).
+        '''
+        verbose('Creating an image called "%s" from an existing definition at "%s".' %
+                (image_name, existing_dir_path))
+
+        if not os.path.isdir(existing_dir_path):
+            die('The path "%s" should be an existing directory containing the definition file and '
+                'other required files. If you want to create a new image without having an '
+                'existing definition, use "image create".' % existing_dir_path)
+
+        definition_file_path = os.path.join(existing_dir_path, 'definition.py')
+        if not os.path.exists(definition_file_path):
+            die('"%s" does not exist. The path should be a directory containing an existing '
+                'definition file. If you want to create a new image wihout having an existing '
+                'definition, use "image create".' % definition_file_path)
+
+        if config.image_with_name(image_name) is not None:
+            die('An image called "%s" already exist.' % image_name)
+
+        config.add_image(image_name, existing_dir_path)
+
     @property
     def _image_data_dir(self):
         '''

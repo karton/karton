@@ -84,6 +84,18 @@ def do_status(parsed_args, image):
     image.command_status()
 
 
+def do_image_create(parsed_args, session):
+    container.Image.command_image_create(session.config,
+                                         parsed_args.image_name,
+                                         parsed_args.directory)
+
+
+def do_image_import(parsed_args, session):
+    container.Image.command_image_import(session.config,
+                                         parsed_args.image_name,
+                                         parsed_args.directory)
+
+
 def run_karton(session):
     '''
     Runs Karton.
@@ -253,10 +265,47 @@ def run_karton(session):
         description='Builds (or rebuilds) the image for the specified container.')
 
     # "image" command.
-    add_command_with_sub_commands(
+    image_parser = add_command_with_sub_commands(
         'image',
         help='manage images',
         description='Manages the creation and deletion of images.')
+
+    # "image create" command.
+    image_create_parser = add_sub_command(
+        image_parser,
+        'create',
+        do_image_create,
+        help='create a new image',
+        description='Creates a new image, including generating a stub definition file.')
+
+    image_create_parser.add_argument(
+        'image_name',
+        metavar='IMAGE-NAME',
+        help='the name of the new image')
+
+    image_create_parser.add_argument(
+        'directory',
+        metavar='EXISTING-PATH/NEW-IMAGE-DIRECTORY',
+        help='the directory to create and where to put the definition file; '
+             'the image directory must not exist, but the path leading to it must exist.')
+
+    # "image import" command.
+    image_create_parser = add_sub_command(
+        image_parser,
+        'import',
+        do_image_import,
+        help='create a new image by importing its definition from an existing one',
+        description='Creates a new image by importing its definition from an existing directory.')
+
+    image_create_parser.add_argument(
+        'image_name',
+        metavar='IMAGE-NAME',
+        help='the name of the new image')
+
+    image_create_parser.add_argument(
+        'directory',
+        metavar='EXISTING-IMAGE-DIRECTORY',
+        help='the directory, containing a definition file and other needed files, to import')
 
     # "help" command.
     def do_help(help_parsed_args, callback_session):

@@ -21,15 +21,15 @@ class ImageConfig(object):
     Configuration for a single image definition.
     '''
 
-    def __init__(self, image_name, json_config_path):
+    def __init__(self, image_name, json_config_path, expect_existing=True):
         '''
         Initializes an ImageConfig instance.
 
-        parser - a configparser.RawConfigParser instance for the file where the
-                 image configuration is stored.
-        section_name - the name of the section in the configuration file for
-                       the image.
         image_name - the user-visible image name.
+        json_config_path - the path to the JSON configuration file for the image.
+        expect_existing - if True, an exception will be raised if the file does not exist already;
+                          if False, the non-existance of the file will be ignore, useful when
+                          creating a new image.
         '''
         verbose('Loading "%s" for image "%s".' % (json_config_path, image_name))
 
@@ -40,13 +40,18 @@ class ImageConfig(object):
             with open(self._json_config_path, 'r') as json_file:
                 self._content = json.load(json_file)
         except IOError as exc:
-            die('Cannot read configuration file "%s" for image "%s": %s.' %
-                (self._json_config_path, self._image_name, exc))
+            if expect_existing:
+                die('Cannot read configuration file "%s" for image "%s": %s.' %
+                    (self._json_config_path, self._image_name, exc))
+            else:
+                self._content = {}
 
     def save(self):
         '''
         Save the JSON configuration file to disk.
         '''
+        assert self.content_directory
+
         with open(self._json_config_path, 'w') as json_file:
             json.dump(self._content, json_file,
                       indent=4,
@@ -65,6 +70,10 @@ class ImageConfig(object):
         The path to the directory where the image definition and files are stored.
         '''
         return self._content.get('content-directory')
+
+    @content_directory.setter
+    def content_directory(self, content_directory):
+        self._content['content-directory'] = content_directory
 
     @property
     def shared_paths(self):
@@ -168,3 +177,26 @@ class GlobalConfig(object):
             self._images[image_name] = image_config
 
         return image_config
+
+    def add_image(self, image_name, content_directory):
+        '''
+        Add a new image from an existing directory.
+
+        image_name - the name of the image.
+        content_directory - the directory where the definition file and other required files are.
+        '''
+        self._ensure_image_names_loaded()
+        assert image_name not in self._image_paths
+
+        image_json_config_path = os.path.join(self._config_path,
+                                              'images',
+                                              image_name + '.json')
+
+        new_image = ImageConfig(image_name, image_json_config_path, expect_existing=False)
+        new_image.content_directory = content_directory
+        new_image.save()
+
+        self._image_paths[image_name] = image_json_config_path
+        self._images[image_name] = new_image
+
+        return new_image
