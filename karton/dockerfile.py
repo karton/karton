@@ -86,6 +86,7 @@ class DefinitionProperties(object):
             'host.username': lambda: self._host_system.username,
             'host.userhome': lambda: self._host_system.user_home,
             'host.hostname': lambda: self._host_system.hostname,
+            'image.name': lambda: self._image_name,
             }
 
     def __str__(self):
@@ -225,7 +226,7 @@ class DefinitionProperties(object):
         if self._hostname is not None:
             return self._hostname
         else:
-            return self.eval(self.image_name + '-on-$(host.hostname)')
+            return self.eval('$(image.name)-on-$(host.hostname)')
 
     @hostname.setter
     def hostname(self, hostname):
