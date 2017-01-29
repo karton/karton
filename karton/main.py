@@ -7,6 +7,7 @@
 import argparse
 import collections
 
+import alias
 import container
 import runtime
 
@@ -94,6 +95,40 @@ def do_image_import(parsed_args, session):
     container.Image.command_image_import(session.config,
                                          parsed_args.image_name,
                                          parsed_args.directory)
+
+
+def do_alias(parsed_args, session):
+    manager = alias.AliasManager(session.config)
+
+    def check_no_run():
+        if parsed_args.run:
+            die('"--run" only makes sense when adding an alias.')
+
+    if parsed_args.remove:
+        if not parsed_args.alias_name:
+            die('If you specify "--remove" you must specify the alias you want to remove.')
+        if parsed_args.image_name:
+            die('If you specify "--remove" you cannot specify the image name, '
+                'just the alias name.')
+
+        check_no_run()
+
+        manager.command_remove(parsed_args.alias_name)
+
+    elif parsed_args.alias_name is None:
+        # The second positional argument cannot be non-None if the first is.
+        assert parsed_args.image_name is None
+        check_no_run()
+        manager.command_show_all()
+
+    else:
+        assert parsed_args.alias_name is not None
+
+        if parsed_args.image_name:
+            manager.command_add(parsed_args.alias_name, parsed_args.image_name, parsed_args.run)
+        else:
+            check_no_run()
+            manager.command_show(parsed_args.alias_name)
 
 
 def run_karton(session):
@@ -306,6 +341,36 @@ def run_karton(session):
         'directory',
         metavar='EXISTING-IMAGE-DIRECTORY',
         help='the directory, containing a definition file and other needed files, to import')
+
+    # "alias" command.
+    alias_parser = add_command(
+        'alias',
+        do_alias,
+        help='show or set aliases to avoid specifying the image every time',
+        description='Shows or sets aliases. By using an alias you can invoke Karton without '
+        'having to specify the name of the image every time.')
+
+    alias_parser.add_argument(
+        'alias_name',
+        metavar='ALIAS-NAME',
+        nargs='?',
+        help='the name of the alias')
+
+    alias_parser.add_argument(
+        'image_name',
+        metavar='IMAGE-NAME',
+        nargs='?',
+        help='the image to associate to the alias')
+
+    alias_parser.add_argument(
+        '--run',
+        action='store_true',
+        help='if adding an alias, the alias will imply the "run" command')
+
+    alias_parser.add_argument(
+        '--remove',
+        action='store_true',
+        help='remove the alias')
 
     # "help" command.
     def do_help(help_parsed_args, callback_session):

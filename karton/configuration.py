@@ -9,11 +9,15 @@ except ImportError:
     # Python 3.
     import configparser
 
+import collections
 import glob
 import json
 import os
 
 from log import die, verbose
+
+
+ImageAlias = collections.namedtuple('ImageAlias', ['alias_name', 'image_name', 'run'])
 
 
 class ImageConfig(object):
@@ -128,11 +132,18 @@ class GlobalConfig(object):
         self._config_path = config_path
 
         self._parser = configparser.SafeConfigParser()
-        main_config_path = os.path.join(self._config_path, 'karton.cfg')
-        self._parser.read([main_config_path])
+        self._main_config_path = os.path.join(self._config_path, 'karton.cfg')
+        self._parser.read([self._main_config_path])
 
         self._image_paths = None
         self._images = {}
+
+    def _save(self):
+        '''
+        Save the main configuration to file.
+        '''
+        with open(self._main_config_path, 'w') as config_file:
+            self._parser.write(config_file)
 
     def _ensure_image_names_loaded(self):
         '''
@@ -200,3 +211,79 @@ class GlobalConfig(object):
         self._images[image_name] = new_image
 
         return new_image
+
+    def get_aliases(self):
+        '''
+        Get all the configured aliases.
+
+        return value - a dictionary with the aliases names as keys and instances of ImageAlias as
+                       value.
+        '''
+        aliases = {}
+
+        if not self._parser.has_section('alias'):
+            return aliases
+
+        for alias_name, value in self._parser.items('alias'):
+            try:
+                alias_type, image_name = value.split(';', 1)
+            except ValueError:
+                verbose('Invalid alias value "%s".' % value)
+                continue
+
+            if alias_type == 'run':
+                run = True
+            elif alias_type == 'control':
+                run = False
+            else:
+                verbose('Invalid alias type "%s".' % alias_type)
+                continue
+
+            aliases[alias_name] = ImageAlias(alias_name, image_name, run)
+
+        return aliases
+
+    def add_alias(self, alias):
+        '''
+        Add a new alias.
+
+        It's the caller's resposibility to make sure that alias.image_name points to an existing
+        image.
+
+        alias - the alias to add.
+        return value - True if the alias was added, False if it wasn't added because an alias with
+                       the same name already exists.
+        '''
+        existing_aliases = self.get_aliases()
+        if alias.alias_name in existing_aliases:
+            return False
+
+        if alias.run:
+            alias_type = 'run'
+        else:
+            alias_type = 'control'
+
+        if not self._parser.has_section('alias'):
+            self._parser.add_section('alias')
+
+        self._parser.set('alias', alias.alias_name, alias_type + ';' + alias.image_name)
+        self._save()
+
+        return True
+
+    def remove_alias(self, alias_name):
+        '''
+        Remove the alias with name alias_name.
+
+        alias_name - the name of the alias to remove.
+        return value - True if the alias was removed, False otherwise.
+        '''
+        try:
+            removed = self._parser.remove_option('alias', alias_name)
+        except configparser.NoSectionError:
+            removed = False
+
+        if removed:
+            self._save()
+
+        return removed
