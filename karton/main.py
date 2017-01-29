@@ -147,13 +147,16 @@ def run_karton(session, arguments):
 
     all_commands = {}
 
-    def add_command(command_name, callback, *args, **kwargs):
+    def add_command_internal(command_name, callback, *args, **kwargs):
         command_subparser = subparsers.add_parser(command_name, *args, **kwargs)
         all_commands[command_name] = CommandInfo(
             name=command_name,
             subparser=command_subparser,
             callback=callback)
         return command_subparser
+
+    def add_command(command_name, callback, *args, **kwargs):
+        return add_command_internal(command_name, callback, *args, **kwargs)
 
     def add_image_command(command_name, image_callback, *args, **kwargs):
         def callback(callback_parsed_args, callback_session):
@@ -173,9 +176,8 @@ def run_karton(session, arguments):
         command_subparser = add_command(command_name, callback, *args, **kwargs)
 
         command_subparser.add_argument(
-            '-i',
-            '--image',
-            dest='image_name',
+            'image_name',
+            metavar='IMAGE-NAME',
             help='name of the image to target')
 
         return command_subparser
