@@ -212,6 +212,73 @@ class GlobalConfig(object):
 
         return new_image
 
+    def _get(self, section, option, default=None):
+        '''
+        Get the value of an option.
+
+        This works around ConfigParser's oddities with sections.
+
+        section - the section where the option is.
+        option - the name of the option
+        default - a value to return if the option doesn't exist.
+        '''
+        try:
+            return self._parser.get(section, option)
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            return default
+
+    def _get_items(self, section):
+        '''
+        Get all the options in a section.
+
+        This works around ConfigParser's oddities with sections.
+
+        section - the section where the options are.
+        return value - an ordered dictionary of options and their values.
+        '''
+        try:
+            items = self._parser.items(section)
+        except configparser.NoSectionError:
+            items = []
+
+        return collections.OrderedDict(items)
+
+    def _set(self, section, option, value):
+        '''
+        Set the value of an option.
+
+        This works around ConfigParser's oddities with sections.
+
+        section - the section where the option is.
+        option - the name of the option.
+        value - the new value of the option.
+        '''
+        if not self._parser.has_section(section):
+            self._parser.add_section(section)
+
+        self._parser.set(section, option, value)
+        self._save()
+
+    def _remove(self, section, option):
+        '''
+        Remove an option.
+
+        This works around ConfigParser's oddities with sections.
+
+        section - the section where the option is.
+        option - the name of the option.
+        return value - True if the option was removed, False otherwise.
+        '''
+        try:
+            removed = self._parser.remove_option(section, option)
+        except configparser.NoSectionError:
+            removed = False
+
+        if removed:
+            self._save()
+
+        return removed
+
     def get_aliases(self):
         '''
         Get all the configured aliases.
@@ -221,10 +288,7 @@ class GlobalConfig(object):
         '''
         aliases = {}
 
-        if not self._parser.has_section('alias'):
-            return aliases
-
-        for alias_name, value in self._parser.items('alias'):
+        for alias_name, value in self._get_items('alias').iteritems():
             try:
                 alias_type, image_name = value.split(';', 1)
             except ValueError:
@@ -263,11 +327,7 @@ class GlobalConfig(object):
         else:
             alias_type = 'control'
 
-        if not self._parser.has_section('alias'):
-            self._parser.add_section('alias')
-
-        self._parser.set('alias', alias.alias_name, alias_type + ';' + alias.image_name)
-        self._save()
+        self._set('alias', alias.alias_name, alias_type + ';' + alias.image_name)
 
         return True
 
@@ -278,12 +338,4 @@ class GlobalConfig(object):
         alias_name - the name of the alias to remove.
         return value - True if the alias was removed, False otherwise.
         '''
-        try:
-            removed = self._parser.remove_option('alias', alias_name)
-        except configparser.NoSectionError:
-            removed = False
-
-        if removed:
-            self._save()
-
-        return removed
+        return self._remove('alias', alias_name)
