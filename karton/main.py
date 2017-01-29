@@ -6,6 +6,7 @@
 
 import argparse
 import collections
+import sys
 
 import alias
 import container
@@ -131,11 +132,12 @@ def do_alias(parsed_args, session):
             manager.command_show(parsed_args.alias_name)
 
 
-def run_karton(session):
+def run_karton(session, arguments):
     '''
     Runs Karton.
 
     session - a runtime.Session instance.
+    arguments - the command line arguments (for instance sys.argv).
     '''
 
     assert session
@@ -408,7 +410,7 @@ def run_karton(session):
         help='enable verbose logging')
 
     # Now actually parse the command line.
-    parsed_args = parser.parse_args()
+    parsed_args = parser.parse_args(arguments[1:])
 
     set_verbose(parsed_args.verbose)
 
@@ -421,7 +423,7 @@ def run_karton(session):
     command.callback(parsed_args, session)
 
 
-def main(session):
+def main(session, arguments):
     '''
     Runs Karton as a command, i.e. taking care or dealing with keyboard interrupts,
     unexpected exceptions, etc.
@@ -430,10 +432,11 @@ def main(session):
     run_karton instead.
 
     session - a runtime.Session instance.
+    arguments - the command line arguments (for instance sys.argv).
     '''
 
     try:
-        run_karton(session)
+        run_karton(session, arguments)
     except KeyboardInterrupt:
         info('\nInterrupted.')
         raise SystemExit(1)
@@ -450,4 +453,4 @@ def main(session):
 
 
 if __name__ == '__main__':
-    main(runtime.Session.default_session())
+    main(runtime.Session.default_session(), sys.argv)
