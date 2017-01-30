@@ -171,7 +171,11 @@ class Image(object):
 
         # If force is True and we still failed (or another one started just now), let's let
         # "docker rmi" take care of it.
-        if self._get_container_id() is not None and not force:
+        existing_container = self._get_container_id()
+        if not self.docker.is_container_running(existing_container):
+            existing_container = None
+
+        if existing_container is not None and not force:
             die('You need to stop the container before removing it.')
 
         self._remove_docker_image()
