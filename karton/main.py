@@ -6,6 +6,7 @@
 
 import argparse
 import collections
+import os
 import sys
 
 import alias
@@ -57,6 +58,25 @@ class SharedArgument(object):
         '''
         for arg in shared_arguments:
             arg.add_to_parser(target_parser)
+
+
+class FakeParser(object):
+    '''
+    A parser-replacement object which does nothing (i.e. doesn't add options).
+    '''
+
+    def __init__(self, *args, **kwargs):
+        self.karton_main_command_name = None
+
+    @staticmethod
+    def add_argument(*args, **kwargs):
+        return None
+
+    def add_subparsers(self, *args, **kwargs):
+        return self
+
+    def add_parser(self, *args, **kwargs):
+        return self
 
 
 CommandInfo = collections.namedtuple('CommandInfo', ['name', 'subparser', 'callback'])
@@ -142,7 +162,26 @@ def run_karton(session, arguments):
 
     assert session
 
-    parser = ArgumentParser(description='Manages semi-persistent Docker containers.')
+    # Check if we are run through an alias.
+    program_name = os.path.basename(arguments[0])
+    if program_name == 'main.py':
+        program_name = 'karton'
+
+    if program_name != 'karton':
+        current_alias = session.config.get_alias(program_name)
+    else:
+        current_alias = None
+
+    if current_alias:
+        implied_image_name = current_alias.image_name
+        if current_alias.run:
+            arguments.insert(1, 'run')
+    else:
+        implied_image_name = None
+
+    # And now setup the parser.
+    parser = ArgumentParser(prog=program_name,
+                            description='Manages semi-persistent Docker containers.')
     subparsers = parser.add_subparsers(dest='command', metavar='COMMAND')
 
     all_commands = {}
@@ -156,6 +195,15 @@ def run_karton(session, arguments):
         return command_subparser
 
     def add_command(command_name, callback, *args, **kwargs):
+        add_even_if_not_image = kwargs.get('add_even_if_not_image')
+        if add_even_if_not_image:
+            del kwargs['add_even_if_not_image']
+
+        if implied_image_name and not add_even_if_not_image:
+            # Commands which do not operate on images are not supported if run throguh an
+            # alias.
+            return FakeParser()
+
         return add_command_internal(command_name, callback, *args, **kwargs)
 
     def add_image_command(command_name, image_callback, *args, **kwargs):
@@ -173,12 +221,15 @@ def run_karton(session, arguments):
             image = container.Image(session, image_config)
             image_callback(parsed_args, image)
 
-        command_subparser = add_command(command_name, callback, *args, **kwargs)
+        command_subparser = add_command_internal(command_name, callback, *args, **kwargs)
 
-        command_subparser.add_argument(
-            'image_name',
-            metavar='IMAGE-NAME',
-            help='name of the image to target')
+        if not implied_image_name:
+            # We don't have an image name already (given through an alias), so we need to get
+            # it on the command line.
+            command_subparser.add_argument(
+                'image_name',
+                metavar='IMAGE-NAME',
+                help='name of the image to target')
 
         return command_subparser
 
@@ -393,6 +444,7 @@ def run_karton(session, arguments):
     help_parser = add_command(
         'help',
         do_help,
+        add_even_if_not_image=True,
         help='show the help message',
         description='Shows the documentation. If used with no argument, then the general '
         'documentation is shown. Otherwise, when a command is specified as argument, '
@@ -413,6 +465,9 @@ def run_karton(session, arguments):
 
     # Now actually parse the command line.
     parsed_args = parser.parse_args(arguments[1:])
+
+    if implied_image_name:
+        parsed_args.image_name = implied_image_name
 
     set_verbose(parsed_args.verbose)
 
