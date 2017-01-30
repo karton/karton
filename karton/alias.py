@@ -148,6 +148,20 @@ class AliasManager(object):
         removed = self._config.remove_alias(alias_name)
         assert removed
 
+    def command_remove_all_for_image(self, image_name):
+        '''
+        Remove all the aliases for an image.
+
+        image_name - the name of the image for which the aliases should be removed.
+        '''
+        verbose('Removing all aliases for image "%s".' % image_name)
+
+        for alias in self._config.get_aliases().itervalues():
+            if alias.image_name == image_name:
+                verbose('Alias "%s" is for the target image "%s" so it will be removed.' %
+                        (alias.alias_name, image_name))
+                self.command_remove(alias.alias_name)
+
     def _ensure_alias_symlink_directory(self):
         directory = self._config.alias_symlink_directory
         if directory is None:

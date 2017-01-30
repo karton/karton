@@ -10,11 +10,12 @@ except ImportError:
     import configparser
 
 import collections
+import errno
 import glob
 import json
 import os
 
-from log import die, verbose
+from log import die, info, verbose
 
 
 ImageAlias = collections.namedtuple('ImageAlias', ['alias_name', 'image_name', 'run'])
@@ -56,10 +57,39 @@ class ImageConfig(object):
         '''
         assert self.content_directory
 
+        if self._json_config_path is None:
+            info('Configuration for image "%s" cannot be saved as the image was removed.' %
+                 self._image_name)
+            return
+
         with open(self._json_config_path, 'w') as json_file:
             json.dump(self._content, json_file,
                       indent=4,
                       separators=(',', ': '))
+
+    def remove(self):
+        '''
+        Remove the configuration file for the image.
+
+        After a call to this, this instance should not be used any more.
+
+        If the file cannot be removed, the original OSError exception is raised.
+        '''
+        try:
+            os.unlink(self._json_config_path)
+        except OSError as exc:
+            if exc.errno == errno.ENOENT:
+                # This can happen if we create an ImageConfig and try to remove it before
+                # saving it, so there's nothing to worry about.
+                # Even if this is not the case... meh, after all we just wanted to remove
+                # the file.
+                verbose('Configuration file "%s" for image "%s" doesn\'t exist, so there is '
+                        'no need to remove it.'
+                        % (self._image_name, self._json_config_path))
+            else:
+                raise
+
+        self._json_config_path = None
 
     @property
     def image_name(self):
@@ -211,6 +241,23 @@ class GlobalConfig(object):
         self._images[image_name] = new_image
 
         return new_image
+
+    def remove_image(self, image_name):
+        '''
+        Remove an existing image.
+
+        If the image cannot be removed, the original OSError from the failing os.unlink
+        is propagated.
+
+        image_name - the name of the image to remove (which must exist).
+        '''
+        image_config = self.image_with_name(image_name)
+        assert image_config
+
+        image_config.remove() # Don't catch exceptions on purpose.
+
+        del self._image_paths[image_name]
+        del self._images[image_name]
 
     def _get(self, section, option, default=None):
         '''

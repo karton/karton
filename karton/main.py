@@ -118,6 +118,17 @@ def do_image_import(parsed_args, session):
                                          parsed_args.directory)
 
 
+def do_image_remove(parsed_args, session):
+    assert parsed_args.image_name
+
+    image_config = session.config.image_with_name(parsed_args.image_name)
+    if image_config is None:
+        die('The image "%s" doesn\'t exist.' % parsed_args.image_name)
+
+    image = container.Image(session, image_config)
+    image.command_remove(parsed_args.force)
+
+
 def do_alias(parsed_args, session):
     manager = alias.AliasManager(session.config)
 
@@ -396,6 +407,26 @@ def run_karton(session, arguments):
         'directory',
         metavar='EXISTING-IMAGE-DIRECTORY',
         help='the directory, containing a definition file and other needed files, to import')
+
+    # "image remove" command.
+    image_remove_parser = add_sub_command(
+        image_parser,
+        'remove',
+        do_image_remove,
+        help='remove an existing image',
+        description='Removes and existing image and its aliases, stopping any running container '
+        'as well.')
+
+    image_remove_parser.add_argument(
+        '-f',
+        '--force',
+        action='store_true',
+        help='if there are running commands in the container, then they are stopped without asking')
+
+    image_remove_parser.add_argument(
+        'image_name',
+        metavar='IMAGE-NAME',
+        help='the name of the image to remove')
 
     # "alias" command.
     alias_parser = add_command(

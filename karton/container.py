@@ -8,6 +8,7 @@ import os
 import tempfile
 import time
 
+import alias
 import dockerctl
 import dockerfile
 import lock
@@ -158,6 +159,43 @@ class Image(object):
                 Image._print_running_commands(running_commands)
             else:
                 info('No commands are running.')
+
+    def command_remove(self, force):
+        '''
+        Remove the image.
+
+        force - if True, the container is stopped even if commands are running in it; if False,
+                then the user is asked in case there are programs running.
+        '''
+        self.command_stop(force)
+
+        # If force is True and we still failed (or another one started just now), let's let
+        # "docker rmi" take care of it.
+        if self._get_container_id() is not None and not force:
+            die('You need to stop the container before removing it.')
+
+        self._remove_docker_image()
+
+        alias.AliasManager(self._session.config).command_remove_all_for_image(self.image_name)
+
+        content_directory = self._image_config.content_directory
+
+        try:
+            self._session.config.remove_image(self.image_name)
+        except OSError as exc:
+            die('Cannot remove cofiguration file for "%s": %s.' % (self.image_name, exc))
+
+        info('Image "%s" removed. The definition files at "%s" were NOT deleted.' %
+             (self.image_name, content_directory))
+
+    def _remove_docker_image(self):
+        '''
+        Remove the current image.
+        '''
+        try:
+            self.docker.check_call(['rmi', '--force', self.image_name])
+        except proc.CalledProcessError:
+            die('Cannot remove the image.')
 
     @staticmethod
     def command_image_create(config, image_name, complete_path):
