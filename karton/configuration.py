@@ -307,6 +307,16 @@ class GlobalConfig(object):
 
         return aliases
 
+    def get_alias(self, alias_name):
+        '''
+        Get the alias named alias_name.
+
+        alias_name - the name of the alias for retrieve.
+        return value - the Alias instance corresponding to alias_name or None if the alias
+                       is not configured.
+        '''
+        return self.get_aliases().get(alias_name)
+
     def add_alias(self, alias):
         '''
         Add a new alias.
@@ -339,3 +349,14 @@ class GlobalConfig(object):
         return value - True if the alias was removed, False otherwise.
         '''
         return self._remove('alias', alias_name)
+
+    @property
+    def alias_symlink_directory(self):
+        '''
+        The directory where to put symlinks used for aliases.
+        '''
+        return self._get('general', 'alias-symlink-directory')
+
+    @alias_symlink_directory.setter
+    def alias_symlink_directory(self, directory):
+        self._set('general', 'alias-symlink-directory', directory)
