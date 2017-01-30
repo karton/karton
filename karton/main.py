@@ -106,6 +106,10 @@ def do_status(parsed_args, image):
     image.command_status()
 
 
+def do_image_list(parsed_args, session):
+    container.Image.command_image_list(session.config)
+
+
 def do_image_create(parsed_args, session):
     container.Image.command_image_create(session.config,
                                          parsed_args.image_name,
@@ -370,6 +374,14 @@ def run_karton(session, arguments):
         'image',
         help='manage images',
         description='Manages the creation and deletion of images.')
+
+    # "image list" command.
+    add_sub_command(
+        image_parser,
+        'list',
+        do_image_list,
+        help='list existing images',
+        description='List all existing and configured images.')
 
     # "image create" command.
     image_create_parser = add_sub_command(

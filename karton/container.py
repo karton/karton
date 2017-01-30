@@ -198,6 +198,20 @@ class Image(object):
             die('Cannot remove the image.')
 
     @staticmethod
+    def command_image_list(config):
+        '''
+        List existing images.
+
+        config - a configuration.GlobalConfig instance containing the images.
+        '''
+        images = config.get_all_images()
+        if not images:
+            info('No images configured.')
+        else:
+            for image in images:
+                info(' - %s at "%s"' % (image.image_name, image.content_directory))
+
+    @staticmethod
     def command_image_create(config, image_name, complete_path):
         '''
         Create a new image.

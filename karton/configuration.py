@@ -195,6 +195,20 @@ class GlobalConfig(object):
 
             self._image_paths[image_name] = image_json_config_path
 
+    def get_all_images(self):
+        '''
+        Returns all the configured images.
+
+        return value - a list of ImageConfig instances.
+        '''
+        self._ensure_image_names_loaded()
+
+        images = []
+        for image_name in self._image_paths:
+            images.append(self.image_with_name(image_name))
+
+        return images
+
     def image_with_name(self, image_name):
         '''
         Returns the ImageConfig instance representing the configuration of
