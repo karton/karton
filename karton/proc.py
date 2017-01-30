@@ -21,6 +21,14 @@ def call(cmd_args, *args, **kwargs):
     return subprocess.call(cmd_args, *args, **kwargs)
 
 
+def check_call(cmd_args, *args, **kwargs):
+    '''
+    Like subprocess.check_call, but with extra logging in verbose mode.
+    '''
+    verbose('Calling (using check_call):\n%s' % cmd_args)
+    return subprocess.check_call(cmd_args, *args, **kwargs)
+
+
 def check_output(cmd_args, *args, **kwargs):
     '''
     Like subprocess.check_output, but with extra logging in verbose mode.

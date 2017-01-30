@@ -29,6 +29,13 @@ class Docker(object):
         '''
         return proc.call([self._docker_command] + cmd_args, *args, **kwargs)
 
+    def check_call(self, cmd_args, *args, **kwargs):
+        '''
+        Like subprocess.check_call, but the right command for docker is prepended
+        to the arguments.
+        '''
+        return proc.check_call([self._docker_command] + cmd_args, *args, **kwargs)
+
     def check_output(self, cmd_args, *args, **kwargs):
         '''
         Like subprocess.check_output, but the right command for docker is prepended
