@@ -224,10 +224,7 @@ def run_karton(session, arguments):
     def add_image_command(command_name, image_callback, *args, **kwargs):
         def callback(callback_parsed_args, callback_session):
             assert session == callback_session
-
-            if parsed_args.image_name is None:
-                die('You need to specify wich image to target with the "-i" option '
-                    '(or the longer form, "--image").')
+            assert parsed_args.image_name
 
             image_config = session.config.image_with_name(parsed_args.image_name)
             if image_config is None:
