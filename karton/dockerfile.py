@@ -12,6 +12,7 @@ import traceback
 
 import dirs
 import pathutils
+import runtime
 
 from log import verbose
 
@@ -132,10 +133,8 @@ class DefinitionProperties(object):
 
         self._shared_home_paths = []
         self._shared_paths = []
-        self._container_home_path_on_host = os.path.join(host_system.user_home,
-                                                         '.karton',
-                                                         'home-dirs',
-                                                         self._image_name)
+        self._container_home_path_on_host = os.path.join(
+            runtime.Session.configuration_dir(), 'home-dirs', self._image_name)
         self._username = host_system.username
         self._user_home = host_system.user_home
         self._hostname = None

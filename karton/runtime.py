@@ -44,7 +44,22 @@ class Session(object):
     for Karton.
     '''
 
-    DEFAULT_CONFIGURATION_PATH = os.path.join(os.path.expanduser('~'), '.karton')
+    @staticmethod
+    def configuration_dir():
+        '''
+        The directory where configuration files are.
+
+        This defaults to "~/.karton/" but can be overwritten with the $KARTON_CONFIG_DIR
+        environment variable.
+        Note that this is a development feature only, for instance to write tests, so
+        it should not be used for general purposes (that's why it's exposed as a static
+        method instead of being configurable like all the other options).
+        '''
+        env_dir = os.getenv('KARTON_CONFIG_DIR')
+        if env_dir:
+            return env_dir
+
+        return os.path.join(os.path.expanduser('~'), '.karton')
 
     def __init__(self, data_dir, host_system, config, docker):
         '''
@@ -66,7 +81,7 @@ class Session(object):
         return Session(
             os.path.join(tempfile.gettempdir(), 'karton'),
             HostSystem(),
-            configuration.GlobalConfig(Session.DEFAULT_CONFIGURATION_PATH),
+            configuration.GlobalConfig(Session.configuration_dir()),
             dockerctl.Docker())
 
     @property
