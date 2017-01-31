@@ -2,9 +2,6 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
-#from log import die, verbose
-
-
 import os
 
 import configuration
