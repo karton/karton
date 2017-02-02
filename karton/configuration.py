@@ -15,6 +15,8 @@ import glob
 import json
 import os
 
+import pathutils
+
 from log import die, info, verbose
 
 
@@ -61,6 +63,8 @@ class ImageConfig(object):
             info('Configuration for image "%s" cannot be saved as the image was removed.' %
                  self._image_name)
             return
+
+        pathutils.makedirs(os.path.dirname(self._json_config_path))
 
         with open(self._json_config_path, 'w') as json_file:
             json.dump(self._content, json_file,
