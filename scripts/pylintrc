@@ -65,7 +65,7 @@ enable=all
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=raw_input-builtin,missing-docstring,global-statement,unused-argument,too-few-public-methods,broad-except,fixme,too-many-instance-attributes,too-many-locals,too-many-statements
+disable=raw_input-builtin,missing-docstring,global-statement,unused-argument,too-few-public-methods,broad-except,fixme,too-many-instance-attributes,too-many-locals,too-many-statements,relative-import
 
 
 [REPORTS]
