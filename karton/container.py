@@ -195,7 +195,7 @@ class Image(object):
         # If force is True and we still failed (or another one started just now), let's let
         # "docker rmi" take care of it.
         existing_container = self._get_container_id()
-        if not self.docker.is_container_running(existing_container):
+        if existing_container and not self.docker.is_container_running(existing_container):
             existing_container = None
 
         if existing_container is not None and not force:
