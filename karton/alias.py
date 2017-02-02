@@ -50,7 +50,7 @@ class AliasManager(object):
         try:
             alias = aliases[alias_name]
         except KeyError:
-            die('"%s" is not a known alias')
+            die('"%s" is not a known alias.' % alias_name)
 
         self._print_alias(alias)
 
