@@ -67,9 +67,17 @@ class ImageConfig(object):
         pathutils.makedirs(os.path.dirname(self._json_config_path))
 
         with open(self._json_config_path, 'w') as json_file:
-            json.dump(self._content, json_file,
+            json.dump(self.json_serializable_config,
+                      json_file,
                       indent=4,
                       separators=(',', ': '))
+
+    @property
+    def json_serializable_config(self):
+        '''
+        A dictionary suitable for JSON represantation representing this object.
+        '''
+        return self._content
 
     def remove(self):
         '''

@@ -103,11 +103,17 @@ def do_build(parsed_args, image):
 
 
 def do_status(parsed_args, image):
-    image.command_status()
+    if parsed_args.json:
+        image.command_status_json()
+    else:
+        image.command_status()
 
 
 def do_image_list(parsed_args, session):
-    container.Image.command_image_list(session.config)
+    if parsed_args.json:
+        container.Image.command_image_list_json(session.config)
+    else:
+        container.Image.command_image_list(session.config)
 
 
 def do_image_create(parsed_args, session):
@@ -140,6 +146,10 @@ def do_alias(parsed_args, session):
         if parsed_args.run:
             die('"--run" only makes sense when adding an alias.')
 
+    def check_no_json():
+        if parsed_args.json:
+            die('"--json" can only be used when no positional argument is provided.')
+
     if parsed_args.remove:
         if not parsed_args.alias_name:
             die('If you specify "--remove" you must specify the alias you want to remove.')
@@ -148,6 +158,7 @@ def do_alias(parsed_args, session):
                 'just the alias name.')
 
         check_no_run()
+        check_no_json()
 
         manager.command_remove(parsed_args.alias_name)
 
@@ -155,10 +166,15 @@ def do_alias(parsed_args, session):
         # The second positional argument cannot be non-None if the first is.
         assert parsed_args.image_name is None
         check_no_run()
-        manager.command_show_all()
+
+        if parsed_args.json:
+            manager.command_show_all_json()
+        else:
+            manager.command_show_all()
 
     else:
         assert parsed_args.alias_name is not None
+        check_no_json()
 
         if parsed_args.image_name:
             manager.command_add(parsed_args.alias_name, parsed_args.image_name, parsed_args.run)
@@ -303,6 +319,11 @@ def run_karton(session, arguments):
                 'in both container and host'),
         )
 
+    json_arg = SharedArgument(
+        '--json',
+        action='store_true',
+        help=argparse.SUPPRESS)
+
     # "run" command.
     run_parser = add_image_command(
         'run',
@@ -352,12 +373,14 @@ def run_karton(session, arguments):
         help='stop the container without asking even if commands are running in it')
 
     # "status" command.
-    add_image_command(
+    status_parser = add_image_command(
         'status',
         do_status,
         help='query the status of the container',
         description='Prints information about the status of the container and the list of '
         'programs running in it.')
+
+    json_arg.add_to_parser(status_parser)
 
     # "build" command.
     add_image_command(
@@ -373,12 +396,14 @@ def run_karton(session, arguments):
         description='Manages the creation and deletion of images.')
 
     # "image list" command.
-    add_sub_command(
+    image_list_parser = add_sub_command(
         image_parser,
         'list',
         do_image_list,
         help='list existing images',
         description='List all existing and configured images.')
+
+    json_arg.add_to_parser(image_list_parser)
 
     # "image create" command.
     image_create_parser = add_sub_command(
@@ -466,6 +491,8 @@ def run_karton(session, arguments):
         '--remove',
         action='store_true',
         help='remove the alias')
+
+    json_arg.add_to_parser(alias_parser)
 
     # "help" command.
     def do_help(help_parsed_args, callback_session):

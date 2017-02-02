@@ -2,6 +2,7 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+import json
 import os
 
 import configuration
@@ -39,6 +40,26 @@ class AliasManager(object):
         for alias_name in sorted(aliases):
             alias = aliases[alias_name]
             self._print_alias(alias)
+
+    def command_show_all_json(self):
+        '''
+        Print information about all the aliases as a JSON dictionary.
+
+        This is only for internal use (for instance, for testing).
+        '''
+        aliases = self._config.get_aliases()
+        alias_json_dict = {}
+        for alias_name in sorted(aliases):
+            alias = aliases[alias_name]
+            alias_json_dict[alias_name] = {
+                'image-name': alias.image_name,
+                'run': alias.run,
+                }
+
+        json_string = json.dumps(alias_json_dict,
+                                 indent=4,
+                                 separators=(',', ': '))
+        info(json_string)
 
     def command_show(self, alias_name):
         '''

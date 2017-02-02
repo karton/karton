@@ -4,6 +4,7 @@
 
 import errno
 import glob
+import json
 import os
 import tempfile
 import time
@@ -160,6 +161,28 @@ class Image(object):
             else:
                 info('No commands are running.')
 
+    def command_status_json(self):
+        '''
+        Print the status of the image (whether it's running, which commands are running in
+        it, etc.) as a JSON dictionary.
+
+        This is only for internal use (for instance, for testing).
+        '''
+        container_id, running_commands = self.status()
+
+        if container_id is None:
+            json_dict = {
+                'running': False,
+                }
+        else:
+            json_dict = {
+                'running': True,
+                'container-id': container_id,
+                'commands': running_commands
+                }
+
+        self._print_json(json_dict)
+
     def command_remove(self, force):
         '''
         Remove the image.
@@ -214,6 +237,21 @@ class Image(object):
         else:
             for image in images:
                 info(' - %s at "%s"' % (image.image_name, image.content_directory))
+
+    @staticmethod
+    def command_image_list_json(config):
+        '''
+        Print a list of existing images as a JSON dictionary
+
+        This is only for internal use (for instance, for testing).
+
+        config - a configuration.GlobalConfig instance containing the images.
+        '''
+        json_serializable_images = {}
+        for image in config.get_all_images():
+            json_serializable_images[image.image_name] = image.json_serializable_config
+
+        Image._print_json(json_serializable_images)
 
     @staticmethod
     def command_image_create(config, image_name, complete_path):
@@ -564,6 +602,18 @@ class Image(object):
             # Just for printing, it doesn't need to be perfect.
             args = [a.replace(' ', r'\ ') for a in args]
             info(' - %d: %s' % (pid, ' '.join(args)))
+
+    @staticmethod
+    def _print_json(json_object):
+        '''
+        Pretty prints json_object as JSON.
+
+        json_object - an object to print out
+        '''
+        json_string = json.dumps(json_object,
+                                 indent=4,
+                                 separators=(',', ': '))
+        info(json_string)
 
     def _get_running_commands(self):
         '''
