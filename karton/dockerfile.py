@@ -483,10 +483,23 @@ class Builder(object):
                     locales
             ''')
 
-        props.packages.append('python')
-
         if props.sudo != DefinitionProperties.SUDO_NO:
-            props.packages.append('sudo')
+            sudo_package = 'sudo'
+        else:
+            sudo_package = ''
+
+        emit(
+            r'''
+            RUN \
+                export DEBIAN_FRONTEND=noninteractive && \
+                sed -e 's|^# en_GB.UTF-8|en_GB.UTF-8|g' -i /etc/locale.gen && \
+                locale-gen && \
+                TERM=xterm apt-get install -qqy -o=Dpkg::Use-Pty=0 \
+                    python %(sudo_package)s
+            ''' % dict(
+                sudo_package=sudo_package,
+                )
+            )
 
         if props.packages:
             packages = ' '.join(props.packages)
@@ -494,8 +507,6 @@ class Builder(object):
                 r'''
                 RUN \
                     export DEBIAN_FRONTEND=noninteractive && \
-                    sed -e 's|^# en_GB.UTF-8|en_GB.UTF-8|g' -i /etc/locale.gen && \
-                    locale-gen && \
                     TERM=xterm apt-get install -qqy -o=Dpkg::Use-Pty=0 \
                         %s
                 ''' % packages)
