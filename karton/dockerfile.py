@@ -519,8 +519,6 @@ class Builder(object):
             r'''
             RUN \
                 export DEBIAN_FRONTEND=noninteractive && \
-                sed -e 's|^# en_GB.UTF-8|en_GB.UTF-8|g' -i /etc/locale.gen && \
-                locale-gen && \
                 apt-get update -qqy && \
                 TERM=xterm apt-get install -qqy -o=Dpkg::Use-Pty=0 \
                     python %(sudo_package)s
