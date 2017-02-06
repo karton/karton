@@ -304,7 +304,7 @@ class DefinitionProperties(object):
         # FIXME: handle tags.
         if distro not in ('ubuntu', 'debian'):
             raise DefinitionError(self._definition_file_path,
-                                  'Invalid distibution: "%s".' % distro)
+                                  'Invalid distro: "%s".' % distro)
 
         self._distro = distro
 
