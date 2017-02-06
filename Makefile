@@ -20,6 +20,19 @@ LOGOS = $(patsubst %,logos/out/karton-%.png,$(LOGO_SIZES))
 automatic-target:
 	@echo "Nothing to build automatically!" >&2; exit 1
 
+.PHONY: check
+check:
+	./tests/run-tests
+
+.PHONY: rm-test-images
+rm-test-images:
+	docker rmi --force \
+	    $$( docker images -q --format '{{ .Repository }} {{ .ID }}' | \
+	        grep '^karton-test-' | \
+	        awk '{ print $$2 }' )
+	docker rmi \
+	    $$( docker images --filter "dangling=true" --quiet )
+
 .PHONY: lint
 lint:
 	./scripts/lint.sh
