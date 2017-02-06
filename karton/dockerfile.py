@@ -177,7 +177,7 @@ class DefinitionProperties(object):
             if replacement_cb is None:
                 raise DefinitionError(
                     self._definition_file_path,
-                    'The variable "$(%s)" is not valid (in string "%s").' %
+                    'The variable "$(%s)" is not valid (in string "%s")' %
                     (var_name, match.string))
             return replacement_cb()
 
@@ -304,7 +304,7 @@ class DefinitionProperties(object):
         # FIXME: handle tags.
         if distro not in ('ubuntu', 'debian'):
             raise DefinitionError(self._definition_file_path,
-                                  'Invalid distro: "%s".' % distro)
+                                  'Invalid distro: "%s"' % distro)
 
         self._distro = distro
 
@@ -322,7 +322,7 @@ class DefinitionProperties(object):
                         DefinitionProperties.SUDO_WITH_PASSWORD,
                         DefinitionProperties.SUDO_NO):
             raise DefinitionError(self._definition_file_path,
-                                  'Invalid sudo policy value: "%s".' % sudo)
+                                  'Invalid sudo policy value: "%s"' % sudo)
 
         self._sudo = sudo
 
@@ -385,7 +385,7 @@ class Builder(object):
             raise DefinitionError(
                 definition_path,
                 'The definition file "%s" doesn\'t contain a "setup_image" method (which should '
-                'accept an argument of type "DefinitionProperties").' % definition_path)
+                'accept an argument of type "DefinitionProperties")' % definition_path)
 
         try:
             args_spec = inspect.getargspec(setup_image)
@@ -393,13 +393,13 @@ class Builder(object):
             raise DefinitionError(
                 definition_path,
                 'The definition file "%s" does contain a "setup_image" attribute, but it should be '
-                'a method accepting an argument of type "DefinitionProperties".' % definition_path)
+                'a method accepting an argument of type "DefinitionProperties"' % definition_path)
 
         if len(args_spec.args) != 1:
             raise DefinitionError(
                 definition_path,
                 'The definition file "%s" does contain a "setup_image" method, but it should '
-                'accept a single argument of type "DefinitionProperties".' % definition_path)
+                'accept a single argument of type "DefinitionProperties"' % definition_path)
 
         # Execute it.
         props = DefinitionProperties(self._image_config.image_name,
