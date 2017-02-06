@@ -138,7 +138,7 @@ class DefinitionProperties(object):
         self._username = host_system.username
         self._user_home = host_system.user_home
         self._hostname = None
-        self._distro = 'ubuntu'
+        self._distro = 'ubuntu:latest'
         self._packages = []
         self._additional_archs = []
         self._sudo = DefinitionProperties.SUDO_PASSWORDLESS
@@ -301,12 +301,39 @@ class DefinitionProperties(object):
 
     @distro.setter
     def distro(self, distro):
-        # FIXME: handle tags.
-        if distro not in ('ubuntu', 'debian'):
+        '''
+        The distro used for the image.
+
+        This is in the Docker format, i.e. the distro name, a colon and the tag name.
+        If you don't specify the tag, "latest" is used.
+        '''
+        split = distro.split(':')
+        if len(split) == 1:
+            distro_name = split[0]
+            distro_tag = 'latest'
+        elif len(split) == 2:
+            distro_name, distro_tag = split
+        else:
             raise DefinitionError(self._definition_file_path,
                                   'Invalid distro: "%s"' % distro)
 
-        self._distro = distro
+        if distro_name not in ('ubuntu', 'debian'):
+            raise DefinitionError(self._definition_file_path,
+                                  'Invalid distro name: "%s"' % distro_name)
+
+        self._distro = distro_name + ':' + distro_tag
+
+    @props_property
+    def distro_components(self):
+        '''
+        The distro used for the image, split into the distro name and the tag.
+
+        return value - a two-element tuple; the first one is the distro name (for instance
+                       "ubuntu"), the second one is the tag (for instance "latest").
+        '''
+        split = self._distro.split(':')
+        assert len(split) == 2
+        return tuple(split)
 
     @props_property
     def additional_archs(self):
