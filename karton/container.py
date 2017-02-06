@@ -552,6 +552,7 @@ class Image(object):
         full_args = [
             'exec',
             '-it',
+            '--env', 'KARTON_IMAGE=' + self.image_name,
             container_id,
             '/karton/command_runner.py',
             container_dir,
