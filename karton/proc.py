@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-#
 # Copyright (C) 2016-2017 Marco Barisione
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
