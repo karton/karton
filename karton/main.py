@@ -18,7 +18,7 @@ from log import die, info, verbose, get_verbose, set_verbose
 
 class ArgumentParser(argparse.ArgumentParser):
     '''
-    ArgumentParser for handling special Karton use cases.
+    `ArgumentParser` for handling special Karton use cases.
     '''
 
     def error(self, message):
@@ -39,22 +39,28 @@ class SharedArgument(object):
 
     def __init__(self, *args, **kwargs):
         '''
-        Initialise a SharedArgument. The arguments are the same you would pass
-        to ArgumentParser.add_argument.
+        Initialise a `SharedArgument`.
+
+        The arguments are the same you would pass to `ArgumentParser.add_argument`.
         '''
         self.args = args
         self.kwargs = kwargs
 
     def add_to_parser(self, target_parser):
         '''
-        Add the command to target_parser.
+        Add the command to `target_parser`.
         '''
         target_parser.add_argument(*self.args, **self.kwargs)
 
     @staticmethod
     def add_group_to_parser(target_parser, shared_arguments):
         '''
-        Add all the commands in the shared_arguments iterable to target_parser.
+        Add all the commands in the `shared_arguments` iterable to `target_parser`.
+
+        target_parser:
+            A parser to which `shared_arguments` should be added.
+        shared_arguments:
+            A list of `SharedArgument`.
         '''
         for arg in shared_arguments:
             arg.add_to_parser(target_parser)
@@ -63,6 +69,8 @@ class SharedArgument(object):
 class FakeParser(object):
     '''
     A parser-replacement object which does nothing (i.e. doesn't add options).
+
+    This is used to simplify the code in case some commands are disabled.
     '''
 
     def __init__(self, *args, **kwargs):
@@ -187,8 +195,10 @@ def run_karton(session, arguments):
     '''
     Runs Karton.
 
-    session - a runtime.Session instance.
-    arguments - the command line arguments (for instance sys.argv).
+    session:
+        A `runtime.Session` instance.
+    arguments:
+        Te command line arguments (for instance `sys.argv`).
     '''
 
     assert session
@@ -309,14 +319,14 @@ def run_karton(session, arguments):
             action='store_const',
             const=container.Image.CD_NO,
             default=container.Image.CD_YES,
-            help='don\'t change the current directory in the container'),
+            help='don\'t change the current directory in the image'),
         SharedArgument(
             '--auto-cd',
             dest='cd',
             action='store_const',
             const=container.Image.CD_AUTO,
-            help='chanbge the current directory in the container only if the same is available ' \
-                'in both container and host'),
+            help='change the current directory in the image only if it\'s available '
+            'in both image and host'),
         )
 
     json_arg = SharedArgument(
@@ -328,14 +338,14 @@ def run_karton(session, arguments):
     run_parser = add_image_command(
         'run',
         do_run,
-        help='run a  program in the container',
-        description='Runs a program or command inside the container (starting it if necessary).')
+        help='run a  program inside the image',
+        description='Runs a program or command inside the image (starting the image if necessary).')
 
     run_parser.add_argument(
         'remainder',
         metavar='COMMANDS',
         nargs=argparse.REMAINDER,
-        help='commands to execute in the container')
+        help='commands to execute inside the image')
 
     SharedArgument.add_group_to_parser(run_parser, cd_args)
 
@@ -343,8 +353,9 @@ def run_karton(session, arguments):
     shell_parser = add_image_command(
         'shell',
         do_shell,
-        help='start a shell in the container',
-        description='Starts an interactive shell inside the container (starting it if necessary)')
+        help='start a shell inside the image',
+        description='Starts an interactive shell inside the image (starting the image '
+        'if necessary).')
 
     SharedArgument.add_group_to_parser(shell_parser, cd_args)
 
@@ -352,32 +363,32 @@ def run_karton(session, arguments):
     add_image_command(
         'start',
         do_start,
-        help='if not running, start the container',
-        description='Starts the container. If already running does nothing. '
+        help='if not running, start the image',
+        description='Starts the image. If already running does nothing. '
         'Usually you should not need to use this command as both "run" and "shell" start '
-        'the container automatically.')
+        'the image automatically.')
 
     # "stop" command.
     stop_command = add_image_command(
         'stop',
         do_stop,
-        help='stop the container if running',
-        description='Stops the container. If already not running does nothing. '
-        'If there are commands running in the container, the user is asked before stopping the '
-        'container. Pass "--force" to stop in any case without asking.')
+        help='stop the image if running',
+        description='Stops the image. If already not running does nothing. '
+        'If there are commands running in the image, the user is asked before stopping the '
+        'image. Pass "--force" to stop in any case without asking.')
 
     stop_command.add_argument(
         '-f',
         '--force',
         action='store_true',
-        help='stop the container without asking even if commands are running in it')
+        help='stop the image without asking even if commands are running in it')
 
     # "status" command.
     status_parser = add_image_command(
         'status',
         do_status,
-        help='query the status of the container',
-        description='Prints information about the status of the container and the list of '
+        help='query the status of the image',
+        description='Prints information about the status of the image and the list of '
         'programs running in it.')
 
     json_arg.add_to_parser(status_parser)
@@ -386,8 +397,8 @@ def run_karton(session, arguments):
     add_image_command(
         'build',
         do_build,
-        help='build the image for the container',
-        description='Builds (or rebuilds) the image for the specified container.')
+        help='build the image from its definition',
+        description='Builds (or rebuilds) the image from its definition.')
 
     # "image" command.
     image_parser = add_command_with_sub_commands(
@@ -422,7 +433,7 @@ def run_karton(session, arguments):
         'directory',
         metavar='EXISTING-PATH/NEW-IMAGE-DIRECTORY',
         help='the directory to create and where to put the definition file; '
-             'the image directory must not exist, but the path leading to it must exist.')
+        'the image directory must not exist, but the path leading to it must exist.')
 
     # "image import" command.
     image_create_parser = add_sub_command(
@@ -448,14 +459,13 @@ def run_karton(session, arguments):
         'remove',
         do_image_remove,
         help='remove an existing image',
-        description='Removes and existing image and its aliases, stopping any running container '
-        'as well.')
+        description='Removes and existing image and its aliases, stopping it if it\'s running.')
 
     image_remove_parser.add_argument(
         '-f',
         '--force',
         action='store_true',
-        help='if there are running commands in the container, then they are stopped without asking')
+        help='if there are running commands in the image, then they are stopped without asking')
 
     image_remove_parser.add_argument(
         'image_name',
@@ -549,14 +559,19 @@ def run_karton(session, arguments):
 
 def main(session, arguments):
     '''
-    Runs Karton as a command, i.e. taking care or dealing with keyboard interrupts,
+    Run Karton as a command, i.e. taking care or dealing with keyboard interrupts,
     unexpected exceptions, etc.
 
-    If you need to run Karton as part of another program or from unit tests, use
-    run_karton instead.
+    This function doesn't return and raises a `SystemExit` with the appropriate
+    exit code.
 
-    session - a runtime.Session instance.
-    arguments - the command line arguments (for instance sys.argv).
+    If you need to run Karton as part of another program or from unit tests, use
+    `run_karton` instead.
+
+    session:
+        A `runtime.Session` instance.
+    arguments:
+        The command line arguments (for instance `sys.argv`).
     '''
 
     try:

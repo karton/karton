@@ -52,7 +52,7 @@ def main(args):
         os.chdir(container_dir)
     except OSError:
         die('Cannot change directory to "%s".\n'
-            'It is possible that the container lost its mounts (yeah I know...). '
+            'It is possible that the image lost its mounts (yeah I know...). '
             'Try to use the "stop" command and rerun this command.' % container_dir)
 
     try:
@@ -67,9 +67,9 @@ def main(args):
     # We allow some small difference that shouldn't matter, plus a slightly bigger one
     # on one side in case Docker took some time to launch this command.
     if not host_time - 5 <= container_time <= host_time + 25:
-        error('The container time is out of sync with the host.')
-        error(' - Host time:      ' + seconds_since_epoch_to_human(host_time))
-        error(' - Container time: ' + seconds_since_epoch_to_human(container_time))
+        error('The image time is out of sync with the host.')
+        error(' - Host time:  ' + seconds_since_epoch_to_human(host_time))
+        error(' - Image time: ' + seconds_since_epoch_to_human(container_time))
         error('Updating it.')
 
         err_msg = \

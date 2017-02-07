@@ -31,21 +31,22 @@ class FakeHostSystem(object):
 
 class KartonMixin(unittest.TestCase):
     '''
-    A mixin providing basic running of Karton.
+    A mixin providing basic features to run and control Karton.
     '''
 
     @staticmethod
     def run_and_spawn(function):
         '''
-        Decorator which makes the method be run twice; once it's passed run_karton and once
-        spawn_karton.
+        Decorator which makes the method run twice; once it's passed `run_karton` and
+        once `spawn_karton`.
 
         Using this, a method can test that both ways of spawning Karton work reliably.
 
-        The decorated method is called with a single argument which is either run_karton or
-        spawn_karton.
+        The decorated method is called with a single argument which is either `run_karton`
+        or `spawn_karton`.
 
-        function - the method to decorate.
+        function:
+            The method to decorate.
         '''
         def call_function(self):
             function(self, self.run_karton)
@@ -93,9 +94,11 @@ class KartonMixin(unittest.TestCase):
         '''
         Create a directory inside this test's temporary directory.
 
-        intermediate - if not None, the new directory will be a sub directory of intermediate
-                       which will be a subdirectory of the tests' temporary directory.
-        return value - the path to an existing empty temporary directory.
+        intermediate:
+            If not None, the new directory will be a sub directory of intermediate
+            which will be a subdirectory of the tests' temporary directory.
+        Return value:
+            The path to an existing empty temporary directory.
         '''
         if intermediate is None:
             base_dir = self.tmp_dir
@@ -110,7 +113,8 @@ class KartonMixin(unittest.TestCase):
         '''
         The output of the latest Karton invokation split into lines.
 
-        return value - a list of strings representing the output of Karton.
+        Return value:
+            A list of strings representing the output of Karton.
         '''
         text = self.current_text.strip()
         return [line for line in text.split('\n') if line.strip()]
@@ -120,7 +124,8 @@ class KartonMixin(unittest.TestCase):
         '''
         The output of the latest Karton invokation parsed as JSON and converted to an object.
 
-        return value - an object representing the JSON output of Karton.
+        Return value:
+            An object representing the JSON output of Karton.
         '''
         return json.loads(self.current_text)
 
@@ -128,12 +133,16 @@ class KartonMixin(unittest.TestCase):
         '''
         Run Karton as a module.
 
-        The output from Karton is saved in KartonMixin.current_text after Karton terminates.
+        The output from Karton is saved in `current_text` after Karton terminates.
 
-        arguments - the arguments to pass to Karton (excluding argument 0, i.e. the program name).
-        prog - the name of the Karton program (i.e. what would be sys.argv[0]) or None to default
-               to Karton.
-        ignore_fail - if false, errors caused an assertion failure; if true, errors are ignored.
+        arguments:
+            The arguments to pass to Karton (excluding argument 0, i.e. the program name).
+        prog:
+            The name of the Karton program (i.e. what would be `sys.argv[0]`) or `None` to default
+            to Karton.
+        ignore_fail:
+            If false, errors cause an assertion failure.
+            If true, errors are ignored.
         '''
         if prog is None:
             prog = 'karton'
@@ -179,15 +188,19 @@ class KartonMixin(unittest.TestCase):
         '''
         Run Karton as a separate process.
 
-        This is less flexible than using run_karton, but is heplful to test that Karton can
+        This is less flexible than using `run_karton`, but is heplful to test that Karton can
         be actually spawned.
 
-        The output from Karton is saved in KartonMixin.current_text after Karton terminates.
+        The output from Karton is saved in `current_text` after Karton terminates.
 
-        arguments - the arguments to pass to Karton (excluding argument 0, i.e. the program name).
-        prog - the name of the Karton program (i.e. what would be sys.argv[0]) or None to default
-               to Karton.
-        ignore_fail - if false, errors caused an assertion failure; if true, errors are ignored.
+        arguments:
+            The arguments to pass to Karton (excluding argument 0, i.e. the program name).
+        prog:
+            The name of the Karton program (i.e. what would be `sys.argv[0]`) or `None` to default
+            to Karton.
+        ignore_fail:
+            If false, errors cause an assertion failure.
+            If true, errors are ignored.
         '''
         if prog is None:
             prog = main.__file__
@@ -221,7 +234,8 @@ class KartonMixin(unittest.TestCase):
         '''
         Get the currently configured aliases.
 
-        return value - a JSON-based dictionary representation of the available aliases.
+        Return value:
+            A JSON-based dictionary representation of the available aliases.
         '''
         self.run_karton(['alias', '--json'])
         return self.deserialized_current_text
@@ -230,8 +244,10 @@ class KartonMixin(unittest.TestCase):
         '''
         Get the status of an image.
 
-        image_name - the name of the image to query.
-        return value - a JSON-based dictionary representation of the status.
+        image_name:
+            The name of the image to query.
+        Return value:
+            A JSON-based dictionary representation of the status.
         '''
         self.run_karton(['status', '--json', image_name])
         return self.deserialized_current_text
@@ -240,14 +256,15 @@ class KartonMixin(unittest.TestCase):
         '''
         List all available images.
 
-        return value - a JSON-based dictionary listing all available images.
+        Return value:
+            A JSON-based dictionary listing all available images.
         '''
         self.run_karton(['image', 'list', '--json'])
         return self.deserialized_current_text
 
     def assert_exit_success(self):
         '''
-        Asserts that the latest invokation of Karton terminated with a 0 exit code.
+        Assert that the latest invokation of Karton terminated with a 0 exit code.
         '''
         if self._last_exit_code is None:
             self.fail('assert_exit_success called before running Karton')
@@ -257,7 +274,7 @@ class KartonMixin(unittest.TestCase):
 
     def assert_exit_fail(self):
         '''
-        Asserts that the latest invokation of Karton terminated with a non-0 exit code.
+        Assert that the latest invokation of Karton terminated with a non-0 exit code.
         '''
         if self._last_exit_code is None:
             self.fail('assert_exit_fail called before running Karton')

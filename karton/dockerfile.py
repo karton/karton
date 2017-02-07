@@ -46,7 +46,7 @@ def setup_image(props):
     #props.hostname = props.eval('$(host.hostname)-$(image.name)')
 
     # You will probably want to make some directory from the host accessible in the
-    # container as well.
+    # image as well.
     # For instance you can share your ~/src directory like this:
     #props.share_path_in_home('src')
     # props.share_path_in_home will just share a path inside your home directory inside
@@ -58,17 +58,16 @@ def setup_image(props):
     #props.share_path('/path/on/host', '/different/path/in/image')
     # Sharing is not limited to directories, but single files can be shared as well.
 
-    # The home directory from the container should be saved on the host or all the
+    # The home directory from the image should be saved on the host or all the
     # configuration files and other changes you make to your user will be lost.
     # It's better not to share your host home directory in the image as that could lead
     # to confusion and messing up of your configuration files (which could be accessed
-    # by two different version of the same program on host and container).
-    # The props.container_home_path_on_host property allow you to set where to save
+    # by two different version of the same program on host and inside the image).
+    # The props.image_home_path_on_host property allow you to set where to save
     # the image home directory. If unset, it will be in a sub-directory of "~/.karton".
-    #props.container_home_path_on_host = props.eval('$(host.userhome)/MyImageHomeDir')
+    #props.image_home_path_on_host = props.eval('$(host.userhome)/MyImageHomeDir')
 
-
-    # You are likely to want to install some extra packages inside the container.
+    # You are likely to want to install some extra packages inside the image.
     # props.packages is a list of packages to be installed and you can add more if you
     # want.
     #props.packages.extend(['vim', 'some-package-I-need'])
@@ -88,10 +87,12 @@ class DefinitionError(Exception):
 
     def __init__(self, definition_file_path, msg):
         '''
-        Initializes a DefinitionError instance.
+        Initialize a `DefinitionError` instance.
 
-        definition_file_path - The path of the definition file which caused the error.
-        msg - The exception error message.
+        definition_file_path:
+            The path of the definition file which caused the error.
+        msg:
+            The exception error message.
         '''
         super(DefinitionError, self).__init__(msg)
 
@@ -125,7 +126,7 @@ class DefinitionProperties(object):
 
     def __init__(self, image_name, definition_file_path, host_system):
         '''
-        Initializes a DefinitionProperties instance.
+        Initializes a `DefinitionProperties` instance.
         '''
         self._image_name = image_name
         self._definition_file_path = definition_file_path
@@ -133,7 +134,7 @@ class DefinitionProperties(object):
 
         self._shared_home_paths = []
         self._shared_paths = []
-        self._container_home_path_on_host = os.path.join(
+        self._image_home_path_on_host = os.path.join(
             runtime.Session.configuration_dir(), 'home-dirs', self._image_name)
         self._username = host_system.username
         self._user_home = host_system.user_home
@@ -167,7 +168,7 @@ class DefinitionProperties(object):
 
     def eval(self, in_string):
         '''
-        Replaces variables in in_string and returns the new string.
+        Replace variables in `in_string` and return the new string.
 
         FIXME: Document the variable syntanx and valid variables.
         '''
@@ -190,54 +191,63 @@ class DefinitionProperties(object):
         You should call this only after setting things like the home directory location which
         could change some of these values.
 
-        return value - a list of tuples; the first element of the tuple is the location of the
-                       share directory or file on the host, the second is the location in the
-                       container.
+        Return value:
+            A list of tuples.
+            The first element of the tuple is the location of the shared directory or file on
+            the host.
+            The second is the location inside the image.
         '''
-        resources = [(self.container_home_path_on_host, self.user_home)]
+        resources = [(self.image_home_path_on_host, self.user_home)]
 
         for rel_path in self._shared_home_paths:
             host_path = os.path.join(self._host_system.user_home, rel_path)
-            container_path = os.path.join(self.user_home, rel_path)
-            resources.append((host_path, container_path))
+            image_path = os.path.join(self.user_home, rel_path)
+            resources.append((host_path, image_path))
 
-        for host_path, container_path in self._shared_paths:
-            resources.append((host_path, container_path))
+        for host_path, image_path in self._shared_paths:
+            resources.append((host_path, image_path))
 
         return resources
 
     def share_path_in_home(self, relative_path):
         '''
-        Share the directory or file at relative_path between host and image.
+        Share the directory or file at `relative_path` between host and image.
 
-        relative_path - the path to share at the same location in both host and container;
-                        the path must a subdirectory of the home directory and relative to it.
+        relative_path:
+            The path to share at the same location in both host and image.
+            The path must a subdirectory of the home directory and relative to it.
         '''
         self._shared_home_paths.append(relative_path)
 
-    def share_path(self, host_path, container_path=None):
+    def share_path(self, host_path, image_path=None):
         '''
-        Share the directory or file at host_path with the container where it will be accessible
-        as container_path.
+        Share the directory or file at `host_path` with the image where it will be accessible
+        as `image_path`.
 
-        If container_path is None, then it will be accessible at the same location in both host
+        If `image_path` is None, then it will be accessible at the same location in both host
         and container.
 
         host_path - the path on the host system of the directory or file to share.
-        container_path - the path in the container where the file or directory will be accessible,
-                         or None to use the same path in both host and container.
+        image_path - the path in the container where the file or directory will be accessible,
+                     or None to use the same path in both host and container.
         '''
-        if container_path is None:
-            container_path = host_path
+        if image_path is None:
+            image_path = host_path
 
-        self._shared_paths.append((host_path, container_path))
+        self._shared_paths.append((host_path, image_path))
 
     @props_property
     def image_name(self):
+        '''
+        The mame of the image.
+        '''
         return self._image_name
 
     @props_property
     def username(self):
+        '''
+        The name of the normal non-root user.
+        '''
         return self._username
 
     @username.setter
@@ -247,33 +257,33 @@ class DefinitionProperties(object):
 
     @props_property
     def user_home(self):
+        '''
+        The path (valid inside the image) of the normal non-root user home directory.
+
+        It's recommended to keep the home directory identical in the host and image.
+        This helps in case any tool write an image path into a file which is later
+        accessed on the host.
+        '''
         return self._user_home
 
     @user_home.setter
     def user_home(self, user_home):
-        '''
-        Sets the user home directory for the user in the container.
-
-        It's recommended to keep the home directory identical in the host and
-        container. This helps in case any tool write a container path into a
-        file that is later accessed from the host.
-        '''
         self._user_home = user_home
 
     @props_property
-    def container_home_path_on_host(self):
+    def image_home_path_on_host(self):
         '''
-        The path on the host where to store the content of the container home
-        directory.
+        The path on the host where to store the content of the home directory from the
+        image.
 
-        You should not set this to the host home directory to avoid messing up
-        your configuration files.
+        You should not set this to the host home directory to avoid messing up your
+        configuration files.
         '''
-        return self._container_home_path_on_host
+        return self._image_home_path_on_host
 
-    @container_home_path_on_host.setter
-    def container_home_path_on_host(self, path):
-        self._container_home_path_on_host = path
+    @image_home_path_on_host.setter
+    def image_home_path_on_host(self, path):
+        self._image_home_path_on_host = path
 
     @props_property
     def packages(self):
@@ -282,7 +292,7 @@ class DefinitionProperties(object):
     @props_property
     def hostname(self):
         '''
-        The hostname for the container.
+        The hostname for the image.
 
         The default value is "IMAGE_NAME-on-HOST-HOSTNAME".
         '''
@@ -297,16 +307,16 @@ class DefinitionProperties(object):
 
     @props_property
     def distro(self):
-        return self._distro
-
-    @distro.setter
-    def distro(self, distro):
         '''
         The distro used for the image.
 
         This is in the Docker format, i.e. the distro name, a colon and the tag name.
-        If you don't specify the tag, "latest" is used.
+        If you don't specify the tag when setting the distro, "latest" is used.
         '''
+        return self._distro
+
+    @distro.setter
+    def distro(self, distro):
         split = distro.split(':')
         if len(split) == 1:
             distro_name = split[0]
@@ -327,9 +337,6 @@ class DefinitionProperties(object):
     def distro_components(self):
         '''
         The distro used for the image, split into the distro name and the tag.
-
-        return value - a two-element tuple; the first one is the distro name (for instance
-                       "ubuntu"), the second one is the tag (for instance "latest").
         '''
         split = self._distro.split(':')
         assert len(split) == 2
@@ -356,15 +363,17 @@ class DefinitionProperties(object):
 
 class Builder(object):
     '''
-    Builds a Dockerfile and related files.
+    Build a `Dockerfile` file and related files.
     '''
 
     def __init__(self, image_config, dst_dir, host_system):
         '''
-        Initializes a Builds instance.
+        Initialize a `Builder` instance.
 
-        image_config - the configuration.ImageConfig instance for the image to build.
-        dst_dir - the directory where to put the Dockerfile and related files.
+        image_config:
+            The `configuration.ImageConfig` instance for the image to build.
+        dst_dir:
+            The directory where to put the `Dockerfile` file and related files.
         '''
         self._image_config = image_config
         self._dst_dir = dst_dir
@@ -375,11 +384,11 @@ class Builder(object):
 
     def generate(self):
         '''
-        Prepare the directory with the Dockerfile and all the other required
+        Prepare the directory with the `Dockerfile` and all the other required
         files.
 
         If something goes wrong due to the user configuration or definition
-        file, then a DefinitionError is raised.
+        file, then a `DefinitionError` is raised.
         '''
 
         # Load the definition file.
@@ -447,10 +456,11 @@ class Builder(object):
 
     def _make_file_copyable(self, host_file_path):
         '''
-        Allow the file at path host_file_path (on the host) to be copied to the image by
+        Allow the file at path `host_file_path` (on the host) to be copied to the image by
         creating a hard link to it from the directory sent to the Docker daemon.
 
-        return value - the path of the hard link, relative to the destination directory.
+        Return value:
+            The path of the hard link, relative to the destination directory.
         '''
         # FIXME: what if two files have the same basenames?
         link_path = os.path.join(self._copyable_files_dir, os.path.basename(host_file_path))
@@ -461,10 +471,11 @@ class Builder(object):
 
     def _generate_docker_stuff(self, props):
         '''
-        Generate the Dockerfile file and all the other related files.
+        Generate the `Dockerfile` file and all the other related files.
 
-        props - The DefinitionProperties instance contianing information on what to
-                put in the Dockerfile and which other files are needed.
+        props:
+            The `DefinitionProperties` instance contianing information on what to
+            put in the `Dockerfile` file and which other files are needed.
         '''
         lines = []
 
@@ -608,6 +619,6 @@ class Builder(object):
 
     def cleanup(self):
         '''
-        Removes intermediate files created to build the image.
+        Remove intermediate files created to build the image.
         '''
         shutil.rmtree(self._dst_dir)

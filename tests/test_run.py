@@ -120,7 +120,7 @@ class RunTestCase(DockerMixin,
                              expected_file_output):
         props = self.cached_props[image_name]
 
-        host_dir = props.container_home_path_on_host
+        host_dir = props.image_home_path_on_host
         image_dir = props.user_home
         source_filename = 'source-file.c'
         exe_filename = 'program'
@@ -224,6 +224,6 @@ class RunTestCase(DockerMixin,
 
         do_nothing_in_image() # Make the time correct.
         self.assertIn('out of sync with the host', self.current_text)
-        self.assertIn('Container time: 2001-09-', self.current_text)
+        self.assertIn('Image time: 2001-09-', self.current_text)
 
         assert_time_correct()

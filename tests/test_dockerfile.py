@@ -15,7 +15,7 @@ from mixin_dockerfile import DockerfileMixin
 class DockerfileTestCase(DockerfileMixin,
                          unittest.TestCase):
     '''
-    Test the generation of Dockerfiles (but don't actually invoke Docker).
+    Test the generation of `Dockerfile` files (but don't actually invoke Docker).
     '''
 
     def test_setup_nothing(self):

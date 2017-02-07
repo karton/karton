@@ -9,16 +9,16 @@ import tempfile
 
 class Redirector(object):
     '''
-    Redirects standard output and error to a file. Use with a "with" block.
+    Redirect standard output and error to a file. Use with a `with` block.
 
-    The mixed output and error can be accesses through the content attribute.
+    The mixed output and error can be accessed through `content`.
 
-    Setting sys.stdout and sys.stderr doesn't work for spwaned processes.
+    Setting `sys.stdout` and `sys.stderr` doesn't work for spwaned processes.
     When spawning we could pipe the output and error somewhere, but that means changing
     the internals of how Karton launches applications and would lead to a different code
     path when run under tests.
 
-    This class allow all the output and error messages, both from Python itself and from
+    This class allows all the output and error messages, both from Python itself and from
     spawned processes, to be redirected.
     '''
 

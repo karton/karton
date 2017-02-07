@@ -30,13 +30,16 @@ class ImageConfig(object):
 
     def __init__(self, image_name, json_config_path, expect_existing=True):
         '''
-        Initializes an ImageConfig instance.
+        Initialize an `ImageConfig` instance.
 
-        image_name - the user-visible image name.
-        json_config_path - the path to the JSON configuration file for the image.
-        expect_existing - if True, an exception will be raised if the file does not exist already;
-                          if False, the non-existance of the file will be ignore, useful when
-                          creating a new image.
+        image_name:
+            The user-visible image name.
+        json_config_path:
+            The path to the JSON configuration file for the image.
+        expect_existing:
+            If True, an exception will be raised if the file does not exist already.
+            If False, the non-existance of the file will be ignore, useful when
+            creating a new image.
         '''
         verbose('Loading "%s" for image "%s".' % (json_config_path, image_name))
 
@@ -75,7 +78,7 @@ class ImageConfig(object):
     @property
     def json_serializable_config(self):
         '''
-        A dictionary suitable for JSON represantation representing this object.
+        A dictionary suitable for JSON represantation for this object.
         '''
         return self._content
 
@@ -83,9 +86,9 @@ class ImageConfig(object):
         '''
         Remove the configuration file for the image.
 
-        After a call to this, this instance should not be used any more.
+        After a call to this method, this instance should not be used any more.
 
-        If the file cannot be removed, the original OSError exception is raised.
+        If the file cannot be removed, the original `OSError` exception is raised.
         '''
         try:
             os.unlink(self._json_config_path)
@@ -125,10 +128,10 @@ class ImageConfig(object):
     def shared_paths(self):
         '''
         A sequence of two-items tuples representing the directories or files shared between
-        host and container.
+        host and image.
 
         The first tuple element is the path on the host, the second one is the path in the
-        container.
+        image.
         '''
         return tuple(self._content.get('shared-paths', ()))
 
@@ -161,15 +164,15 @@ class ImageConfig(object):
 
 class GlobalConfig(object):
     '''
-    Read and write the Karton configuration file.
+    Read and write the Karton configuration files.
     '''
 
     def __init__(self, config_path):
         '''
-        Initializes a GlobalConfig object.
+        Initialize a `GlobalConfig` object.
 
-        filename - the path for the configuration file (which doesn't need to
-                   exist).
+        filename:
+            The path for the configuration file (which doesn't need to exist).
         '''
         self._config_path = config_path
 
@@ -189,7 +192,7 @@ class GlobalConfig(object):
 
     def _ensure_image_names_loaded(self):
         '''
-        Make sure that the configuration of the images has been loaded into
+        Make sure that the configuration for the images has been loaded into
         memory.
         '''
         if self._image_paths is not None:
@@ -209,9 +212,10 @@ class GlobalConfig(object):
 
     def get_all_images(self):
         '''
-        Returns all the configured images.
+        Get all the configured images.
 
-        return value - a list of ImageConfig instances.
+        Return value:
+            A list of `ImageConfig` instances.
         '''
         self._ensure_image_names_loaded()
 
@@ -223,10 +227,11 @@ class GlobalConfig(object):
 
     def image_with_name(self, image_name):
         '''
-        Returns the ImageConfig instance representing the configuration of
-        the image called image_name or None if the image doesn't exist.
+        Return the `ImageConfig` instance representing the configuration for
+        the image called `image_name` or `None` if the image doesn't exist.
 
-        image_name - the name of the image
+        image_name:
+            The name of the image
         '''
         self._ensure_image_names_loaded()
 
@@ -249,8 +254,10 @@ class GlobalConfig(object):
         '''
         Add a new image from an existing directory.
 
-        image_name - the name of the image.
-        content_directory - the directory where the definition file and other required files are.
+        image_name:
+            The name of the image.
+        content_directory:
+            The directory where the definition file and other required files are.
         '''
         self._ensure_image_names_loaded()
         assert image_name not in self._image_paths
@@ -272,10 +279,11 @@ class GlobalConfig(object):
         '''
         Remove an existing image.
 
-        If the image cannot be removed, the original OSError from the failing os.unlink
+        If the image cannot be removed, the original `OSError` from the failing `os.unlink`
         is propagated.
 
-        image_name - the name of the image to remove (which must exist).
+        image_name:
+            The name of the image to remove (which must exist).
         '''
         image_config = self.image_with_name(image_name)
         assert image_config
@@ -287,13 +295,18 @@ class GlobalConfig(object):
 
     def _get(self, section, option, default=None):
         '''
-        Get the value of an option.
+        Get the value of a global option.
 
-        This works around ConfigParser's oddities with sections.
+        This works around `ConfigParser`'s oddities with sections.
 
-        section - the section where the option is.
-        option - the name of the option
-        default - a value to return if the option doesn't exist.
+        section:
+            The section where the option is.
+        option:
+            The name of the option.
+        default:
+            A value to return if the option doesn't exist.
+        Return value:
+            The value of the option (or default if the option doesn't exist).
         '''
         try:
             return self._parser.get(section, option)
@@ -302,12 +315,14 @@ class GlobalConfig(object):
 
     def _get_items(self, section):
         '''
-        Get all the options in a section.
+        Get all the global options in a section.
 
-        This works around ConfigParser's oddities with sections.
+        This works around `ConfigParser`'s oddities with sections.
 
-        section - the section where the options are.
-        return value - an ordered dictionary of options and their values.
+        section:
+            The section where the options are.
+        Return value:
+            An ordered dictionary (`collection.OrderedDict`) of options and their values.
         '''
         try:
             items = self._parser.items(section)
@@ -318,13 +333,16 @@ class GlobalConfig(object):
 
     def _set(self, section, option, value):
         '''
-        Set the value of an option.
+        Set the value of a global option.
 
-        This works around ConfigParser's oddities with sections.
+        This works around `ConfigParser`'s oddities with sections.
 
-        section - the section where the option is.
-        option - the name of the option.
-        value - the new value of the option.
+        section:
+            The section where the option is.
+        option:
+            The name of the option.
+        value:
+            The new value of the option.
         '''
         if not self._parser.has_section(section):
             self._parser.add_section(section)
@@ -334,13 +352,16 @@ class GlobalConfig(object):
 
     def _remove(self, section, option):
         '''
-        Remove an option.
+        Remove a global option.
 
-        This works around ConfigParser's oddities with sections.
+        This works around `ConfigParser`'s oddities with sections.
 
-        section - the section where the option is.
-        option - the name of the option.
-        return value - True if the option was removed, False otherwise.
+        section:
+            The section where the option is.
+        option:
+            The name of the option.
+        Return value:
+            `True` if the option was removed, `False` otherwise.
         '''
         try:
             removed = self._parser.remove_option(section, option)
@@ -356,8 +377,8 @@ class GlobalConfig(object):
         '''
         Get all the configured aliases.
 
-        return value - a dictionary with the aliases names as keys and instances of ImageAlias as
-                       value.
+        Return value:
+            A dictionary with the alias names as keys and instances of `ImageAlias` as value.
         '''
         aliases = {}
 
@@ -382,11 +403,13 @@ class GlobalConfig(object):
 
     def get_alias(self, alias_name):
         '''
-        Get the alias named alias_name.
+        Get the alias named `alias_name`.
 
-        alias_name - the name of the alias for retrieve.
-        return value - the Alias instance corresponding to alias_name or None if the alias
-                       is not configured.
+        alias_name:
+            The name of the alias for retrieve.
+        Return value:
+            The `Alias` instance corresponding to `alias_name` or `None` if the alias is
+            not configured.
         '''
         return self.get_aliases().get(alias_name)
 
@@ -394,12 +417,14 @@ class GlobalConfig(object):
         '''
         Add a new alias.
 
-        It's the caller's resposibility to make sure that alias.image_name points to an existing
-        image.
+        It's the caller's resposibility to make sure that `alias.image_name` points to an
+        existing image.
 
-        alias - the alias to add.
-        return value - True if the alias was added, False if it wasn't added because an alias with
-                       the same name already exists.
+        alias:
+            The alias to add.
+        Return value:
+            `True` if the alias was added, `False` if it wasn't added because an alias
+            with the same name already exists.
         '''
         existing_aliases = self.get_aliases()
         if alias.alias_name in existing_aliases:
@@ -416,10 +441,12 @@ class GlobalConfig(object):
 
     def remove_alias(self, alias_name):
         '''
-        Remove the alias with name alias_name.
+        Remove the alias with name `alias_name`.
 
-        alias_name - the name of the alias to remove.
-        return value - True if the alias was removed, False otherwise.
+        alias_name:
+            The name of the alias to remove.
+        Return value:
+            `True` if the alias was removed, `False` otherwise.
         '''
         return self._remove('alias', alias_name)
 

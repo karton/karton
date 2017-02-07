@@ -44,16 +44,18 @@ class FakeDefinitionModule(object):
 
 class DockerfileMixin(KartonMixin):
     '''
-    A mixin used for tests which needs to generate Dockerfiles.
+    A mixin used for tests which needs to generate `Dockerfile` files.
     '''
 
     @staticmethod
     def _create_definition(definition_dir, setup_image_callback):
         '''
-        Create a definition file, which will call setup_image_callback.
+        Create a definition file, which will call `setup_image_callback`.
 
-        definition_dir - the path of the directory where to create the definition file.
-        setup_image_callback - a function to call to setup a DefinitionProperties.
+        definition_dir:
+            The path of the directory where to create the definition file.
+        setup_image_callback:
+            A function to call to setup a `DefinitionProperties`.
         '''
         sys.modules['shared_definition_stuff'] = FakeDefinitionModule(setup_image_callback)
 
@@ -65,11 +67,14 @@ class DockerfileMixin(KartonMixin):
 
     def make_builder(self, setup_image_callback, image_name='new-image'):
         '''
-        Add an image and create a dockerfile.Builder for a new image.
+        Add an image and create a `dockerfile.Builder` for a new image.
 
-        setup_image_callback - a function to call to setup a DefinitionProperties.
-        image_name - the name of the image to create.
-        return value - a DockerfileBuildInfo for the dockerfile.Builder.
+        setup_image_callback:
+            A function to call to setup a `DefinitionProperties`.
+        image_name:
+            The name of the image to create.
+        Return value:
+            A `DockerfileBuildInfo` for the `dockerfile.Builder`.
         '''
         definition_dir = self.make_tmp_sub_dir('definitions')
         dockerfile_dir = self.make_tmp_sub_dir('dockerfiles')
@@ -85,9 +90,10 @@ class DockerfileMixin(KartonMixin):
 
     def prepare_for_image_create(self):
         '''
-        Helper to create the files needed for an "image create" command.
+        Helper to create the files needed for an `image create` command.
 
-        return value - an ImageCreateInfo instance.
+        Return value:
+            An `ImageCreateInfo` instance.
         '''
         definition_parent_dir = self.make_tmp_sub_dir('images')
         future_definition_dir = os.path.join(definition_parent_dir, 'actual-image')
@@ -99,10 +105,12 @@ class DockerfileMixin(KartonMixin):
 
     def prepare_for_image_import(self, setup_image_callback):
         '''
-        Helper to create the files needed for an "image import" command.
+        Helper to create the files needed for an `image import` command.
 
-        setup_image_callback - a function to call to setup a DefinitionProperties.
-        return value -  an ImageImportInfo instance.
+        setup_image_callback:
+            A function to call to setup a `DefinitionProperties`.
+        Return value:
+            An `ImageImportInfo` instance.
         '''
         create_info = self.prepare_for_image_create()
         pathutils.makedirs(create_info.future_definition_dir)

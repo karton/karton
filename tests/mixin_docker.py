@@ -16,9 +16,10 @@ def make_image(main_image_name):
     '''
     Decorator for methods which setup an image.
 
-    The decorated method should accept a DefinitionProperties instance.
+    The decorated method should accept a `DefinitionProperties` instance.
 
-    main_image_name - an identifier for the images which is used to build the actual image name.
+    main_image_name:
+        An identifier for the images which is used to build the actual image name.
     '''
     def real_decorator(function):
         def actual_method(self):
@@ -70,7 +71,7 @@ class DockerMixin(KartonMixin):
 
     def clear_running_test_containers(self):
         '''
-        Stop all the test containers.
+        Stop all the test Docker containers.
         '''
         for container_id in self.get_running_test_containers():
             subprocess.check_output(
@@ -82,9 +83,10 @@ class DockerMixin(KartonMixin):
     @staticmethod
     def get_running_test_containers():
         '''
-        List all the running test containers.
+        List all the running test Docker containers.
 
-        return value - a list of container IDs.
+        Return value:
+            A list of container IDs.
         '''
         # --filter doesn't accept wildcards nor a regexp.
         output = subprocess.check_output(
@@ -107,18 +109,21 @@ class DockerMixin(KartonMixin):
     @staticmethod
     def make_image_name(main_name_component):
         '''
-        Make an image name which contains main_name_component in it.
+        Make an image name which contains `main_name_component` in it.
 
-        main_name_component - an identifier for the image.
-        return value - an image name.
+        main_name_component:
+            An identifier for the image.
+        Return value:
+            An image name.
         '''
         return DockerMixin.TEST_IMAGE_PREFIX + main_name_component
 
     def assert_running(self, image_name):
         '''
-        Asserts that the image called image_name is running.
+        Assert that the image called `image_name` is running.
 
-        image_name - the image to check.
+        image_name:
+            The image to check.
         '''
         status = self.get_status(image_name)
         self.assertTrue(status['running'])
@@ -127,31 +132,36 @@ class DockerMixin(KartonMixin):
 
     def assert_running_with_no_commands(self, image_name):
         '''
-        Asserts that the image called image_name is running, but that no
-        command is running in it.
+        Assert that the image called `=image_name` is running, but that no
+        command is running inside it.
 
-        image_name - the image to check.
+        image_name:
+            The image to check.
         '''
         commands = self.assert_running(image_name)
         self.assertEqual(len(commands), 0)
 
     def assert_not_running(self, image_name):
         '''
-        Asserts that the image called image_name is not running.
+        Assert that the image called `image_name` is not running.
 
-        image_name - the image to check.
+        image_name:
+            The image to check.
         '''
         status = self.get_status(image_name)
         self.assertFalse(status['running'])
 
     def add_and_build(self, image_name, setup_image, ignore_build_fail=False):
         '''
-        Add an image called image_name.
+        Add an image called `image_name`.
 
-        image_name - the name of the image to add.
-        setup_image - the setup function for the image definition.
-        ignore_build_fail - if True, build errors are ignored, otherwise an assert
-                            will be triggered in case of failure.
+        image_name:
+            The name of the image to add.
+        setup_image:
+            The setup function for the image definition.
+        ignore_build_fail:
+            If true, build errors are ignored.
+            Otherwise, an assert is triggered in case of failure.
         '''
         assert image_name.startswith(DockerMixin.TEST_IMAGE_PREFIX)
 

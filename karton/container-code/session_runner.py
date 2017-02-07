@@ -11,7 +11,7 @@ import signal
 
 
 def terminate(signum, stack_frame):
-    print('Terminating the container.')
+    print('Terminating the image.')
     raise SystemExit(1)
 
 

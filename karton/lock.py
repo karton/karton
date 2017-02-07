@@ -23,15 +23,19 @@ class FileLock(object):
 
     def __init__(self, lock_file_path, timeout=60, timeout_cb=None, still_waiting_cb=None):
         '''
-        Initialize a FileLock instance.
+        Initialize a `FileLock` instance.
 
-        lock_file_path - the path to the lock file (ideally something in a temporary directory).
-        timeout - how many seconds to wait before giving up. This is a very rough estimate.
-        timeout_cb - a function to call if the lock cannot be acquired due to timeout; see
-                     acquire for details.
-        still_waiting_cb - a function to call once in a while if we are waiting to acquire the
-                           lock; this is useful, for instance, to print an informative message
-                           to the user, so that they know the program is not frozen.
+        lock_file_path:
+            The path to the lock file (ideally something in a temporary directory).
+        timeout:
+            How many seconds to wait before giving up. This is a very rough estimate.
+        timeout_cb:
+            A function to call if the lock cannot be acquired due to timeout.
+            See `acquire` for details.
+        still_waiting_cb:
+            A function to call once in a while if we are waiting to acquire the lock. This is
+            useful, for instance, to print an informative message to the user, so that they
+            know the program is not frozen.
         '''
         self._lock_file_path = lock_file_path
         self._timeout = timeout
@@ -52,7 +56,7 @@ class FileLock(object):
 
     def acquire(self):
         '''
-        Acquires the lock.
+        Acquire the lock.
 
         This method can take quite a while before returning if the lock is not immediately
         available.
@@ -107,7 +111,7 @@ class FileLock(object):
 
     def release(self):
         '''
-        Releases a previously acquired lock.
+        Release a previously acquired lock.
         '''
         assert self._locked
         assert self._lock_file

@@ -7,6 +7,9 @@ import os
 
 def root_code_dir():
     '''
-    Return the top directory containing the Karton scripts.
+    The top directory containing the Karton scripts.
+
+    Return value:
+        The top directory.
     '''
     return os.path.dirname(os.path.abspath(__file__))

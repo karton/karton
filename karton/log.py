@@ -12,21 +12,25 @@ _g_verbose_logging = False
 
 class ExitDueToFailure(SystemExit):
     '''
-    Raised by the die function to exit the program.
+    Raised by the `die` function to exit the program.
     '''
 
     def __init__(self, exit_code=1):
         '''
-        Initializes a ExitDueToFailure object.
+        Initialize an `ExitDueToFailure` instance.
 
-        The program exit code can be passed in the exit_code argument.
+        exit_code:
+            The program exit code.
         '''
         super(ExitDueToFailure, self).__init__(exit_code)
 
 
 def set_verbose(verbose_logging):
     '''
-    Sets whether to enable verbose logging.
+    Set whether to enable verbose logging.
+
+    verbose_logging:
+        If true, verbose logging will be enabled; otherwise, it will be disabled.
     '''
     global _g_verbose_logging
     _g_verbose_logging = verbose_logging
@@ -34,14 +38,21 @@ def set_verbose(verbose_logging):
 
 def get_verbose():
     '''
-    Returns whether verbose logging is enabled.
+    Return whether verbose logging is enabled.
+
+    Return value:
+        `True` if verbose logging is enabled; `False` otherwise.
     '''
     return _g_verbose_logging
 
 
 def die(msg):
     '''
-    Prints an error message and quits with an error code.
+    Print an error message and quit the program
+    with an error exit code.
+
+    msg:
+        The error message.
     '''
     sys.stderr.write('\n')
     sys.stderr.write(msg)
@@ -51,14 +62,20 @@ def die(msg):
 
 def info(msg):
     '''
-    Prints an informative message.
+    Print an informative message.
+
+    msg:
+        The message to print.
     '''
     print(msg)
 
 
 def verbose(msg):
     '''
-    Prints a message iff verbose logging is enabled.
+    Print a message iff verbose logging is enabled.
+
+    msg:
+        The message to print.
     '''
     if _g_verbose_logging:
         info(msg)

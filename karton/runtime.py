@@ -49,11 +49,14 @@ class Session(object):
         '''
         The directory where configuration files are.
 
-        This defaults to "~/.karton/" but can be overwritten with the $KARTON_CONFIG_DIR
+        This defaults to "~/.karton/" but can be overwritten with the `$KARTON_CONFIG_DIR`
         environment variable.
-        Note that this is a development feature only, for instance to write tests, so
-        it should not be used for general purposes (that's why it's exposed as a static
-        method instead of being configurable like all the other options).
+        Note that this is a development feature only, e.g. to write tests, so it should
+        not be used for general purposes (that's why it's exposed as a static method
+        instead of being configurable like all the other options).
+
+        Return value:
+            The directory where the configuration files are.
         '''
         env_dir = os.getenv('KARTON_CONFIG_DIR')
         if env_dir:
@@ -63,11 +66,14 @@ class Session(object):
 
     def __init__(self, data_dir, host_system, config, docker):
         '''
-        Initializes a Session object.
+        Initialize a `Session` instance.
 
-        data_dir - the path to a directory where to store working files.
-        config - a configuration.GlobalConfig instance.
-        docker - a dockerctl.Docker instance.
+        data_dir:
+            The path to a directory where to store working files.
+        config:
+            A `configuration.GlobalConfig` instance.
+        docker:
+            A `dockerctl.Docker` instance.
         '''
         self._data_dir = data_dir
         self._host_system = host_system
@@ -76,6 +82,9 @@ class Session(object):
 
     @staticmethod
     def default_session():
+        '''
+        A `Session` using the default configuration, dirs, etc.
+        '''
         # FIXME: We should not use a directory in the temp dir and we should take
         # care of dealing with multiple users.
         return Session(
@@ -96,20 +105,20 @@ class Session(object):
     @property
     def host_system(self):
         '''
-        The runtime.HostSystem object for the session.
+        The `runtime.HostSystem` instance for the session.
         '''
         return self._host_system
 
     @property
     def config(self):
         '''
-        The configuration.GlobalConfig object for the session.
+        The `configuration.GlobalConfig` instance for the session.
         '''
         return self._config
 
     @property
     def docker(self):
         '''
-        The dockerctl.Docker object for the session.
+        The `dockerctl.Docker` instance for the session.
         '''
         return self._docker

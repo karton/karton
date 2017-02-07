@@ -14,21 +14,22 @@ from log import die, info, verbose
 
 class AliasManager(object):
     '''
-    Deals with adding, removing and listing aliases.
+    Deal with adding, removing and listing aliases.
 
     Aliases are used to access Karton without having to specify an image every time.
 
-    All the methods starting with "command_" deal with expected exceptions
-    (by calling log.die if needed) and are suitable to be called by a command
+    All the methods starting with `command_` deal with expected exceptions
+    (by calling `log.die` if needed) and are suitable to be called by a command
     line tool.
     '''
 
     def __init__(self, config):
         '''
-        Initializes a AliasManager instance.
+        Initialize a AliasManager instance.
 
-        config - a configuration.GlobalConfing instance used to store the aliases and
-                 corresponding images.
+        config:
+            A configuration.GlobalConfing instance used to store the aliases and
+            corresponding images.
         '''
         self._config = config
 
@@ -63,9 +64,10 @@ class AliasManager(object):
 
     def command_show(self, alias_name):
         '''
-        Print information about the alias with name alias_name.
+        Print information about the alias with name `alias_name`.
 
-        alias_name - the name of the alias
+        alias_name:
+            The name of the alias.
         '''
         aliases = self._config.get_aliases()
         try:
@@ -79,9 +81,12 @@ class AliasManager(object):
         '''
         Add an alias.
 
-        alias_name - the name of the alias to add.
-        image_name - the name of the image the alias should use.
-        run - whether the alias should automatically call the "run" command.
+        alias_name:
+            The name of the alias to add.
+        image_name:
+            The name of the image the alias should use.
+        run:
+            Whether the alias should automatically call the `run` command.
         '''
         verbose('Adding alias "%s" for image "%s" (run=%s)' %
                 (alias_name, image_name, run))
@@ -127,9 +132,10 @@ class AliasManager(object):
 
     def command_remove(self, alias_name):
         '''
-        Remove an alias with name alias_name.
+        Remove an alias with name `alias_name`.
 
-        alias_name - the name of the alias to remove.
+        alias_name:
+            The name of the alias to remove.
         '''
         # Do we have the alias?
         if not self._config.get_alias(alias_name):
@@ -170,7 +176,8 @@ class AliasManager(object):
         '''
         Remove all the aliases for an image.
 
-        image_name - the name of the image for which the aliases should be removed.
+        image_name:
+            The name of the image for which the aliases should be removed.
         '''
         verbose('Removing all aliases for image "%s".' % image_name)
 
@@ -237,9 +244,10 @@ class AliasManager(object):
     @staticmethod
     def _print_alias(alias):
         '''
-        Print information about alias.
+        Print information about `alias`.
 
-        alias - The configuration.ImageAlias to analyse.
+        alias
+            The `configuration.ImageAlias` to analyse.
         '''
         if alias.run:
             extra = ' (the "run" command is used automatically)'
