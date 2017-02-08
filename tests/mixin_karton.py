@@ -13,7 +13,7 @@ import unittest
 from karton import (
     configuration,
     log,
-    main,
+    karton,
     pathutils,
     runtime,
     )
@@ -155,7 +155,7 @@ class KartonMixin(unittest.TestCase):
                 redirector = testutils.Redirector()
                 try:
                     with redirector:
-                        main.run_karton(self.session, [prog] + arguments)
+                        karton.run_karton(self.session, [prog] + arguments)
                 finally:
                     self.current_text = redirector.content
 
@@ -203,7 +203,7 @@ class KartonMixin(unittest.TestCase):
             If true, errors are ignored.
         '''
         if prog is None:
-            prog = main.__file__
+            prog = karton.__file__
 
         self._last_exit_code = 0
         self.current_text = 'INVALID'

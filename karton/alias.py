@@ -115,7 +115,7 @@ class AliasManager(object):
             alias_symlink_directory = self._ensure_alias_symlink_directory()
             alias_symlink_path = os.path.join(alias_symlink_directory, alias_name)
 
-            karton = os.path.join(dirs.root_code_dir(), 'main.py')
+            karton = os.path.join(dirs.root_code_dir(), 'karton.py')
             verbose('Creating alias symlink from "%s" to "%s".' % (alias_symlink_path, karton))
             try:
                 os.symlink(karton, alias_symlink_path)
@@ -154,7 +154,7 @@ class AliasManager(object):
                 'The alias cannot be removed.' %
                 (symlink, alias_name))
         symlink_target = os.path.realpath(symlink)
-        if not symlink_target.endswith('karton/main.py'):
+        if not symlink_target.endswith('karton/karton.py'):
             die('Alias symblic link "%s" for alias "%s" is not a valid symbolic link for an alias. '
                 'The target path is not the Karton executable but "%s".' %
                 (symlink, alias_name, symlink_target))

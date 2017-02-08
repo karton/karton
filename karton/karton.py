@@ -206,7 +206,7 @@ def run_karton(session, arguments):
 
     # Check if we are run through an alias.
     program_name = os.path.basename(arguments[0])
-    if program_name in ('main.py', 'main.pyc', 'main.pyo'):
+    if program_name in ('karton.py', 'karton.pyc', 'karton.pyo'):
         program_name = 'karton'
 
     if program_name != 'karton':

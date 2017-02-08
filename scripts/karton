@@ -4,7 +4,7 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
-from karton import main
+from karton import karton
 
 if __name__ == '__main__':
-    main.main_with_defaults()
+    karton.main_with_defaults()
