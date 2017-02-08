@@ -7,3 +7,8 @@
 *.py[co]
 
 logos/out/*
+
+MANIFEST
+MANIFEST.in
+build/
+dist/
