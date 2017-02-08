@@ -149,23 +149,26 @@ class AliasManager(object):
 
         # Is the symlink in place?
         symlink = os.path.join(directory, alias_name)
-        if not os.path.islink(symlink):
-            die('Alias file "%s" for alias "%s" is not a symbolic link. '
-                'The alias cannot be removed.' %
-                (symlink, alias_name))
-        symlink_target = os.path.realpath(symlink)
-        if not symlink_target.endswith('karton/karton.py'):
-            die('Alias symblic link "%s" for alias "%s" is not a valid symbolic link for an alias. '
-                'The target path is not the Karton executable but "%s".' %
-                (symlink, alias_name, symlink_target))
 
-        # And now we can delete the symlink.
-        try:
-            os.unlink(symlink)
-        except OSError as exc:
-            die('Cannot delete the symbolic link "%s" for alias "%s", so the alias cannot be '
-                'removed: %s.' %
-                (symlink, alias_name, exc))
+        # If somebody deletes the symlink, we should still work.
+        if os.path.exists(symlink):
+            if not os.path.islink(symlink):
+                die('Alias file "%s" for alias "%s" is not a symbolic link. '
+                    'The alias cannot be removed.' %
+                    (symlink, alias_name))
+            symlink_target = os.path.realpath(symlink)
+            if not symlink_target.endswith('karton/karton.py'):
+                die('Alias symblic link "%s" for alias "%s" is not a valid symbolic link for an '
+                    'alias. The target path is not the Karton executable but "%s".' %
+                    (symlink, alias_name, symlink_target))
+
+            # And now we can delete the symlink.
+            try:
+                os.unlink(symlink)
+            except OSError as exc:
+                die('Cannot delete the symbolic link "%s" for alias "%s", so the alias cannot be '
+                    'removed: %s.' %
+                    (symlink, alias_name, exc))
 
         # Finally delete the alias from our configuration.
         # We do this last as it can fail only if there's a programming error.
