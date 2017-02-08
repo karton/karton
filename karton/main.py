@@ -12,6 +12,7 @@ import sys
 import alias
 import container
 import runtime
+import version
 
 from log import die, info, verbose, get_verbose, set_verbose
 
@@ -224,6 +225,11 @@ def run_karton(session, arguments):
     parser = ArgumentParser(prog=program_name,
                             description='Manages semi-persistent Docker containers.')
     subparsers = parser.add_subparsers(dest='command', metavar='COMMAND')
+
+    parser.add_argument(
+        '--version',
+        action='version',
+        version='Karton %s' % version.__version__)
 
     all_commands = {}
 
