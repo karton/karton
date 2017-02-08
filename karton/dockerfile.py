@@ -584,6 +584,20 @@ class Builder(object):
                 RUN chmod 440 /etc/sudoers
                 ''')
 
+        container_code_path = os.path.join(dirs.root_code_dir(), 'container-code')
+        for container_script in ('session_runner.py', 'command_runner.py'):
+            path = os.path.join(container_code_path, container_script)
+            copyable_path = self._make_file_copyable(path)
+            emit(
+                r'''
+                ADD %(copyable_path)s /karton/%(container_script)s'
+                RUN chmod +x /karton/%(container_script)s
+                '''
+                % dict(
+                    copyable_path=copyable_path,
+                    container_script=container_script,
+                    ))
+
         emit(
             r'''
             RUN \
@@ -598,13 +612,7 @@ class Builder(object):
                 user_home=props.user_home,
                 ))
 
-        container_code_path = os.path.join(dirs.root_code_dir(), 'container-code')
-        for container_script in ('session_runner.py', 'command_runner.py'):
-            path = os.path.join(container_code_path, container_script)
-            copyable_path = self._make_file_copyable(path)
-            emit('ADD %s /karton/%s' %
-                 (copyable_path, container_script))
-        emit()
+        # After this point everything will be run as the normal user, not root!
 
         content = ''.join(lines).strip() + '\n'
         verbose('The Dockerfile is:\n========\n%s========' % content)
