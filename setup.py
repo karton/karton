@@ -15,6 +15,21 @@ Karton is a tool to transparently run Linux programs on macOS or on another Linu
 Underneath, Karton uses Docker to allow running programs and manage semi-persistent containers.
 '''.strip()
 
+# https://pypi.python.org/pypi?%3Aaction=list_classifiers
+classifiers = [
+    'Development Status :: 3 - Alpha',
+    'Environment :: Console',
+    'Environment :: MacOS X',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
+    'Natural Language :: English',
+    'Operating System :: MacOS :: MacOS X',
+    'Operating System :: POSIX :: Linux',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Topic :: Utilities',
+]
+
 config = {
     # Info about the package:
     'name': 'karton',
@@ -27,6 +42,7 @@ config = {
     'download_url': 'https://github.com/karton/karton',
     'license': 'LPGL 2.1 or later',
     'platforms': ['Linux', 'macOS'],
+    'classifiers': classifiers,
 
     # Installation stuff:
     'packages': ['karton'],
