@@ -12,6 +12,7 @@ import unittest
 
 from karton import (
     configuration,
+    locations,
     log,
     karton,
     pathutils,
@@ -204,6 +205,10 @@ class KartonMixin(unittest.TestCase):
         '''
         if prog is None:
             prog = karton.__file__
+
+        # FIXME: this is not going to work if the executable permission is dropped because of
+        # distutils.
+        locations.set_karton_executable(karton.__file__)
 
         self._last_exit_code = 0
         self.current_text = 'INVALID'
