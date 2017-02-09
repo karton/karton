@@ -6,7 +6,7 @@ import json
 import os
 
 import configuration
-import dirs
+import locations
 import pathutils
 
 from log import die, info, verbose
@@ -115,7 +115,7 @@ class AliasManager(object):
             alias_symlink_directory = self._ensure_alias_symlink_directory()
             alias_symlink_path = os.path.join(alias_symlink_directory, alias_name)
 
-            karton = os.path.join(dirs.root_code_dir(), 'karton.py')
+            karton = os.path.join(locations.root_code_dir(), 'karton.py')
             verbose('Creating alias symlink from "%s" to "%s".' % (alias_symlink_path, karton))
             try:
                 os.symlink(karton, alias_symlink_path)

@@ -10,7 +10,7 @@ import shutil
 import textwrap
 import traceback
 
-import dirs
+import locations
 import pathutils
 import runtime
 
@@ -584,7 +584,7 @@ class Builder(object):
                 RUN chmod 440 /etc/sudoers
                 ''')
 
-        container_code_path = os.path.join(dirs.root_code_dir(), 'container-code')
+        container_code_path = os.path.join(locations.root_code_dir(), 'container-code')
         for container_script in ('session_runner.py', 'command_runner.py'):
             path = os.path.join(container_code_path, container_script)
             copyable_path = self._make_file_copyable(path)
