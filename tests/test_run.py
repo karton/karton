@@ -3,6 +3,7 @@
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
 import os
+import sys
 import time
 import unittest
 
@@ -198,6 +199,11 @@ class RunTestCase(DockerMixin,
         self.assertIn('No such file or directory', self.current_text)
 
     def test_date(self):
+        if sys.platform != 'darwin':
+            # This test tests a workaround for OS X. It would not work on Linux as setting the
+            # time in the container also sets it on the host.
+            return
+
         image_name = self.build_ubuntu_latest_with_gcc()
 
         def now():
