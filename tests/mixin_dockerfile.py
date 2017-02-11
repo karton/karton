@@ -86,7 +86,7 @@ class DockerfileMixin(KartonMixin):
         return DockerfileBuildInfo(
             builder=dockerfile.Builder(image_config, dockerfile_dir, self.session.host_system),
             dockerfile_dir=dockerfile_dir,
-            dockerfile_path=os.path.join(dockerfile_dir, 'DockerFile'))
+            dockerfile_path=os.path.join(dockerfile_dir, 'Dockerfile'))
 
     def prepare_for_image_create(self):
         '''
