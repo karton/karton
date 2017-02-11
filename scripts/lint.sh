@@ -17,4 +17,5 @@ pylint \
     --rcfile=scripts/pylintrc \
     karton/*.py \
     karton/container-code/*.py \
-    tests/*.py
+    tests/*.py \
+    inception/*.py
