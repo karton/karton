@@ -459,6 +459,10 @@ class Image(object):
             ]
 
         for host_path, container_path in self._image_config.shared_paths:
+            if not os.path.exists(host_path):
+                # If the shared path doesn't exist, then Docker creates it. On Linux this means
+                # that the new path is owned by root isntead of being owned by the current user.
+                pathutils.makedirs(host_path)
             args += ['-v', '%s:%s' % (host_path, container_path)]
 
         args += [
