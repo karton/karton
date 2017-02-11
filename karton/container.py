@@ -455,6 +455,7 @@ class Image(object):
             '-it',
             '--privileged',
             '--hostname', self._image_config.hostname,
+            '--env', 'KARTON_IMAGE=' + self.image_name,
             ]
 
         for host_path, container_path in self._image_config.shared_paths:
@@ -577,7 +578,6 @@ class Image(object):
         full_args = [
             'exec',
             '-it',
-            '--env', 'KARTON_IMAGE=' + self.image_name,
             container_id,
             '/karton/command_runner.py',
             container_dir,
