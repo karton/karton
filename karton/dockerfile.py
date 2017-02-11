@@ -464,7 +464,7 @@ class Builder(object):
         '''
         # FIXME: what if two files have the same basenames?
         link_path = os.path.join(self._copyable_files_dir, os.path.basename(host_file_path))
-        os.link(host_file_path, link_path)
+        pathutils.hard_link_or_copy(host_file_path, link_path)
 
         assert link_path.startswith(self._dst_dir)
         return os.path.relpath(link_path, start=self._dst_dir)
