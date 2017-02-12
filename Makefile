@@ -26,7 +26,8 @@ automatic-target:
 
 .PHONY: check
 check:
-	./tests/run.py
+	mkdir -p test-results/ 2> /dev/null
+	python ./tests/run.py --save-json-results test-results/local.json
 
 .PHONY: dist
 dist: MANIFEST.in

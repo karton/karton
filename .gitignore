@@ -12,3 +12,5 @@ MANIFEST
 MANIFEST.in
 build/
 dist/
+
+test-results/
