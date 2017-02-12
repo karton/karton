@@ -27,9 +27,6 @@ cat > $script_path << EOF
 
 set -e
 
-base_package_name="$1"
-package="$base_package_name.tar.gz"
-
 tar xzf "$package"
 cd "$base_package_name"
 
@@ -42,6 +39,6 @@ for target in $TARGETS; do
         --save-back "test-results/inception-$target.json"  "test-results.json" \
         --add-script "$script_path" "run.sh" \
         "$target" \
-        "./run.sh" "$base_package_name"
+        "./run.sh"
 done
 
