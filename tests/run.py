@@ -134,7 +134,7 @@ def main(argv):
                       indent=4,
                       separators=(',', ': '))
 
-    return result.wasSuccessful
+    return result.wasSuccessful()
 
 
 if __name__ == '__main__':
