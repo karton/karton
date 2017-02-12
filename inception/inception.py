@@ -11,6 +11,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 
 try:
     # Python 3.
@@ -45,7 +46,6 @@ RUN \
         ca-certificates \
         docker.io \
         make \
-        ntpdate \
         python \
         sudo \
         && \
@@ -61,6 +61,11 @@ Defaults    secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin
 
 CONTAINER_RUNNER_SCRIPT = '''\
 #! /bin/bash
+
+host_date="$1"
+if [ "$host_date" != "NOSYNC" ]; then
+    sudo date -s "@$host_date" > /dev/null
+fi
 
 sudo dockerd > dockerd.log 2>&1 &
 cd /inception
@@ -163,6 +168,11 @@ def run(image_name, commands, added_files, added_scripts, save_back_files):
             runner_file.write(content)
 
         # Run the script/commands.
+        if sys.platform == 'darwin':
+            host_time = str(int(time.time()))
+        else:
+            host_time = 'NOSYNC'
+
         try:
             subprocess.check_call([
                 'docker',
@@ -175,6 +185,7 @@ def run(image_name, commands, added_files, added_scripts, save_back_files):
                 '-it',
                 image_name,
                 '/inception-private/runner',
+                host_time,
                 ])
         except subprocess.CalledProcessError as exc:
             die('Failed to run script in "%s": %s.' % (image_name, exc))
