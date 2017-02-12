@@ -33,6 +33,14 @@ check:
 inception-check: dist
 	./tests/run-inception.sh dist/karton-`python ./karton/version.py`.tar.gz
 
+.PHONY: all-check
+all-check: check inception-check
+	@echo
+	@echo
+	@echo "SUMMARY OF BOTH LOCAL AND INCEPTION TESTS"
+	@echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	@python ./tests/summary.py
+
 .PHONY: dist
 dist: MANIFEST.in
 	python setup.py sdist --format=gztar
