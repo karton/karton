@@ -29,6 +29,10 @@ check:
 	mkdir -p test-results/ 2> /dev/null
 	python ./tests/run.py --save-json-results test-results/local.json
 
+.PHONY: inception-check
+inception-check: dist
+	./tests/run-inception.sh dist/karton-`python ./karton/version.py`.tar.gz
+
 .PHONY: dist
 dist: MANIFEST.in
 	python setup.py sdist --format=gztar
