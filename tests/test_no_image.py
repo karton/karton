@@ -2,13 +2,12 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
-import unittest
-
 from mixin_karton import KartonMixin
+from tracked import TrackedTestCase
 
 
 class NoImageTestCase(KartonMixin,
-                      unittest.TestCase):
+                      TrackedTestCase):
     '''
     Test commands which don't require images to exist or Docker to be invoked.
     '''

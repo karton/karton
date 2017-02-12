@@ -6,12 +6,13 @@ from __future__ import print_function
 
 import os
 import sys
-import unittest
 
 import testutils
 
+from tracked import TrackedTestCase
 
-class InternalTestCase(unittest.TestCase):
+
+class InternalTestCase(TrackedTestCase):
     '''
     Test the functions provided internally by the test framework itself.
     '''

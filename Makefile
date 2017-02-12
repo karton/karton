@@ -22,7 +22,7 @@ automatic-target:
 
 .PHONY: check
 check:
-	./tests/run-tests
+	./tests/run.py
 
 .PHONY: dist
 dist: MANIFEST.in

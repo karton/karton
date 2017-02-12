@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import unittest
 
 from karton import (
     configuration,
@@ -21,6 +20,8 @@ from karton import (
 
 import testutils
 
+from tracked import TrackedTestCase
+
 
 class FakeHostSystem(object):
 
@@ -30,7 +31,7 @@ class FakeHostSystem(object):
         self.hostname = 'test-host-hostname'
 
 
-class KartonMixin(unittest.TestCase):
+class KartonMixin(TrackedTestCase):
     '''
     A mixin providing basic features to run and control Karton.
     '''

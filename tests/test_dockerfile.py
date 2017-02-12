@@ -3,17 +3,17 @@
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
 import os
-import unittest
 
 from karton import (
     dockerfile,
     )
 
 from mixin_dockerfile import DockerfileMixin
+from tracked import TrackedTestCase
 
 
 class DockerfileTestCase(DockerfileMixin,
-                         unittest.TestCase):
+                         TrackedTestCase):
     '''
     Test the generation of `Dockerfile` files (but don't actually invoke Docker).
     '''

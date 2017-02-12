@@ -3,13 +3,13 @@
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
 import os
-import unittest
 
 from mixin_dockerfile import DockerfileMixin
+from tracked import TrackedTestCase
 
 
 class ImagesTestCase(DockerfileMixin,
-                     unittest.TestCase):
+                     TrackedTestCase):
     '''
     Test commands which manipulate images.
     '''

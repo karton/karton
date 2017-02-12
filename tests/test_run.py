@@ -5,7 +5,6 @@
 import os
 import sys
 import time
-import unittest
 
 from karton import (
     pathutils,
@@ -13,6 +12,7 @@ from karton import (
 
 from mixin_docker import DockerMixin
 from mixin_dockerfile import DockerfileMixin
+from tracked import TrackedTestCase
 
 
 TEST_C_SOURCE = '''\
@@ -32,7 +32,7 @@ int main(int argc,
 
 class RunTestCase(DockerMixin,
                   DockerfileMixin,
-                  unittest.TestCase):
+                  TrackedTestCase):
     '''
     Test the run/start/stop commands.
     '''
