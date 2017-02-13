@@ -37,6 +37,7 @@ ENV USER test-user
 USER test-user
 '''
 
+# For Ubuntu we use the distro packages.
 DEB_BASIC_SETUP = '''\
 RUN \
     export DEBIAN_FRONTEND=noninteractive && \
@@ -50,6 +51,25 @@ RUN \
         sudo \
         && \
     apt-get clean -qq
+'''
+
+# For CentOS we use the official upstream packages.
+CENTOS_BASIC_SETUP = '''\
+RUN \
+    yum makecache fast && \
+    yum install -y \
+        make \
+        python \
+        sudo \
+        yum-utils \
+        which \
+        && \
+    yum-config-manager \
+        --add-repo \
+        https://docs.docker.com/engine/installation/linux/repo_files/centos/docker.repo \
+        && \
+    yum makecache fast && \
+    yum -y install docker-engine
 '''
 
 SUDOERS = '''\
@@ -67,7 +87,15 @@ if [ "$host_date" != "NOSYNC" ]; then
     sudo date -s "@$host_date" > /dev/null
 fi
 
-sudo dockerd > dockerd.log 2>&1 &
+if which dockerd > /dev/null; then
+    dockerd_command="dockerd"
+else
+    dockerd_command="docker daemon"
+fi
+
+echo "RUNNING DOCKERD: $dockerd_command"
+sudo $dockerd_command > dockerd.log 2>&1 &
+
 cd /inception
 %(commands)s
 '''
@@ -253,7 +281,7 @@ def main(arguments):
     else:
         die('Invalid distribution: "%s".' % parsed_args.distro_and_tag)
 
-    if distro_name not in ('ubuntu', 'debian'):
+    if distro_name not in ('ubuntu', 'debian', 'centos'):
         die('Invalid distro name: "%s".' % distro_name)
 
     if not distro_tag:
@@ -262,9 +290,17 @@ def main(arguments):
 
     # And now actually run stuff.
     image_name = 'inception-' + parsed_args.distro_and_tag.replace(':', '-')
+
+    if distro_name in ('debian', 'ubuntu'):
+        basic_setup = DEB_BASIC_SETUP
+    elif distro_name == 'centos':
+        basic_setup = CENTOS_BASIC_SETUP
+    else:
+        assert False, 'Unexpected distro "%s" even if we already checked earlier' % distro_name
+
     dockerfile_content = BASE_DOCKERFILE % \
         dict(
-            basic_setup=DEB_BASIC_SETUP,
+            basic_setup=basic_setup,
             distro_and_tag=parsed_args.distro_and_tag,
             )
     build_container(image_name, dockerfile_content)
