@@ -84,16 +84,16 @@ def die(msg):
     raise SystemExit(1)
 
 
-def quiet_exec(*args, **kwargs):
+def quiet_exec(commands, *args, **kwargs):
     try:
-        return subprocess.check_output(*args, stderr=subprocess.STDOUT, **kwargs)
+        return subprocess.check_output(commands, *args, stderr=subprocess.STDOUT, **kwargs)
     except subprocess.CalledProcessError as exc:
         die('Failed to execute commands: %s.\n'
             'The program output was:\n'
             '========\n'
             '%s'
             '========' %
-            exc.output)
+            (commands, exc.output))
 
 
 def build_container(image_name, dockerfile_content):
