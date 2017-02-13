@@ -63,7 +63,7 @@ class KartonMixin(TrackedTestCase):
 
         # Directories.
         # The realpath is needed on OS X as Docker gets confused on whether the directory can be
-        # shared if there are symlinks in it. See <https://github.com/docker/docker/issues/30738>.
+        # shared if there are symlinks in it. See <https://github.com/docker/for-mac/issues/1298>.
         self.tmp_dir = os.path.realpath(tempfile.mkdtemp())
 
         self.config_dir = os.path.join(self.tmp_dir, 'config')
