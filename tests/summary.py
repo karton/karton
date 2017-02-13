@@ -11,6 +11,34 @@ import json
 import os
 
 
+def get_target_details(summary, target):
+    '''
+    Get `summary['targets'][target]` creating it if needed.
+
+    summary:
+        The dictionary cotaining the summary of all test results.
+    target:
+        The name of the target.
+    Return value:
+        A dictionary with existing target details or a new one with default values.
+    '''
+    if target == 'local':
+        sanity_default = 'N/A'
+    else:
+        sanity_default = 'unknown'
+
+    if target not in summary['targets']:
+        summary['targets'][target] = {
+            'pass-count': 0,
+            'fail-count': 0,
+            'error-count': 0,
+            'sanity-result': sanity_default,
+            'sanity-ok': True,
+            }
+
+    return summary['targets'][target]
+
+
 def process_results_file(summary, target, results_path):
     '''
     Process a single JSON result file and adds its data to `summary`.
@@ -32,9 +60,11 @@ def process_results_file(summary, target, results_path):
     summary['total-count'] += results['total-count']
 
     failure_details = summary['failure-details']
+    target_details = get_target_details(summary, target)
 
     for test_name, details in results['details'].iteritems():
         if details['passed']:
+            target_details['pass-count'] += 1
             continue
 
         if test_name not in failure_details:
@@ -45,6 +75,11 @@ def process_results_file(summary, target, results_path):
         failure_string = details.get('failure')
         error_string = details.get('error')
         assert bool(failure_string) != bool(error_string)
+
+        if failure_string:
+            target_details['fail-count'] += 1
+        if error_string:
+            target_details['error-count'] += 1
 
         exception_string = failure_string or error_string
 
@@ -71,12 +106,15 @@ def process_sanity_file(summary, target, sanity_path):
         lines = sanity_file.readlines()
 
     result = lines[0].strip()
+    target_details = get_target_details(summary, target)
 
     if result == 'PASSED':
         summary['sanity-pass-count'] += 1
+        target_details['sanity-result'] = 'passed'
 
     elif result == 'SKIPPED':
         summary['sanity-skip-count'] += 1
+        target_details['sanity-result'] = 'skipped'
 
     elif result == 'FAILED':
         summary['sanity-fail-count'] += 1
@@ -84,6 +122,8 @@ def process_sanity_file(summary, target, sanity_path):
             'target': target,
             'log': ''.join(lines[5:])
             })
+        target_details['sanity-result'] = 'failed'
+        target_details['sanity-ok'] = False
 
     else:
         assert False, 'Invalid sanity result: %s' % result
@@ -106,6 +146,8 @@ def main():
         'sanity-skip-count': 0,
         'sanity-fail-count': 0,
         'sanity-failure-details': [],
+
+        'targets': {},
         }
 
     for path in glob.glob('test-results/*.json'):
@@ -169,6 +211,24 @@ def main():
             print()
 
         print_counts()
+
+        for target, target_details in summary['targets'].iteritems():
+            ok = \
+                target_details['fail-count'] == 0 and \
+                target_details['error-count'] == 0 and \
+                target_details['sanity-ok']
+            if ok:
+                continue
+
+            print(' - %s: %d passed, %d failures, %d errors, sanity: %s)' %
+                  (target,
+                   target_details['pass-count'],
+                   target_details['fail-count'],
+                   target_details['error-count'],
+                   target_details['sanity-result']))
+
+        print()
+
         print('FAILED (%s failures, %d errors, %d sanity failures)' %
               (summary['fail-count'],
                summary['error-count'],
