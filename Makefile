@@ -1,5 +1,7 @@
 NULL=
 
+CURRENT_MAKEFILE:=$(lastword $(MAKEFILE_LIST))
+
 CHECK_PRG=./scripts/check-program
 SVG2PNG=./scripts/svg2png
 
@@ -34,7 +36,9 @@ inception-check: dist
 	./tests/run-inception.sh dist/karton-`python ./karton/version.py`.tar.gz
 
 .PHONY: all-check
-all-check: check inception-check
+all-check:
+	-$(MAKE) -f $(CURRENT_MAKEFILE) check
+	-$(MAKE) -f $(CURRENT_MAKEFILE) inception-check
 	@echo
 	@echo
 	@echo "SUMMARY OF BOTH LOCAL AND INCEPTION TESTS"
