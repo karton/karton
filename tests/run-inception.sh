@@ -1,8 +1,18 @@
 #! /bin/bash
 
-TARGETS="\
-    ubuntu:latest \
-    "
+TARGETS=""
+
+# Ubuntu.
+TARGETS+=" ubuntu:latest" # Latest LTS, not latest release.
+TARGETS+=" ubuntu:devel"
+# The previous LTS (14.04, Trusty Tahr) has an acient Docker.
+
+# Debian.
+TARGETS+=" debian:unstable"
+
+# CentOS.
+TARGETS+=" centos:latest" # This is 7 at the time of writing.
+# 6 is ancient (first released in 2011)
 
 function _error() {
     echo "$1" >&2
@@ -133,6 +143,7 @@ echo
 EOF
 
 for target in $TARGETS; do
+    echo "TESTING ON TARGET $target"
     ./inception/inception.py \
         --add "$package_path" _ \
         --save-back "test-results/inception-$target.json"  "test-results.json" \
@@ -142,4 +153,3 @@ for target in $TARGETS; do
         "$target" \
         "./run.sh"
 done
-
