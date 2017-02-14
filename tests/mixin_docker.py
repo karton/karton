@@ -175,12 +175,12 @@ class DockerMixin(KartonMixin):
     @make_image('ubuntu-gcc')
     def build_ubuntu_latest_with_gcc(self, props=None):
         props.distro = 'ubuntu'
-        props.packages.append('gcc')
+        props.packages.extend(['gcc', 'libc6-dev', 'file'])
 
     @make_image('ubuntu-gcc-x32')
     def build_ubuntu_old_with_gcc_x32(self, props=None):
         props.distro = 'ubuntu:trusty'
-        props.packages.extend(['gcc', 'gcc-multilib'])
+        props.packages.extend(['gcc', 'libc6-dev', 'gcc-multilib', 'file'])
 
     # We cannot skip the build stage as we need to generate some on-disk content.
     @make_image('ubuntu-shared-dirs')
