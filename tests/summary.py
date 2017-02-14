@@ -213,11 +213,11 @@ def main():
         print_counts()
 
         for target, target_details in summary['targets'].iteritems():
-            ok = \
+            target_ok = \
                 target_details['fail-count'] == 0 and \
                 target_details['error-count'] == 0 and \
                 target_details['sanity-ok']
-            if ok:
+            if target_ok:
                 continue
 
             print(' - %s: %d passed, %d failures, %d errors, sanity: %s)' %
