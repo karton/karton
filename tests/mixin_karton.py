@@ -152,25 +152,7 @@ class KartonMixin(TrackedTestCase):
         self._last_exit_code = 0
         self.current_text = 'INVALID'
 
-        try:
-            try:
-                redirector = testutils.Redirector()
-                try:
-                    with redirector:
-                        karton.run_karton(self.session, [prog] + arguments)
-                finally:
-                    self.current_text = redirector.content
-
-            except log.ExitDueToFailure as exc:
-                self._last_exit_code = exc.code
-                if not ignore_fail:
-                    self.fail('Karton failed unexpectedly (ExitDueToFailure exception): %s' % exc)
-            except SystemExit as exc:
-                self._last_exit_code = exc.code
-                if not ignore_fail and self._last_exit_code != 0:
-                    self.fail('Karton failed unexpectedly, exit code is %d '
-                              '(even if ExitDueToFailure was not raised)' % self._last_exit_code)
-        except Exception:
+        def handle_failure():
             if self._last_exit_code == 0:
                 self._last_exit_code = 1
 
@@ -180,9 +162,29 @@ class KartonMixin(TrackedTestCase):
                     'The output from the failing Karton invokation is:\n'
                     '================\n'
                     '%s\n'
-                    '================\n' %
+                    '================\n'
+                    '\n' %
                     self.current_text.strip())
-            raise
+
+        try:
+            redirector = testutils.Redirector()
+            try:
+                with redirector:
+                    karton.run_karton(self.session, [prog] + arguments)
+            finally:
+                self.current_text = redirector.content
+
+        except log.ExitDueToFailure as exc:
+            self._last_exit_code = exc.code
+            if not ignore_fail:
+                handle_failure()
+                self.fail('Karton failed unexpectedly (ExitDueToFailure exception): %s' % exc)
+        except SystemExit as exc:
+            self._last_exit_code = exc.code
+            if not ignore_fail and self._last_exit_code != 0:
+                handle_failure()
+                self.fail('Karton failed unexpectedly, exit code is %d '
+                          '(even if ExitDueToFailure was not raised)' % self._last_exit_code)
 
         return self._last_exit_code
 
