@@ -282,6 +282,7 @@ class Image(object):
         # component.
         verbose('Creating an image called "%s" at "%s".' % (image_name, complete_path))
 
+        complete_path = os.path.abspath(complete_path)
         while complete_path.endswith(os.sep):
             complete_path = complete_path[:-1]
 
@@ -326,6 +327,7 @@ class Image(object):
         verbose('Creating an image called "%s" from an existing definition at "%s".' %
                 (image_name, existing_dir_path))
 
+        existing_dir_path = os.path.abspath(existing_dir_path)
         if not os.path.isdir(existing_dir_path):
             die('The path "%s" should be an existing directory containing the definition file and '
                 'other required files. If you want to create a new image without having an '
