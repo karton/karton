@@ -33,7 +33,7 @@ check:
 
 .PHONY: inception-check
 inception-check: dist
-	./tests/run-inception.sh dist/karton-`python ./karton/version.py`.tar.gz
+	./tests/run-inception.sh dist/karton-`python ./karton/version.py`.tar.gz "$(TARGETS)" $(TESTS)
 
 .PHONY: all-check
 all-check:

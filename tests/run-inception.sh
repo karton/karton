@@ -15,14 +15,49 @@ TARGETS+=" centos:latest" # This is 7 at the time of writing.
 # 6 is ancient (first released in 2011)
 
 function _error() {
+    echo >&2
     echo "$1" >&2
+    echo >&2
     exit 1
 }
 
 package_path="$1"
-
+shift
 if [ -z "$package_path" ]; then
     _error "You must specify a package to run."
+fi
+
+chosen_targets="$1"
+shift
+if [ -z "$chosen_targets" -o "$chosen_targets" = "all" ]; then
+    chosen_targets="$TARGETS"
+else
+    for t1 in $chosen_targets; do
+        ok="false"
+        for t2 in $TARGETS; do
+            if [ "$t1" = "$t2" ]; then
+                ok="true"
+                break
+            fi
+        done
+        if [ "$ok" = "false" ]; then
+            _error "'$t1' is an invalid test target."
+        fi
+    done
+fi
+
+tests_to_run="$@"
+if [ -n "$tests_to_run" ]; then
+    # We save results only if all tests were run.
+    save_result=""
+else
+    save_result="--save-json-results ../test-results.json"
+fi
+if [ "$tests_to_run" = "sanity" ]; then
+    run_sanity_only="true"
+    tests_to_run="FAIL" # If we accidentally run the normal ones, it will fail.
+else
+    run_sanity_only="false"
 fi
 
 package=$(basename "$package_path")
@@ -44,9 +79,19 @@ cd "$base_package_name"
 
 do_sanity_check="false"
 
-touch ../test-results.json
-if python ./tests/run.py --save-json-results ../test-results.json; then
+if [ "$run_sanity_only" = "true" ]; then
+    echo "Not running any unit test"
     do_sanity_check="true"
+    echo "NOT RUN" > ../test-results.json
+else
+    touch ../test-results.json
+    if python ./tests/run.py $save_result $tests_to_run; then
+        do_sanity_check="true"
+    fi
+    # Run sanity checks only if all tests were run.
+    if [ -n "$tests_to_run" ]; then
+        do_sanity_check="false"
+    fi
 fi
 
 cd ..
@@ -142,7 +187,7 @@ fi
 echo
 EOF
 
-for target in $TARGETS; do
+for target in $chosen_targets; do
     echo "TESTING ON TARGET $target"
     ./inception/inception.py \
         --add "$package_path" _ \
