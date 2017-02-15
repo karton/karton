@@ -189,7 +189,7 @@ class Image(object):
 
         self._print_json(json_dict)
 
-    def command_remove(self, force):
+    def command_image_remove(self, force):
         '''
         Remove the image.
 

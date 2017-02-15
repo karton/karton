@@ -145,7 +145,7 @@ def do_image_remove(parsed_args, session):
         die('The image "%s" doesn\'t exist.' % parsed_args.image_name)
 
     image = container.Image(session, image_config)
-    image.command_remove(parsed_args.force)
+    image.command_image_remove(parsed_args.force)
 
 
 def do_alias(parsed_args, session):
