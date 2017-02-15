@@ -45,7 +45,10 @@ class Docker(object):
     def check_output(self, cmd_args, *args, **kwargs):
         '''
         Like `subprocess.check_output`, but the right command for docker is prepended
-        to the arguments.
+        to the arguments and standard error is automatically redirected to the retun
+        value.
+
+        See `proc.check_output` for details.
         '''
         return proc.check_output([self._docker_command] + cmd_args, *args, **kwargs)
 
@@ -65,14 +68,13 @@ class Docker(object):
 
         try:
             output = self.check_output(
-                ['inspect', '--format={{ .State.Running }}', container_id],
-                stderr=proc.STDOUT)
+                ['inspect', '--format={{ .State.Running }}', container_id])
         except proc.CalledProcessError:
             verbose('Cannot inspect the status of the Docker container.')
 
             # Did inspect fail just because docker is not running?
             try:
-                self.check_output(['images'], stderr=proc.STDOUT)
+                self.check_output(['images'])
             except proc.CalledProcessError as exc:
                 die_docker_not_running(exc.output)
 

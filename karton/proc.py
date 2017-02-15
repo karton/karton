@@ -8,7 +8,6 @@ from log import verbose
 
 
 CalledProcessError = subprocess.CalledProcessError
-STDOUT = subprocess.STDOUT
 
 
 def call(cmd_args, *args, **kwargs):
@@ -30,6 +29,17 @@ def check_call(cmd_args, *args, **kwargs):
 def check_output(cmd_args, *args, **kwargs):
     '''
     Like `subprocess.check_output`, but with extra logging in verbose mode.
+
+    The standard error is automatically redirected to standard output (so it's returned
+    together with the rest of the output).
+    To redirect the standard error somewhere else, specify `stderr=...`.
+    To avoid redirecting the standard error output at all, use `stderr=None`.
     '''
     verbose('Calling (using check_output):\n%s' % cmd_args)
+
+    if 'stderr' not in kwargs:
+        kwargs['stderr'] = subprocess.STDOUT
+    elif kwargs['stderr'] is None:
+        del kwargs['stderr']
+
     return subprocess.check_output(cmd_args, *args, **kwargs)

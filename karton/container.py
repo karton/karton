@@ -441,8 +441,7 @@ class Image(object):
         verbose('Starting a new container.')
 
         try:
-            images = self.docker.check_output(['images', '-q', self.image_name],
-                                              stderr=proc.STDOUT)
+            images = self.docker.check_output(['images', '-q', self.image_name])
             images = images.strip()
         except proc.CalledProcessError as exc:
             dockerctl.die_docker_not_running(exc.output)
