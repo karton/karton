@@ -198,6 +198,11 @@ class RunTestCase(DockerMixin,
                           ignore_fail=True)
         self.assertIn('No such file or directory', self.current_text)
 
+    def test_fedora(self):
+        image_name = self.build_fedora_latest()
+        self.spawn_karton(['run', '--no-cd', image_name, 'which', 'yum'])
+        self.assertIn('/usr/bin/yum', self.current_text)
+
     def test_date(self):
         if sys.platform != 'darwin':
             # This test tests a workaround for OS X. It would not work on Linux as setting the

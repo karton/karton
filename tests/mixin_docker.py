@@ -203,3 +203,8 @@ class DockerMixin(KartonMixin):
     def build_debian_latest_without_sudo(self, props=None):
         props.distro = 'debian'
         props.sudo = props.SUDO_NO
+
+    @make_image('fedora')
+    def build_fedora_latest(self, props=None):
+        props.distro = 'fedora:latest'
+        props.packages.append('which')
