@@ -109,11 +109,12 @@ class ImagesTestCase(DockerfileMixin,
         self.assertIn(' - %s at "%s' % (image1, self.tmp_dir), self.current_text)
         self.assertEqual(len(self.current_text_as_lines), 2)
 
-    def check_call(self, arguments):
+    def check_output(self, arguments):
         self.assertEqual(len(arguments), 3)
         self.assertEqual(arguments[0], 'rmi')
         self.assertEqual(arguments[1], '--force')
         self.assertEqual(arguments[2], self._image_we_are_removing)
+        return 'INVALID'
 
     def test_image_remove(self):
         # No images.

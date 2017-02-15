@@ -227,9 +227,11 @@ class Image(object):
         Remove the current image.
         '''
         try:
-            self.docker.check_call(['rmi', '--force', self.image_name])
+            self.docker.check_output(['rmi', '--force', self.image_name])
         except proc.CalledProcessError:
-            die('Cannot remove the image.')
+            verbose('Cannot remove the Docker image for image "%s". '
+                    'This probably happened because the Docker image was never built.' %
+                    self.image_name)
 
     @staticmethod
     def command_image_list(config):
