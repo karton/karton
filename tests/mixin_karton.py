@@ -218,24 +218,30 @@ class KartonMixin(TrackedTestCase):
         self._last_exit_code = 0
         self.current_text = 'INVALID'
 
+        def print_output_after_failure():
+            content = redirector.content.strip()
+            if not content:
+                return
+            sys.stderr.write(
+                '\n'
+                'The output from the failing Karton invokation is:\n'
+                '================\n'
+                '%s\n'
+                '================\n' %
+                content)
+
         redirector = testutils.Redirector()
         try:
             with redirector:
                 self._last_exit_code = subprocess.call(['python', prog] + arguments)
         except KeyboardInterrupt:
-            if redirector.content.strip():
-                sys.stderr.write(
-                    '\n'
-                    'The output from the failing Karton invokation is:\n'
-                    '================\n'
-                    '%s\n'
-                    '================\n' %
-                    redirector.content.strip())
+            print_output_after_failure()
             raise
         finally:
             self.current_text = redirector.content
 
         if not ignore_fail and self._last_exit_code != 0:
+            print_output_after_failure()
             self.fail('Karton invokation failed with exit code %d' % self._last_exit_code)
 
         return self._last_exit_code
