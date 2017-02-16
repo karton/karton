@@ -98,12 +98,12 @@ Creating an alias
 
 After a while you will probably get bored of typing `karton run IMAGE-NAME` all the time. To make things simpler to type you can create an alias:
 
-```
-# Create a symbolic link "wk" which start Karton using the "work" image.
+```sh
+$ # Create a symbolic link "wk" which start Karton using the "work" image.
 $ karton alias wk work
 [...]
 
-# This is equivalent to "karton run work echo hello"
+$ # This is equivalent to "karton run work echo hello"
 $ wk run echo hello
 ```
 
