@@ -28,8 +28,7 @@ class ArgumentParser(argparse.ArgumentParser):
         if message == 'too few arguments':
             # There seems to be no other way, but we need a decent message when
             # the program is invoked without arguments.
-            self.print_help()
-            raise SystemExit(1)
+            message = '%s; try "%s help"' % (message, self.prog)
 
         super(ArgumentParser, self).error(message)
 

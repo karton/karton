@@ -17,11 +17,13 @@ class NoImageTestCase(KartonMixin,
         self.assertIn('positional arguments:', self.current_text)
         self.assertIn('optional arguments:', self.current_text)
 
+    def _verify_too_few_arguments(self):
+        self.assertIn('too few arguments; try "karton', self.current_text)
+
     @KartonMixin.run_and_spawn
     def test_no_args(self, run_or_spawn):
         run_or_spawn([], ignore_fail=True)
-        self.assert_exit_fail()
-        self._verify_help_message()
+        self._verify_too_few_arguments()
 
     @KartonMixin.run_and_spawn
     def test_help(self, run_or_spawn):
@@ -29,12 +31,11 @@ class NoImageTestCase(KartonMixin,
         self.assert_exit_success()
         self._verify_help_message()
 
-    @KartonMixin.run_and_spawn
-    def test_incomplete_commands(self, run_or_spawn):
+    def test_incomplete_commands(self):
         for cmd in ('run', 'shell', 'start', 'stop', 'status', 'build', 'image',
                     'image create', 'image import'):
-            run_or_spawn(cmd.split(' '), ignore_fail=True)
-            self._verify_help_message()
+            self.spawn_karton(cmd.split(' '), ignore_fail=True)
+            self._verify_too_few_arguments()
             self.assert_exit_fail()
 
     @KartonMixin.run_and_spawn
