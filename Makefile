@@ -1,5 +1,7 @@
 NULL=
 
+MAKEFLAGS=-j1
+
 CURRENT_MAKEFILE:=$(lastword $(MAKEFILE_LIST))
 
 CHECK_PRG=./scripts/check-program
