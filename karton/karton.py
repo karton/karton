@@ -9,12 +9,14 @@ import collections
 import os
 import sys
 
-import alias
-import container
-import runtime
-import version
+from . import (
+    alias,
+    container,
+    runtime,
+    version,
+    )
 
-from log import die, info, verbose, get_verbose, set_verbose
+from .log import die, info, verbose, get_verbose, set_verbose
 
 
 class ArgumentParser(argparse.ArgumentParser):

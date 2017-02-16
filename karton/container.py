@@ -9,14 +9,16 @@ import os
 import tempfile
 import time
 
-import alias
-import dockerctl
-import dockerfile
-import lock
-import pathutils
-import proc
+from . import (
+    alias,
+    dockerctl,
+    dockerfile,
+    lock,
+    pathutils,
+    proc,
+    )
 
-from log import die, info, verbose
+from .log import die, info, verbose
 
 
 class CDError(OSError):

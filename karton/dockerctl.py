@@ -2,9 +2,11 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
-import proc
+from . import (
+    proc,
+    )
 
-from log import die, verbose
+from .log import die, verbose
 
 
 def die_docker_not_running(output):

@@ -2,5 +2,4 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
-# pylint: disable=import-self
-from version import __version__
+from .version import __version__

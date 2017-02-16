@@ -207,11 +207,13 @@ class KartonMixin(TrackedTestCase):
             If true, errors are ignored.
         '''
         if prog is None:
-            prog = karton.__file__
+            prog = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                '..',
+                'scripts',
+                'karton')
 
-        # FIXME: this is not going to work if the executable permission is dropped because of
-        # distutils.
-        locations.set_karton_executable(karton.__file__)
+        locations.set_karton_executable(prog)
 
         self._last_exit_code = 0
         self.current_text = 'INVALID'

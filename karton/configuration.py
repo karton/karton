@@ -15,9 +15,11 @@ import glob
 import json
 import os
 
-import pathutils
+from . import (
+    pathutils,
+    )
 
-from log import die, info, verbose
+from .log import die, info, verbose
 
 
 ImageAlias = collections.namedtuple('ImageAlias', ['alias_name', 'image_name', 'run'])

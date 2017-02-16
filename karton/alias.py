@@ -5,11 +5,13 @@
 import json
 import os
 
-import configuration
-import locations
-import pathutils
+from . import (
+    configuration,
+    locations,
+    pathutils,
+    )
 
-from log import die, info, verbose
+from .log import die, info, verbose
 
 
 class AliasManager(object):

@@ -10,11 +10,13 @@ import shutil
 import textwrap
 import traceback
 
-import locations
-import pathutils
-import runtime
+from . import (
+    locations,
+    pathutils,
+    runtime,
+    )
 
-from log import verbose
+from .log import verbose
 
 
 _DEFAULT_DEFINITION_FILE = '''\

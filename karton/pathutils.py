@@ -6,7 +6,7 @@ import errno
 import os
 import shutil
 
-from log import verbose
+from .log import verbose
 
 
 def makedirs(dir_path):

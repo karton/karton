@@ -4,6 +4,14 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+import os
+import sys
+
+_g_root_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
+if os.path.exists(os.path.join(_g_root_dir, 'karton', 'karton.py')):
+    # Running from the source.
+    sys.path.append(_g_root_dir)
+
 from karton import karton
 
 if __name__ == '__main__':

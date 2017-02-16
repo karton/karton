@@ -7,8 +7,10 @@ import os
 import socket
 import tempfile
 
-import configuration
-import dockerctl
+from . import (
+    configuration,
+    dockerctl,
+    )
 
 
 class HostSystem(object):

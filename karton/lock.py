@@ -6,7 +6,7 @@ import errno
 import fcntl
 import time
 
-from log import verbose
+from .log import verbose
 
 
 class TimeoutError(Exception):

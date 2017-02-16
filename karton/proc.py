@@ -4,7 +4,7 @@
 
 import subprocess
 
-from log import verbose
+from .log import verbose
 
 
 CalledProcessError = subprocess.CalledProcessError
