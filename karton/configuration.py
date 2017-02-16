@@ -4,10 +4,19 @@
 
 try:
     # Python 2.
-    import ConfigParser as configparser
+    from ConfigParser import (
+        SafeConfigParser,
+        NoSectionError,
+        NoOptionError,
+        )
+    ConfigParser = SafeConfigParser
 except ImportError:
     # Python 3.
-    import configparser
+    from configparser import (
+        ConfigParser,
+        NoSectionError,
+        NoOptionError,
+        )
 
 import collections
 import errno
@@ -16,6 +25,7 @@ import json
 import os
 
 from . import (
+    compat,
     pathutils,
     )
 
@@ -178,7 +188,7 @@ class GlobalConfig(object):
         '''
         self._config_path = config_path
 
-        self._parser = configparser.SafeConfigParser()
+        self._parser = ConfigParser()
         self._main_config_path = os.path.join(self._config_path, 'karton.cfg')
         self._parser.read([self._main_config_path])
 
@@ -312,7 +322,7 @@ class GlobalConfig(object):
         '''
         try:
             return self._parser.get(section, option)
-        except (configparser.NoSectionError, configparser.NoOptionError):
+        except (NoSectionError, NoOptionError):
             return default
 
     def _get_items(self, section):
@@ -328,7 +338,7 @@ class GlobalConfig(object):
         '''
         try:
             items = self._parser.items(section)
-        except configparser.NoSectionError:
+        except NoSectionError:
             items = []
 
         return collections.OrderedDict(items)
@@ -367,7 +377,7 @@ class GlobalConfig(object):
         '''
         try:
             removed = self._parser.remove_option(section, option)
-        except configparser.NoSectionError:
+        except NoSectionError:
             removed = False
 
         if removed:
@@ -384,7 +394,7 @@ class GlobalConfig(object):
         '''
         aliases = {}
 
-        for alias_name, value in self._get_items('alias').iteritems():
+        for alias_name, value in compat.iteritems(self._get_items('alias')):
             try:
                 alias_type, image_name = value.split(';', 1)
             except ValueError:

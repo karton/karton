@@ -6,6 +6,7 @@ import json
 import os
 
 from . import (
+    compat,
     configuration,
     locations,
     pathutils,
@@ -187,7 +188,7 @@ class AliasManager(object):
         '''
         verbose('Removing all aliases for image "%s".' % image_name)
 
-        for alias in self._config.get_aliases().itervalues():
+        for alias in compat.itervalues(self._config.get_aliases()):
             if alias.image_name == image_name:
                 verbose('Alias "%s" is for the target image "%s" so it will be removed.' %
                         (alias.alias_name, image_name))

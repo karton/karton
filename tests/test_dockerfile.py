@@ -54,7 +54,7 @@ class DockerfileTestCase(DockerfileMixin,
         def setup_image(props):
             self.assertEqual(props.image_name, 'new-image')
 
-            for name, (value, _) in new_values.iteritems():
+            for name, (value, _) in new_values.items():
                 old_value = getattr(props, name)
                 self.assertNotEqual(old_value, value)
 
@@ -66,7 +66,7 @@ class DockerfileTestCase(DockerfileMixin,
         with open(build_info.dockerfile_path) as dockerfile_file:
             content = dockerfile_file.read()
 
-        for value, expected_text in new_values.itervalues():
+        for value, expected_text in new_values.values():
             if expected_text is None:
                 self.assertNotIn(value, content)
             else:
@@ -97,7 +97,7 @@ class DockerfileTestCase(DockerfileMixin,
             props.distro = "invalid"
 
         build_info = self.make_builder(setup_image)
-        with self.assertRaisesRegexp(dockerfile.DefinitionError, 'Invalid distro'):
+        with self.assert_raises_regex(dockerfile.DefinitionError, 'Invalid distro'):
             build_info.builder.generate()
 
     def test_error_other(self):

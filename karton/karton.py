@@ -10,6 +10,7 @@ import os
 import sys
 
 from . import (
+    compat,
     alias,
     container,
     runtime,
@@ -315,7 +316,7 @@ def run_karton(session, arguments):
         return sub_command_subparser
 
     def add_to_every_command(*args, **kwargs):
-        for command in all_commands.itervalues():
+        for command in compat.itervalues(all_commands):
             command.subparser.add_argument(*args, **kwargs)
 
     # Definition of arguments common to multiple commands.
@@ -549,6 +550,10 @@ def run_karton(session, arguments):
 
     # Now actually parse the command line.
     parsed_args = parser.parse_args(arguments[1:])
+
+    if getattr(parsed_args, 'verbose', None) is None:
+        # This is needed in Python 3 if no argument is passed. Not sure why.
+        parser.error('too few arguments')
 
     if implied_image_name:
         parsed_args.image_name = implied_image_name

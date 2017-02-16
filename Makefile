@@ -26,10 +26,18 @@ automatic-target:
 .FORCE:
 	true
 
+.PHONY: check-all-python
+check-all-python: check check-python3
+
 .PHONY: check
 check:
 	mkdir -p test-results/ 2> /dev/null
-	python ./tests/run.py --save-json-results test-results/local.json
+	python2 ./tests/run.py --save-json-results test-results/local.json
+
+.PHONY: check-python3
+check-python3:
+	mkdir -p test-results/ 2> /dev/null
+	python3 ./tests/run.py --save-json-results test-results/local-python3.json
 
 .PHONY: inception-check
 inception-check: dist
@@ -38,6 +46,7 @@ inception-check: dist
 .PHONY: all-check
 all-check:
 	-$(MAKE) -f $(CURRENT_MAKEFILE) check
+	-$(MAKE) -f $(CURRENT_MAKEFILE) check-python3
 	-$(MAKE) -f $(CURRENT_MAKEFILE) inception-check
 	@echo
 	@echo

@@ -18,3 +18,8 @@ class TrackedTestCase(unittest.TestCase):
         TrackedTestCase.all_run_tests.add(test_name)
 
         super(TrackedTestCase, self).setUp()
+
+    def assert_raises_regex(self, *args, **kwargs):
+        # In recent Python, assertRaisesRegexp is deprecated in favour of assertRaisesRegex.
+        actual_method = getattr(self, 'assertRaisesRegex', self.assertRaisesRegexp)
+        return actual_method(*args, **kwargs)

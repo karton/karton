@@ -78,7 +78,8 @@ class DockerMixin(KartonMixin):
                 ['docker',
                  'stop',
                  container_id,
-                ])
+                ],
+                universal_newlines=True)
 
     @staticmethod
     def get_running_test_containers():
@@ -94,7 +95,9 @@ class DockerMixin(KartonMixin):
              'ps',
              '--format',
              '{{ .ID }}:{{ .Image }}',
-            ])
+            ],
+            stderr=subprocess.STDOUT,
+            universal_newlines=True)
 
         ids = []
         for line in output.split('\n'):

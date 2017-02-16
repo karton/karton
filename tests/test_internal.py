@@ -25,7 +25,7 @@ class InternalTestCase(TrackedTestCase):
             sys.stderr.write(sys_stderr_write.message + '\n')
 
         def os_write_1():
-            os.write(1, os_write_1.message + '\n')
+            os.write(1, (os_write_1.message + '\n').encode('utf-8'))
 
         def system_echo():
             os.system('echo "%s"' % system_echo.message)

@@ -122,6 +122,8 @@ class FileLock(object):
         verbose('Lock "%s" released.' % self._lock_file_path)
 
         self._locked = False
+
+        self._lock_file.close()
         self._lock_file = None
 
 

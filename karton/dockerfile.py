@@ -3,7 +3,6 @@
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
 import imp
-import inspect
 import os
 import re
 import shutil
@@ -11,6 +10,7 @@ import textwrap
 import traceback
 
 from . import (
+    compat,
     locations,
     pathutils,
     runtime,
@@ -111,7 +111,7 @@ class DefinitionError(Exception):
 _g_props_all_properties = {}
 
 def props_property(fget, *args, **kwargs):
-    _g_props_all_properties[fget.func_name] = fget
+    _g_props_all_properties[compat.get_func_name(fget)] = fget
     return property(fget, *args, **kwargs)
 
 
@@ -443,7 +443,7 @@ class Builder(object):
                 'accept an argument of type "DefinitionProperties")' % definition_path)
 
         try:
-            args_spec = inspect.getargspec(setup_image)
+            args_spec = compat.getargspec(setup_image)
         except TypeError as exc:
             raise DefinitionError(
                 definition_path,

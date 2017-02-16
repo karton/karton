@@ -28,7 +28,8 @@ def check_call(cmd_args, *args, **kwargs):
 
 def check_output(cmd_args, *args, **kwargs):
     '''
-    Like `subprocess.check_output`, but with extra logging in verbose mode.
+    Like `subprocess.check_output`, but with extra logging in verbose mode, stderr redirection
+    by default and it always returns a string, not bytes.
 
     The standard error is automatically redirected to standard output (so it's returned
     together with the rest of the output).
@@ -42,4 +43,8 @@ def check_output(cmd_args, *args, **kwargs):
     elif kwargs['stderr'] is None:
         del kwargs['stderr']
 
+    if 'universal_newlines' not in kwargs:
+        kwargs['universal_newlines'] = True
+
+    # Without universal_newlines, in Python 3, this returns a byte instance.
     return subprocess.check_output(cmd_args, *args, **kwargs)

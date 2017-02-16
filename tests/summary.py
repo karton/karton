@@ -22,7 +22,7 @@ def get_target_details(summary, target):
     Return value:
         A dictionary with existing target details or a new one with default values.
     '''
-    if target == 'local':
+    if target.startswith('local'):
         sanity_default = 'N/A'
     else:
         sanity_default = 'unknown'
@@ -62,7 +62,7 @@ def process_results_file(summary, target, results_path):
     failure_details = summary['failure-details']
     target_details = get_target_details(summary, target)
 
-    for test_name, details in results['details'].iteritems():
+    for test_name, details in results['details'].items():
         if details['passed']:
             target_details['pass-count'] += 1
             continue
@@ -154,8 +154,8 @@ def main():
         filename = os.path.basename(path)
         if filename == 'summary.json':
             continue
-        elif filename == 'local.json':
-            target = 'local'
+        elif filename.startswith('local'):
+            target = filename[:-len('.json')]
         elif filename.startswith('inception-'):
             target = filename[len('inception-'):-len('.json')]
 
@@ -186,7 +186,7 @@ def main():
 
     print()
     if not summary['ok']:
-        for test_name, details in summary['failure-details'].iteritems():
+        for test_name, details in summary['failure-details'].items():
             print('=' * 70)
             print('FAIL: %s on %d targets' % (test_name, len(details)))
             print('-' * 70)
@@ -212,7 +212,7 @@ def main():
 
         print_counts()
 
-        for target, target_details in summary['targets'].iteritems():
+        for target, target_details in summary['targets'].items():
             target_ok = \
                 target_details['fail-count'] == 0 and \
                 target_details['error-count'] == 0 and \
