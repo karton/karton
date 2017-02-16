@@ -220,7 +220,7 @@ def main():
             if target_ok:
                 continue
 
-            print(' - %s: %d passed, %d failures, %d errors, sanity: %s)' %
+            print(' - %s: %d passed, %d failures, %d errors, sanity: %s' %
                   (target,
                    target_details['pass-count'],
                    target_details['fail-count'],
