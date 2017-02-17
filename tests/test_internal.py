@@ -5,7 +5,13 @@
 from __future__ import print_function
 
 import os
+import subprocess
 import sys
+import tempfile
+
+from karton import (
+    pathutils,
+    )
 
 import testutils
 
@@ -55,3 +61,27 @@ class InternalTestCase(TrackedTestCase):
 
         for _, message in output_sources:
             self.assertIn(message + '\n', redirector.content)
+
+    def test_bin_path(self):
+        tmpdir = tempfile.mkdtemp()
+
+        def subprocess_check_in_path():
+            result = subprocess.check_output(
+                ['bash', '-c', 'echo $PATH'],
+                universal_newlines=True)
+            return result.startswith(tmpdir + ':')
+
+        self.assertNotIn(tmpdir, pathutils.get_system_executable_paths()[0])
+        self.assertFalse(subprocess_check_in_path())
+
+        adder = testutils.BinPathAdder(tmpdir)
+
+        self.assertNotIn(tmpdir, pathutils.get_system_executable_paths()[0])
+        self.assertFalse(subprocess_check_in_path())
+
+        with adder:
+            self.assertEqual(tmpdir, pathutils.get_system_executable_paths()[0])
+            self.assertTrue(subprocess_check_in_path())
+
+        self.assertNotIn(tmpdir, pathutils.get_system_executable_paths()[0])
+        self.assertFalse(subprocess_check_in_path())

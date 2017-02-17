@@ -73,3 +73,32 @@ class Redirector(object):
 
         # Cleanup.
         os.unlink(self._redirected_path)
+
+
+class BinPathAdder(object):
+    '''
+    Add a directory to `$PATH`.
+
+    This is supposed to be used to be used with a `with` block.
+    '''
+
+    def __init__(self, additional_dir):
+        '''
+        Initialize a `BinPathAdder`.
+
+        additional_dir:
+            The directory to add to `$PATH`.
+        '''
+        self.additional_dir = additional_dir
+
+    @property
+    def _dir_and_separator(self):
+        return self.additional_dir + ':'
+
+    def __enter__(self):
+        os.environ['PATH'] = self._dir_and_separator + os.environ['PATH']
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        assert os.environ['PATH'].startswith(self._dir_and_separator)
+        os.environ['PATH'] = os.environ['PATH'][len(self._dir_and_separator):]
