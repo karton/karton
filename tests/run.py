@@ -20,6 +20,7 @@ ALL_TESTS = [
     'test_dockerfile',
     'test_images',
     'test_run',
+    'test_alias',
     ]
 
 
