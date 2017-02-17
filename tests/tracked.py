@@ -23,3 +23,11 @@ class TrackedTestCase(unittest.TestCase):
         # In recent Python, assertRaisesRegexp is deprecated in favour of assertRaisesRegex.
         actual_method = getattr(self, 'assertRaisesRegex', self.assertRaisesRegexp)
         return actual_method(*args, **kwargs)
+
+    def assert_items_equal(self, *args, **kwargs):
+        # In recent Python, assertItemsEqual was removed in favour of the very confusignly
+        # named assertCountEqual.
+        actual_method = getattr(self, 'assertCountEqual', None)
+        if actual_method is None:
+            actual_method = getattr(self, 'assertItemsEqual')
+        return actual_method(*args, **kwargs)
