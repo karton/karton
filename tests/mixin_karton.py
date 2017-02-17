@@ -131,6 +131,25 @@ class KartonMixin(TrackedTestCase):
         '''
         return json.loads(self.current_text)
 
+    @staticmethod
+    def _set_karton_executable(prog=None):
+        '''
+        Set the path to the Karton executable based on `prog`.
+
+        This is similar in effect to setting `sys.argv[0]`.
+
+        prog:
+            The invocation name of Karton or `None` to use the default Karton script.
+        '''
+        if prog is None:
+            prog = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                '..',
+                'scripts',
+                'karton')
+
+        locations.set_karton_executable(prog)
+
     def run_karton(self, arguments, prog=None, ignore_fail=False):
         '''
         Run Karton as a module.
@@ -146,8 +165,9 @@ class KartonMixin(TrackedTestCase):
             If false, errors cause an assertion failure.
             If true, errors are ignored.
         '''
+        self._set_karton_executable(prog)
         if prog is None:
-            prog = 'karton'
+            prog = locations.get_karton_executable()
 
         self._last_exit_code = 0
         self.current_text = 'INVALID'
@@ -206,14 +226,9 @@ class KartonMixin(TrackedTestCase):
             If false, errors cause an assertion failure.
             If true, errors are ignored.
         '''
+        self._set_karton_executable(prog)
         if prog is None:
-            prog = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)),
-                '..',
-                'scripts',
-                'karton')
-
-        locations.set_karton_executable(prog)
+            prog = locations.get_karton_executable()
 
         self._last_exit_code = 0
         self.current_text = 'INVALID'
@@ -233,7 +248,7 @@ class KartonMixin(TrackedTestCase):
         redirector = testutils.Redirector()
         try:
             with redirector:
-                self._last_exit_code = subprocess.call(['python', prog] + arguments)
+                self._last_exit_code = subprocess.call([prog] + arguments)
         except KeyboardInterrupt:
             print_output_after_failure()
             raise
