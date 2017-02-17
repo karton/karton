@@ -610,7 +610,3 @@ def main_with_defaults():
     Call `main` with a default session and `sys.argv`.
     '''
     main(runtime.Session.default_session(), sys.argv)
-
-
-if __name__ == '__main__':
-    main_with_defaults()
