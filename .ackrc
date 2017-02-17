@@ -1,0 +1,9 @@
+# Ignore build directories when using ack (which is like grep but cooler).
+# Ack's package is called ack-grep in Ubuntu/Debian.
+
+# setuptools stuff.
+--ignore-dir=build
+--ignore-dir=dist
+
+# Our stuff.
+--ignore-dir=test-results
