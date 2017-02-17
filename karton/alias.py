@@ -159,9 +159,8 @@ class AliasManager(object):
                 die('Alias file "%s" for alias "%s" is not a symbolic link. '
                     'The alias cannot be removed.' %
                     (symlink, alias_name))
-            symlink_target = os.path.realpath(symlink)
-            # FIXME: This may actually break in some configurations.
-            if not symlink_target.endswith('karton/karton.py'):
+            symlink_target = os.path.abspath(os.path.realpath(symlink))
+            if symlink_target != locations.get_karton_executable():
                 die('Alias symblic link "%s" for alias "%s" is not a valid symbolic link for an '
                     'alias. The target path is not the Karton executable but "%s".' %
                     (symlink, alias_name, symlink_target))
