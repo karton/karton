@@ -20,6 +20,13 @@ from . import (
 from .log import die, info, verbose, get_verbose, set_verbose
 
 
+class ArgumentParserError(Exception):
+    '''
+    An error raised while parsing arguments.
+    '''
+    pass
+
+
 class ArgumentParser(argparse.ArgumentParser):
     '''
     `ArgumentParser` for handling special Karton use cases.
@@ -94,6 +101,9 @@ CommandInfo = collections.namedtuple('CommandInfo', ['name', 'subparser', 'callb
 
 
 def do_run(parsed_args, image):
+    if not parsed_args.remainder:
+        raise ArgumentParserError('too few arguments')
+
     image.command_run(parsed_args.remainder, parsed_args.cd)
 
 
@@ -349,6 +359,9 @@ def run_karton(session, arguments):
         help='run a  program inside the image',
         description='Runs a program or command inside the image (starting the image if necessary).')
 
+    # This needs to be argparse.REMAINDER so options are passed down to the command
+    # instead of being eaten by the karton command itself.
+    # The side effect of this is that parsed_args.remainder may be empty.
     run_parser.add_argument(
         'remainder',
         metavar='COMMANDS',
@@ -566,7 +579,10 @@ def run_karton(session, arguments):
 
     # We don't use argparse's ability to call a callback as we need to do stuff before
     # it's called.
-    command.callback(parsed_args, session)
+    try:
+        command.callback(parsed_args, session)
+    except ArgumentParserError as exc:
+        parser.error(exc.message)
 
 
 def main(session, arguments):
