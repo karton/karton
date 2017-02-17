@@ -13,8 +13,8 @@ from karton import (
     configuration,
     locations,
     log,
-    karton,
     pathutils,
+    program,
     runtime,
     )
 
@@ -190,7 +190,7 @@ class KartonMixin(TrackedTestCase):
             redirector = testutils.Redirector()
             try:
                 with redirector:
-                    karton.run_karton(self.session, [prog] + arguments)
+                    program.run_karton(self.session, [prog] + arguments)
             finally:
                 self.current_text = redirector.content
 

@@ -8,11 +8,11 @@ import os
 import sys
 
 _g_root_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
-if os.path.exists(os.path.join(_g_root_dir, 'karton', 'karton.py')):
+if os.path.exists(os.path.join(_g_root_dir, 'karton', 'program.py')):
     # Running from the source.
     sys.path.append(_g_root_dir)
 
-from karton import karton
+from karton import program
 
 if __name__ == '__main__':
-    karton.main_with_defaults()
+    program.main_with_defaults()
