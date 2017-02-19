@@ -1,3 +1,4 @@
+<img align="right" src="https://karton.github.io/img/karton-256.png" width="96px" height="96px">
 [[Web site](https://karton.github.io/)] &ndash; [[Install](https://karton.github.io/install)] &ndash; [[How to use](https://karton.github.io/how-to-use)]
 
 Karton
