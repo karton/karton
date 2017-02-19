@@ -1,3 +1,5 @@
+[[Web site](https://karton.github.io/)] &ndash; [[Install](https://karton.github.io/install)] &ndash; [[How to use](https://karton.github.io/how-to-use)]
+
 Karton
 ======
 
