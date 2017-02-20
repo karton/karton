@@ -3,7 +3,9 @@
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
 import os
+import platform
 import subprocess
+import sys
 
 from karton import (
     dockerctl,
@@ -172,6 +174,37 @@ class DockerMixin(KartonMixin):
         self.run_karton(['image', 'import', image_name, import_info.definition_dir])
         self.run_karton(['build', image_name], ignore_fail=ignore_build_fail)
 
+    def get_distro_matching_current(self):
+        '''
+        Returns the name (in the docker format but without tag) of the distro we are currently
+        running on.
+
+        In case this is run on macOS, `ubuntu` is returned.
+        '''
+        if sys.platform == 'darwin':
+            return 'ubuntu'
+
+        # We want to match the currently used distro. Here we could have a fallback, but
+        # I don't want to accidentally fallback to something without noticing.
+        # If you need to support another distro, please just add something suitable as
+        # fallback.
+
+        supported_distros = {
+            'Ubuntu': 'ubuntu',
+            'debian': 'debian',
+            'Fedora': 'fedora',
+            'CentOS Linux': 'centos',
+            }
+
+        current_distro = platform.linux_distribution()[0]
+        if not current_distro:
+            self.fail('Unnown distro, cannot run')
+
+        try:
+            return supported_distros[current_distro]
+        except KeyError:
+            self.fail('Unsupported distro "%s"' % current_distro)
+
     # This is needed because pylint gets confused by decorators.
     #pylint: disable=no-self-use
 
@@ -211,3 +244,29 @@ class DockerMixin(KartonMixin):
     def build_fedora_latest(self, props=None):
         props.distro = 'fedora:latest'
         props.packages.append('which')
+
+    def _build_current_with_gcc_for_arch(self, props, arch, unavailable_distros=()):
+        props.distro = self.get_distro_matching_current()
+        if props.distro_name in unavailable_distros:
+            if props.distro_name == 'centos' and 'fedora' not in unavailable_distros:
+                props.distro = 'fedora'
+            else:
+                props.distro = 'ubuntu'
+            assert props.distro not in unavailable_distros
+
+        props.architecture = arch
+
+        if props.deb_based:
+            props.packages.extend(['gcc', 'libc6-dev', 'file'])
+        else:
+            props.packages.append('gcc')
+
+    @make_image('aarch64-gcc')
+    def build_current_aarch64_with_gcc(self, props=None):
+        self._build_current_with_gcc_for_arch(
+            props, 'aarch64', ('fedora', 'centos'))
+
+    @make_image('armv7-gcc')
+    def build_current_armv7_with_gcc(self, props=None):
+        self._build_current_with_gcc_for_arch(
+            props, 'armv7', ('centos',))

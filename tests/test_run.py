@@ -203,6 +203,22 @@ class RunTestCase(DockerMixin,
         self.spawn_karton(['run', '--no-cd', image_name, 'which', 'yum'])
         self.assertIn('/usr/bin/yum', self.current_text)
 
+    def test_aarch64(self):
+        image_name = self.build_current_aarch64_with_gcc()
+        self.run_compilation_test(
+            image_name,
+            None,
+            8,
+            'ELF 64-bit LSB executable, ARM aarch64')
+
+    def test_armv7(self):
+        image_name = self.build_current_armv7_with_gcc()
+        self.run_compilation_test(
+            image_name,
+            None,
+            4,
+            'ELF 32-bit LSB executable, ARM, EABI5')
+
     def test_date(self):
         if sys.platform != 'darwin':
             # This test tests a workaround for OS X. It would not work on Linux as setting the
