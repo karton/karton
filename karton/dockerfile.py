@@ -33,6 +33,17 @@ def setup_image(props):
     The props argument allow you to set various properties for the image to be built.
     \'\'\'
 
+    # The Linux distribution to use.
+    # This string is formed by two parts separated by a ":".
+    # The first part is the name of the distro ("ubuntu", "debian", "fedora", or
+    # "centos").
+    # The second part is the version to use and is optional. If omitted the latest
+    # version of the distribution is used.
+    # Examples of valid values are: "ubuntu:latest", "fedora:25", "debian",
+    # "ubuntu:devel", etc.
+    # This name matches the name used by Docker.
+    #props.distro = 'ubuntu:latest'
+
     # The architecture to use for the image. Possible values are:
     # x86_64 [default value if you don't specify anything]:
     #     Also known as x64, x86-64, or amd64. This is the normal 64-bit architecture
