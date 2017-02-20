@@ -345,12 +345,26 @@ class DefinitionProperties(object):
         return tuple(split)
 
     @props_property
+    def distro_name(self):
+        '''
+        The name of the distro without any tag.
+        '''
+        # pylint: disable=unsubscriptable-object
+        return self.distro_components[0]
+
+    def distro_tag(self):
+        '''
+        The tag part of the distro name.
+        '''
+        # pylint: disable=unsubscriptable-object
+        return self.distro_components[1]
+
+    @props_property
     def deb_based(self):
         '''
         Whether the currently selected distro is based on Debian (i.e. it's Debian or Ubuntu).
         '''
-        # pylint: disable=unsubscriptable-object
-        return self.distro_components[0] in ('debian', 'ubuntu')
+        return self.distro_name in ('debian', 'ubuntu')
 
     @props_property
     def rpm_based(self):
@@ -358,8 +372,7 @@ class DefinitionProperties(object):
         Whether the currently selected distro is based on RPM packages (i.e. it's CentOS or
         Fedora).
         '''
-        # pylint: disable=unsubscriptable-object
-        return self.distro_components[0] in ('centos', 'fedora')
+        return self.distro_name in ('centos', 'fedora')
 
     @props_property
     def additional_archs(self):
