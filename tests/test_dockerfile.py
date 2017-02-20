@@ -77,6 +77,8 @@ class DockerfileTestCase(DockerfileMixin,
         names = (
             'debian', 'debian:lastest', 'debian:testing', 'debian:foo',
             'ubuntu', 'ubuntu:latest', 'ubuntu:trusty',
+            'fedora', 'fedora:lastest', 'fedora:25',
+            'centos', 'centos:latest', 'centos:6',
             )
         for name in names:
             # pylint: disable=cell-var-from-loop
