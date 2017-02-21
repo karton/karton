@@ -269,4 +269,4 @@ class DockerMixin(KartonMixin):
     @make_image('armv7-gcc')
     def build_current_armv7_with_gcc(self, props=None):
         self._build_current_with_gcc_for_arch(
-            props, 'armv7', ('centos',))
+            props, 'armv7', ('fedora', 'centos',))
