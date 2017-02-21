@@ -217,7 +217,18 @@ def main():
 
         print_counts()
 
-        for target, target_details in summary['targets'].items():
+        def target_cmp((target1, target_details1), (target2, target_details2)):
+            # Sort items in summary['targets'] by putting local results first.
+            def index_for_target(target):
+                if target.startswith('local'):
+                    return 0
+                else:
+                    return 1
+
+            return cmp((index_for_target(target1), target1, target_details1),
+                       (index_for_target(target2), target2, target_details2))
+
+        for target, target_details in sorted(summary['targets'].items(), target_cmp):
             target_ok = \
                 target_details['fail-count'] == 0 and \
                 target_details['error-count'] == 0 and \
