@@ -498,8 +498,11 @@ class Image(object):
         try:
             builder.generate()
 
-            self._session.docker.check_call(
-                ['build', '--tag', self._image_config.image_name, dest_path])
+            try:
+                self._session.docker.check_call(
+                    ['build', '--tag', self._image_config.image_name, dest_path])
+            except proc.CalledProcessError as exc:
+                die('Failed to run "karton build" command:\n%s' % exc)
 
         finally:
             builder.cleanup()
