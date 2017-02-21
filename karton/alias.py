@@ -4,6 +4,7 @@
 
 import json
 import os
+import textwrap
 
 from . import (
     compat,
@@ -204,24 +205,43 @@ class AliasManager(object):
 
     @staticmethod
     def _choose_alias_symlink_directory():
-        # FIXME: Give more instructions.
-        info('Aliases are created by creating a file in a directory that is in the list\n'
-             'of places where your system looks for programs.\n'
-             'This list is configured by setting the $PATH environment variable, for\n'
-             'instance in your ~/.bashrc file.')
+        info(textwrap.dedent(
+            '''\
+            Aliases are created by creating a file in a directory where your
+            system looks for programs.
+            This list is configured by setting the $PATH environment variable,
+            for instance in your "~/.bashrc" file.
+            ''').strip())
         info('')
 
         sys_paths = pathutils.get_system_executable_paths()
         accessible_paths = [path for path in sys_paths if path and os.access(path, os.W_OK)]
 
-        if not accessible_paths:
-            die('There\'s no directory in yout $PATH which is writable, so an alias cannot '
-                'be created.\n'
-                'You can configure such directory, for instance "~/bin" and then re-run the '
-                'command.')
+        how_to_add_path = textwrap.dedent(
+            '''\
+            Assuming you use the bash shell (the default for most distros), create
+            a directory called "~/bin" like this:
+                $ mkdir ~/bin
 
-        info('These are the directories which can be used, if none is suitable, please\n'
-             'add a new directory to your shell\'s configuration file:')
+            Now edit the file called ".bashrc" in your home directory and add this
+            like at the very end:
+                PATH="~/bin:$PATH"
+
+            Close the terminal, open a new one and re-run this Karton command.
+            ''').strip()
+
+        if not accessible_paths:
+            die(textwrap.dedent(
+                '''\
+                There's no directory in yout $PATH which is writable, so an alias
+                cannot be created.
+                ''') +
+                how_to_add_path)
+
+        info(textwrap.dedent(
+            '''\
+            These are the directories which can be used at the moment:
+            ''').strip())
 
         for i, path in enumerate(accessible_paths):
             info(' - [%d] %s' % (i + 1, path))
@@ -234,7 +254,14 @@ class AliasManager(object):
                                len(accessible_paths))
             answer = answer.lower()
             if answer == 'q':
-                die('Alias directory not configured.')
+                die(textwrap.dedent(
+                    '''\
+                    Alias directory not configured.
+
+                    If you quit because none of the displayed directories is suitable, you
+                    can add a new directory to your shell's configuration file.
+                    ''') +
+                    how_to_add_path)
 
             choice = None
             try:
