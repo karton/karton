@@ -498,7 +498,7 @@ class Image(object):
         try:
             builder.generate()
 
-            self._session.docker.call(
+            self._session.docker.check_call(
                 ['build', '--tag', self._image_config.image_name, dest_path])
 
         finally:
