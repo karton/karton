@@ -9,6 +9,7 @@ from __future__ import print_function
 import glob
 import json
 import os
+import sys
 
 
 def get_target_details(summary, target):
@@ -51,7 +52,11 @@ def process_results_file(summary, target, results_path):
         The path where the results for `target` are.
     '''
     with open(results_path, 'r') as results_file:
-        results = json.load(results_file)
+        try:
+            results = json.load(results_file)
+        except ValueError:
+            sys.stderr.write('Cannot parse "%s".\n' % results_path)
+            raise SystemExit(1)
 
     summary['target-count'] += 1
     summary['pass-count'] += results['pass-count']
