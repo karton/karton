@@ -8,7 +8,11 @@ TARGETS+=" ubuntu:devel"
 # The previous LTS (14.04, Trusty Tahr) has an acient Docker.
 
 # Debian.
-TARGETS+=" debian:unstable"
+# At the moment, Debian stable and older don't have a working Docker while
+# unstable at some point broke Docker. I'm not sure it's worth the effort
+# as we test two Ubuntu versions.
+# We could test with the official packages, but... meh.
+# TARGETS+=" debian:unstable"
 
 # CentOS.
 TARGETS+=" centos:latest" # This is 7 at the time of writing.
