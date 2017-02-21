@@ -7,6 +7,7 @@ import glob
 import json
 import os
 import tempfile
+import textwrap
 import time
 
 from . import (
@@ -310,10 +311,13 @@ class Image(object):
         except OSError as exc:
             die('Cannot create "%s": %s.' % (complete_path, exc))
 
-        with open(os.path.join(complete_path, 'definition.py'), 'w') as definition_file:
+        definition_file_path = os.path.join(complete_path, 'definition.py')
+        with open(definition_file_path, 'w') as definition_file:
             definition_file.write(dockerfile.get_default_definition_file(image_name))
 
         config.add_image(image_name, complete_path)
+
+        Image._show_help_after_new_image(image_name, definition_file_path)
 
     @staticmethod
     def command_image_import(config, image_name, existing_dir_path):
@@ -347,6 +351,8 @@ class Image(object):
             die('An image called "%s" already exist.' % image_name)
 
         config.add_image(image_name, existing_dir_path)
+
+        Image._show_help_after_new_image(image_name, definition_file_path)
 
     @property
     def _image_data_dir(self):
@@ -722,3 +728,27 @@ class Image(object):
             return None, []
 
         return container_id, self._get_running_commands()
+
+    @staticmethod
+    def _show_help_after_new_image(image_name, definition_file_path):
+        info(textwrap.dedent(
+            '''\
+            Image "%(image_name)s" added!
+
+            You can now modify the definition file at:
+                %(definition_file_path)s
+
+            When you are done, build the image:
+                $ karton build %(image_name)s
+
+            After the image is built, you will only have to build it again if you
+            change the definition file.
+
+            You can then run commands in the image like this:
+                $ karton run %(image_name)s COMMAND_NAME ARGUMENT1 ARGUMENT2 ...
+            ''' %
+            dict(
+                image_name=image_name,
+                definition_file_path=definition_file_path,
+                )
+            ).strip())
