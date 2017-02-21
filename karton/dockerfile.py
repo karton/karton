@@ -268,6 +268,13 @@ class DefinitionProperties(object):
         self._shared_paths.append((host_path, image_path))
 
     @props_property
+    def definition_file_path(self):
+        '''
+        The path to the current definition file.
+        '''
+        return self._definition_file_path
+
+    @props_property
     def image_name(self):
         '''
         The mame of the image.
