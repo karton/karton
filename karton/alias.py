@@ -57,7 +57,7 @@ class AliasManager(object):
             alias = aliases[alias_name]
             alias_json_dict[alias_name] = {
                 'image-name': alias.image_name,
-                'run': alias.run,
+                'implied-command': alias.implied_command,
                 }
 
         json_string = json.dumps(alias_json_dict,
@@ -80,7 +80,7 @@ class AliasManager(object):
 
         self._print_alias(alias)
 
-    def command_add(self, alias_name, image_name, run):
+    def command_add(self, alias_name, image_name, implied_command):
         '''
         Add an alias.
 
@@ -88,11 +88,12 @@ class AliasManager(object):
             The name of the alias to add.
         image_name:
             The name of the image the alias should use.
-        run:
-            Whether the alias should automatically call the `run` command.
+        implied_command:
+            A command to automatically use for this alias or `None` if a
+            command needs to be specified on the command line explicitly.
         '''
-        verbose('Adding alias "%s" for image "%s" (run=%s)' %
-                (alias_name, image_name, run))
+        verbose('Adding alias "%s" for image "%s" (implied command: %s)' %
+                (alias_name, image_name, implied_command))
 
         # Create the alias in our configuration.
         image = self._config.image_with_name(image_name)
@@ -100,7 +101,7 @@ class AliasManager(object):
             die('Cannot add alias "%s" for image "%s" as the image does not exist.' %
                 (alias_name, image_name))
 
-        alias = configuration.ImageAlias(alias_name, image_name, run)
+        alias = configuration.ImageAlias(alias_name, image_name, implied_command)
         if not self._config.add_alias(alias):
             die('Cannot add alias "%s" for image "%s" as an alias with the same name already '
                 'exists.' %
@@ -255,8 +256,8 @@ class AliasManager(object):
         alias
             The `configuration.ImageAlias` to analyse.
         '''
-        if alias.run:
-            extra = ' (the "run" command is used automatically)'
+        if alias.implied_command:
+            extra = ' (the "%s" command is used automatically)' % alias.implied_command
         else:
             extra = ''
 

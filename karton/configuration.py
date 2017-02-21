@@ -32,7 +32,7 @@ from . import (
 from .log import die, info, verbose
 
 
-ImageAlias = collections.namedtuple('ImageAlias', ['alias_name', 'image_name', 'run'])
+ImageAlias = collections.namedtuple('ImageAlias', ['alias_name', 'image_name', 'implied_command'])
 
 
 class ImageConfig(object):
@@ -396,20 +396,15 @@ class GlobalConfig(object):
 
         for alias_name, value in compat.iteritems(self._get_items('alias')):
             try:
-                alias_type, image_name = value.split(';', 1)
+                implied_command, image_name = value.split(';', 1)
             except ValueError:
                 verbose('Invalid alias value "%s".' % value)
                 continue
 
-            if alias_type == 'run':
-                run = True
-            elif alias_type == 'control':
-                run = False
-            else:
-                verbose('Invalid alias type "%s".' % alias_type)
-                continue
+            if implied_command == 'NONE':
+                implied_command = None
 
-            aliases[alias_name] = ImageAlias(alias_name, image_name, run)
+            aliases[alias_name] = ImageAlias(alias_name, image_name, implied_command)
 
         return aliases
 
@@ -442,12 +437,11 @@ class GlobalConfig(object):
         if alias.alias_name in existing_aliases:
             return False
 
-        if alias.run:
-            alias_type = 'run'
-        else:
-            alias_type = 'control'
+        implied_command = alias.implied_command
+        if implied_command is None:
+            implied_command = 'NONE'
 
-        self._set('alias', alias.alias_name, alias_type + ';' + alias.image_name)
+        self._set('alias', alias.alias_name, implied_command + ';' + alias.image_name)
 
         return True
 

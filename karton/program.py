@@ -163,9 +163,9 @@ def do_image_remove(parsed_args, session):
 def do_alias(parsed_args, session):
     manager = alias.AliasManager(session.config)
 
-    def check_no_run():
-        if parsed_args.run:
-            die('"--run" only makes sense when adding an alias.')
+    def check_implied_command():
+        if parsed_args.implied_command:
+            die('"--command" only makes sense when adding an alias.')
 
     def check_no_json():
         if parsed_args.json:
@@ -178,7 +178,7 @@ def do_alias(parsed_args, session):
             die('If you specify "--remove" you cannot specify the image name, '
                 'just the alias name.')
 
-        check_no_run()
+        check_implied_command()
         check_no_json()
 
         manager.command_remove(parsed_args.alias_name)
@@ -186,7 +186,7 @@ def do_alias(parsed_args, session):
     elif parsed_args.alias_name is None:
         # The second positional argument cannot be non-None if the first is.
         assert parsed_args.image_name is None
-        check_no_run()
+        check_implied_command()
 
         if parsed_args.json:
             manager.command_show_all_json()
@@ -197,10 +197,25 @@ def do_alias(parsed_args, session):
         assert parsed_args.alias_name is not None
         check_no_json()
 
+        allowed_implied_commands = (
+            None,
+            'run',
+            'shell',
+            'start',
+            'stop',
+            'status',
+            'build',
+            )
+        if parsed_args.implied_command not in allowed_implied_commands:
+            die('Command "%s" is not a valid command to use with an alias.' %
+                parsed_args.implied_command)
+
         if parsed_args.image_name:
-            manager.command_add(parsed_args.alias_name, parsed_args.image_name, parsed_args.run)
+            manager.command_add(parsed_args.alias_name,
+                                parsed_args.image_name,
+                                parsed_args.implied_command)
         else:
-            check_no_run()
+            check_implied_command()
             manager.command_show(parsed_args.alias_name)
 
 
@@ -228,8 +243,8 @@ def run_karton(session, arguments):
 
     if current_alias:
         implied_image_name = current_alias.image_name
-        if current_alias.run:
-            arguments.insert(1, 'run')
+        if current_alias.implied_command is not None:
+            arguments.insert(1, current_alias.implied_command)
     else:
         implied_image_name = None
 
@@ -514,9 +529,9 @@ def run_karton(session, arguments):
         help='the image to associate to the alias')
 
     alias_parser.add_argument(
-        '--run',
-        action='store_true',
-        help='if adding an alias, the alias will imply the "run" command')
+        '--command',
+        dest='implied_command',
+        help='if adding an alias, the alias will imply the specified command')
 
     alias_parser.add_argument(
         '--remove',

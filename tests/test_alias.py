@@ -85,6 +85,19 @@ class AliasTestCase(DockerMixin,
         self.assert_items_equal(self.get_aliases().keys(), [alias_name])
 
     @bin_dir
+    def test_add_twice_identical_different_implied(self):
+        image_name = self.build_fedora_latest()
+        alias_name = self.get_alias_name('fedora')
+
+        self.run_karton(['alias', '--command', 'run', alias_name, image_name])
+        self.assert_items_equal(self.get_aliases().keys(), [alias_name])
+
+        self.run_karton(['alias', alias_name, image_name], ignore_fail=True)
+        self.assert_exit_fail()
+        self.assert_items_equal(self.get_aliases().keys(), [alias_name])
+        self.assertEqual(self.get_aliases()[alias_name]['implied-command'], 'run')
+
+    @bin_dir
     def test_add_twice_same_name_different_images(self):
         image_name1 = self.build_fedora_latest()
         image_name2 = self.build_ubuntu_latest_with_gcc()
@@ -184,3 +197,30 @@ class AliasTestCase(DockerMixin,
         self.run_karton(['alias'], prog=alias_name, ignore_fail=True)
         self.assert_exit_fail()
         self.assertIn('COMMAND: invalid choice: \'alias\'', self.current_text)
+
+    @bin_dir
+    def test_implied_run_command(self):
+        image_name = self.build_fedora_latest()
+        alias_name = self.get_alias_name('fedora')
+        self.run_karton(['alias', '--command', 'run', alias_name, image_name])
+
+        it_works = 'IT WORKS!'
+
+        # This shouldn't work as the command is implied, so it tries to execute
+        # "run" which doesn't exists.
+        self.run_karton(['run', '--no-cd', 'echo', it_works], prog=alias_name,
+                        ignore_fail=True)
+        self.assert_exit_fail()
+
+        # This should work as the alias is used correctly.
+        self.run_karton(['--no-cd', 'echo', it_works], prog=alias_name)
+        self.assertIn(it_works, self.current_text)
+
+    @bin_dir
+    def test_implied_status_command(self):
+        image_name = self.build_fedora_latest()
+        alias_name = self.get_alias_name('fedora')
+        self.run_karton(['alias', '--command', 'status', alias_name, image_name])
+
+        self.run_karton([], prog=alias_name)
+        self.assertIn('is not running', self.current_text)
