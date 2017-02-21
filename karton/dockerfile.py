@@ -477,17 +477,19 @@ class Builder(object):
         self._copyable_files_dir = os.path.join(self._dst_dir, 'files')
         pathutils.makedirs(self._copyable_files_dir)
 
-    def generate(self):
+    @staticmethod
+    def _prepare_image_setup(definition_directory):
         '''
-        Prepare the directory with the `Dockerfile` and all the other required
-        files.
+        Get the setup function for the definition file in `definition_directory`.
 
-        If something goes wrong due to the user configuration or definition
-        file, then a `DefinitionError` is raised.
+        definition_directory:
+            The directory where `definition.py` is.
+        Return value:
+            The `setup_image` function for the specified image definition and the path
+            of the definition file.
         '''
-
         # Load the definition file.
-        definition_path = os.path.join(self._image_config.content_directory, 'definition.py')
+        definition_path = os.path.join(definition_directory, 'definition.py')
 
         try:
             with open(definition_path) as definition_file:
@@ -531,6 +533,20 @@ class Builder(object):
                 definition_path,
                 'The definition file "%s" does contain a "setup_image" method, but it should '
                 'accept a single argument of type "DefinitionProperties"' % definition_path)
+
+        return setup_image, definition_path
+
+    def generate(self):
+        '''
+        Prepare the directory with the `Dockerfile` and all the other required
+        files.
+
+        If something goes wrong due to the user configuration or definition
+        file, then a `DefinitionError` is raised.
+        '''
+        # Load the user's definition.
+        setup_image, definition_path = \
+            self._prepare_image_setup(self._image_config.content_directory)
 
         # Execute it.
         props = DefinitionProperties(self._image_config.image_name,
