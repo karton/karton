@@ -3,6 +3,7 @@
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
 import os
+import textwrap
 
 from karton import (
     dockerfile,
@@ -110,3 +111,59 @@ class DockerfileTestCase(DockerfileMixin,
         # Normal exceptions are transformed into a DefinitionError.
         with self.assertRaises(dockerfile.DefinitionError):
             build_info.builder.generate()
+
+    def _test_import(self, make_relative):
+        # This definition is meant to be imported from another, so we check that the
+        # values propagate and are overwritten correctly.
+        inner_definition_dir = self.make_tmp_sub_dir('definitions')
+        with open(os.path.join(inner_definition_dir, 'definition.py'), 'w') as inner_content:
+            inner_content.write(textwrap.dedent('''\
+                def setup_image(props):
+                    assert props.distro == 'fedora:outer1'
+                    assert props.username == 'outer-user'
+                    assert props.packages == ['PACKAGE-A']
+
+                    props.distro = 'fedora:inner'
+                    props.username = 'inner-user'
+                    props.packages.append('PACKAGE-B')
+                '''))
+
+        def setup_outer(props):
+            props.username = 'outer-user'
+            props.distro = 'fedora:outer1'
+            props.packages.append('PACKAGE-A')
+
+            if make_relative:
+                inner_definition_dir_to_import = os.path.relpath(
+                    inner_definition_dir,
+                    os.path.dirname(props.definition_file_path))
+            else:
+                inner_definition_dir_to_import = inner_definition_dir
+
+            props.import_definition(inner_definition_dir_to_import)
+
+            props.distro = 'fedora:outer2'
+            props.packages.append('PACKAGE-C')
+
+        build_info = self.make_builder(setup_outer)
+        build_info.builder.generate()
+
+        with open(build_info.dockerfile_path) as dockerfile_file:
+            content = dockerfile_file.read()
+
+        self.assertIn('inner-user', content)
+        self.assertNotIn('outer-user', content)
+
+        self.assertIn('fedora:outer2', content)
+        self.assertNotIn('fedora:outer1', content)
+        self.assertNotIn('fedora:inner', content)
+
+        self.assertIn('PACKAGE-A', content)
+        self.assertIn('PACKAGE-B', content)
+        self.assertIn('PACKAGE-C', content)
+
+    def test_import_absolute(self):
+        self._test_import(make_relative=False)
+
+    def test_import_relative(self):
+        self._test_import(make_relative=True)

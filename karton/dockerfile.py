@@ -154,13 +154,14 @@ class DefinitionProperties(object):
         'armv7': 'armv7/armhf-',
         }
 
-    def __init__(self, image_name, definition_file_path, host_system):
+    def __init__(self, image_name, definition_file_path, host_system, prepare_definition_import):
         '''
         Initializes a `DefinitionProperties` instance.
         '''
         self._image_name = image_name
         self._definition_file_path = definition_file_path
         self._host_system = host_system
+        self._prepare_definition_import = prepare_definition_import
 
         self._shared_home_paths = []
         self._shared_paths = []
@@ -266,6 +267,29 @@ class DefinitionProperties(object):
             image_path = host_path
 
         self._shared_paths.append((host_path, image_path))
+
+    def import_definition(self, other_definition_directory):
+        '''
+        Import an existing definition file.
+
+        other_definition_directory:
+            The path of the directory where the definition file is.
+            It can be an absolute path or a path relative to the current definition file.
+        '''
+        if not other_definition_directory.startswith('/'):
+            other_definition_directory = os.path.normpath(
+                os.path.join(os.path.dirname(self._definition_file_path),
+                             other_definition_directory))
+
+        setup_image, other_definition_path = \
+            self._prepare_definition_import(other_definition_directory)
+
+        outer_definition_path = self._definition_file_path
+        self._definition_file_path = other_definition_path
+
+        setup_image(self)
+
+        self._definition_file_path = outer_definition_path
 
     @props_property
     def definition_file_path(self):
@@ -551,7 +575,8 @@ class Builder(object):
         # Execute it.
         props = DefinitionProperties(self._image_config.image_name,
                                      definition_path,
-                                     self._host_system)
+                                     self._host_system,
+                                     self._prepare_image_setup)
 
         try:
             setup_image(props)
