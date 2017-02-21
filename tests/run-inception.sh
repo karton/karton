@@ -73,6 +73,12 @@ rm test-results/sanity-*.log 2> /dev/null
 main_script_path=$(mktemp)
 sanity_script_path=$(mktemp)
 
+if [ -n "$V" ]; then
+    maybe_verbose="-v"
+else
+    maybe_verbose=""
+fi
+
 cat > $main_script_path << EOF
 #! /bin/bash
 
@@ -89,7 +95,7 @@ if [ "$run_sanity_only" = "true" ]; then
     echo "NOT RUN" > ../test-results.json
 else
     touch ../test-results.json
-    if python ./tests/run.py $save_result $tests_to_run; then
+    if python ./tests/run.py $maybe_verbose $save_result $tests_to_run; then
         do_sanity_check="true"
     fi
     # Run sanity checks only if all tests were run.
