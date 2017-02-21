@@ -457,8 +457,10 @@ class Image(object):
             dockerctl.die_docker_not_running(exc.output)
 
         if not images:
-            die('Image "%s" is not available. Try building it with "build" first.' %
-                self.image_name)
+            die('Image "%(image_name)s" is not available.\n\n'
+                'Did you forget to build it? You can build the image with:\n'
+                '    $ karton build %(image_name)s' %
+                dict(image_name=self.image_name))
 
         args = [
             'run',
