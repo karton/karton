@@ -18,7 +18,10 @@ LOGO_SIZES = \
 	512 \
 	$(NULL)
 
-LOGOS = $(patsubst %,logos/out/karton-%.png,$(LOGO_SIZES))
+LOGOS = \
+	$(patsubst %,logos/out/karton-%.png,$(LOGO_SIZES)) \
+	logos/out/favicon.ico \
+	$(NULL)
 
 .PHONY: automatic-target
 automatic-target:
@@ -109,3 +112,10 @@ logos/out/karton-256.png: logos/src/karton.svg logos/out/.stamp
 
 logos/out/karton-512.png: logos/src/karton.svg logos/out/.stamp
 	$(SVG2PNG) $< $@ 512
+
+logos/out/favicon.ico: logos/out/karton-16.png logos/out/karton-32.png logos/out/.stamp
+	@$(CHECK_PRG) convert
+	convert \
+	    \( logos/out/karton-16.png \) \
+	    \( logos/out/karton-32.png \) \
+	    $@
