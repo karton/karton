@@ -1,0 +1,5 @@
+Karton 0.0.2 - 2017-02-23 Marco Barisione <marco@barisione.org>
+
+    * First working alpha release.
+    * All the main features (configuring images, runnning programs, etc.) are
+      implemented and work on macOS and Linux.
