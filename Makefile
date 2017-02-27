@@ -23,6 +23,13 @@ LOGOS = \
 	logos/out/favicon.ico \
 	$(NULL)
 
+
+########################################################################
+# Misc generic targets                                                 #
+########################################################################
+
+# KEEP THIS THE FIRST TARGET OF THE MAKEFILE!
+# There's no automatic target as we don't need to really build anything.
 .PHONY: automatic-target
 automatic-target:
 	@echo "Nothing to build automatically!" >&2; exit 1
@@ -31,33 +38,72 @@ automatic-target:
 .FORCE:
 	true
 
-.PHONY: check-all-python
-check-all-python: check check-python3
+.PHONY: lint
+lint:
+	./scripts/lint.sh
+
+
+########################################################################
+# Tests                                                                #
+########################################################################
 
 .PHONY: check
-check:
-	mkdir -p test-results/ 2> /dev/null
+check: check-python2
+
+.PHONY: check-python-all
+check-python-all: check-python2 check-python3
+
+.PHONY: check-python2
+check-python2:
+	@mkdir -p test-results/ 2> /dev/null
 	python2 ./tests/run.py --save-json-results test-results/local.json
 
 .PHONY: check-python3
 check-python3:
-	mkdir -p test-results/ 2> /dev/null
+	@mkdir -p test-results/ 2> /dev/null
 	python3 ./tests/run.py --save-json-results test-results/local-python3.json
 
-.PHONY: inception-check
-inception-check: dist
+.PHONY: check-inception
+check-inception: dist
 	./tests/run-inception.sh dist/karton-`python ./karton/version.py`.tar.gz "$(TARGETS)" $(TESTS)
 
-.PHONY: all-check
-all-check:
-	-$(MAKE) -f $(CURRENT_MAKEFILE) check
+.PHONY: distcheck
+distcheck:
+	-$(MAKE) -f $(CURRENT_MAKEFILE) check-python2
 	-$(MAKE) -f $(CURRENT_MAKEFILE) check-python3
-	-$(MAKE) -f $(CURRENT_MAKEFILE) inception-check
+	-$(MAKE) -f $(CURRENT_MAKEFILE) check-inception
 	@echo
 	@echo
 	@echo "SUMMARY OF BOTH LOCAL AND INCEPTION TESTS"
 	@echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 	@python ./tests/summary.py
+
+.PHONY: distcheck-fast
+distcheck-fast:
+	# Locally, we only run Python 3 tests as the Python2 ones will be run
+	# in inception.
+	@rm test-results/local.json 2> /dev/null || true
+	-$(MAKE) -f $(CURRENT_MAKEFILE) check-python3
+	-$(MAKE) -f $(CURRENT_MAKEFILE) check-inception TARGETS="ubuntu:devel"
+	@echo
+	@echo
+	@echo "SUMMARY OF FAST LOCAL AND INCEPTION TESTS"
+	@echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	@python ./tests/summary.py
+
+.PHONY: rm-test-images
+rm-test-images:
+	docker rmi --force \
+	    $$( docker images -q --format '{{ .Repository }} {{ .ID }}' | \
+	        grep '^karton-test-' | \
+	        awk '{ print $$2 }' )
+	docker rmi \
+	    $$( docker images --filter "dangling=true" --quiet )
+
+
+########################################################################
+# Distribution stuff                                                   #
+########################################################################
 
 .PHONY: dist
 dist: MANIFEST.in
@@ -69,18 +115,10 @@ MANIFEST.in: .FORCE
 	echo 'include MANIFEST.in' >> $@
 	git ls-files | sed 's/^/include /' >> $@
 
-.PHONY: rm-test-images
-rm-test-images:
-	docker rmi --force \
-	    $$( docker images -q --format '{{ .Repository }} {{ .ID }}' | \
-	        grep '^karton-test-' | \
-	        awk '{ print $$2 }' )
-	docker rmi \
-	    $$( docker images --filter "dangling=true" --quiet )
 
-.PHONY: lint
-lint:
-	./scripts/lint.sh
+########################################################################
+# Logos                                                                #
+########################################################################
 
 .PHONY: logos
 logos: $(LOGOS)
