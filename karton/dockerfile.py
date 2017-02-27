@@ -151,7 +151,7 @@ class DefinitionProperties(object):
     _ARCHITECTURES = {
         'x86_64': '',
         'aarch64': 'aarch64/',
-        'armv7': 'armv7/armhf-',
+        'armv7': 'armhf/',
         }
 
     def __init__(self, image_name, definition_file_path, host_system, prepare_definition_import):
