@@ -72,4 +72,11 @@ Running the full set of tests (`make distcheck`) will take a very long time (fir
 Making a release
 ----------------
 
-**FIXME**
+Most of the release process is automated:
+
+1. Check everything looks good.
+2. Make sure the main repo is called `origin`.
+3. Run `./scripts/release.py prepare` and follow the instructions.
+4. Run `make distcheck` and everything else that the previous command told you to do.
+5. Run `./scripts/release.py push` and follow the instructions.
+6. Make a pip release following the instructions given by the previous command.

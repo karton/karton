@@ -18,4 +18,5 @@ pylint \
     karton/*.py \
     karton/container-code/*.py \
     tests/*.py \
-    inception/*.py
+    inception/*.py \
+    scripts/*.py
