@@ -74,9 +74,10 @@ Making a release
 
 Most of the release process is automated:
 
-1. Check everything looks good.
-2. Make sure the main repo is called `origin`.
-3. Run `./scripts/release.py prepare` and follow the instructions.
-4. Run `make distcheck` and everything else that the previous command told you to do.
-5. Run `./scripts/release.py push` and follow the instructions.
-6. Make a pip release following the instructions given by the previous command.
+1. Install GitHub's [hub tool](https://github.com/github/hub) and make sure it's in your `$PATH`.
+2. Check everything looks good.
+3. Make sure the main repo is called `origin`.
+4. Run `./scripts/release.py prepare` and follow the instructions.
+5. Run `make distcheck` and everything else that the previous command told you to do.
+6. Run `./scripts/release.py push` and follow the instructions.
+7. Make a pip release following the instructions given by the previous command.
