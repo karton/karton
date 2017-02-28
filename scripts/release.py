@@ -168,7 +168,9 @@ def push():
 
     call('git', 'push', 'origin', 'master')
     call('git', 'push', 'origin', tag_name)
-    call('hub', 'release', 'create', '-m', entry, tag_name)
+
+    release_log = 'Karton ' + version + '\n' + entry
+    call('hub', 'release', 'create', '-m', release_log, tag_name)
 
     print(textwrap.dedent(
         '''\
