@@ -4,16 +4,13 @@
 
 import json
 import os
-import shutil
 import subprocess
 import sys
-import tempfile
 
 from karton import (
     configuration,
     locations,
     log,
-    pathutils,
     program,
     runtime,
     )
@@ -21,6 +18,7 @@ from karton import (
 import testutils
 
 from tracked import TrackedTestCase
+from mixin_tempdir import TempDirMixin
 
 
 class FakeHostSystem(object):
@@ -31,7 +29,8 @@ class FakeHostSystem(object):
         self.hostname = 'test-host-hostname'
 
 
-class KartonMixin(TrackedTestCase):
+class KartonMixin(TempDirMixin,
+                  TrackedTestCase):
     '''
     A mixin providing basic features to run and control Karton.
     '''
@@ -62,10 +61,6 @@ class KartonMixin(TrackedTestCase):
         self._last_exit_code = None
 
         # Directories.
-        # The realpath is needed on OS X as Docker gets confused on whether the directory can be
-        # shared if there are symlinks in it. See <https://github.com/docker/for-mac/issues/1298>.
-        self.tmp_dir = os.path.realpath(tempfile.mkdtemp())
-
         self.config_dir = os.path.join(self.tmp_dir, 'config')
         os.mkdir(self.config_dir)
         os.environ['KARTON_CONFIG_DIR'] = self.config_dir
@@ -80,35 +75,12 @@ class KartonMixin(TrackedTestCase):
             configuration.GlobalConfig(runtime.Session.configuration_dir()),
             self.create_docker())
 
-    def tearDown(self):
-        super(KartonMixin, self).tearDown()
-
-        shutil.rmtree(self.tmp_dir)
-
     @property
     def docker(self):
         return self.session.docker
 
     def create_docker(self):
         return self
-
-    def make_tmp_sub_dir(self, intermediate=None):
-        '''
-        Create a directory inside this test's temporary directory.
-
-        intermediate:
-            If not None, the new directory will be a sub directory of intermediate
-            which will be a subdirectory of the tests' temporary directory.
-        Return value:
-            The path to an existing empty temporary directory.
-        '''
-        if intermediate is None:
-            base_dir = self.tmp_dir
-        else:
-            base_dir = os.path.join(self.tmp_dir, intermediate)
-            pathutils.makedirs(base_dir)
-
-        return tempfile.mkdtemp(dir=base_dir)
 
     @property
     def current_text_as_lines(self):
