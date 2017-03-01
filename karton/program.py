@@ -8,12 +8,15 @@ import argparse
 import collections
 import os
 import sys
+import time
+import textwrap
 
 from . import (
     compat,
     alias,
     container,
     runtime,
+    updater,
     version,
     )
 
@@ -617,6 +620,21 @@ def main(session, arguments):
         The command line arguments (for instance `sys.argv`).
     '''
 
+    now = int(time.time())
+    seconds_in_a_week = 7 * 24 * 60 * 60
+    time_for_a_check = now - session.config.last_update_check > seconds_in_a_week
+
+    both_out_and_err_ttys = sys.stdout.isatty() and sys.stderr.isatty()
+
+    if time_for_a_check and both_out_and_err_ttys:
+        update_check = updater.Updater(
+            'https://api.github.com/repos/karton/karton/releases',
+            version.__version__)
+    else:
+        update_check = None
+
+    exit_code = 0
+
     try:
         run_karton(session, arguments)
     except KeyboardInterrupt:
@@ -630,8 +648,34 @@ def main(session, arguments):
             raise
         else:
             die(msg)
+    except SystemExit as exc:
+        exit_code = exc.code
 
-    raise SystemExit(0)
+    if update_check:
+        did_check, new_version = update_check.results
+
+        if new_version is not None:
+            info(textwrap.dedent(
+                '''\
+                A new version of Karton is available! You can update from %(curr)s to %(new)s.
+                If you installed Karton with pip, you can update it with:
+                    pip install --upgrade --user karton
+                ''').strip() % dict(
+                    curr=version.__version__,
+                    new=new_version,
+                    ))
+        else:
+            verbose('No new version of Karton is available.')
+
+        if did_check:
+            verbose('Update check completed, it won\'t be re-run for a week.')
+            session.config.last_update_check = now
+        else:
+            verbose('Update check not completed, it will be re-run at the next invocation.')
+    else:
+        verbose('No update check was run.')
+
+    raise SystemExit(exit_code)
 
 
 def main_with_defaults():

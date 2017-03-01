@@ -466,3 +466,20 @@ class GlobalConfig(object):
     @alias_symlink_directory.setter
     def alias_symlink_directory(self, directory):
         self._set('general', 'alias-symlink-directory', directory)
+
+    @property
+    def last_update_check(self):
+        '''
+        The last time (in seconds since the epoch) when we checked for an update.
+        '''
+        last_check_time_string = self._get('general', 'last-update-check', 0)
+        try:
+            return int(last_check_time_string)
+        except ValueError:
+            verbose('Invalid configuration for last-update-check, integer expected but got "%s".' %
+                    last_check_time_string)
+            return 0
+
+    @last_update_check.setter
+    def last_update_check(self, last_check_time):
+        self._set('general', 'last-update-check', str(last_check_time))
