@@ -229,7 +229,11 @@ class DockerMixin(KartonMixin):
 
         props.test_shared_file_host = os.path.join(self.tmp_dir, 'test-shared-file')
         props.test_shared_file_image = '/etc/test-shared-file'
-        props.share_path(props.test_shared_file_host, props.test_shared_file_image)
+        # Also verify we deal correctly with relative paths
+        relative_test_shared_file_host = os.path.relpath(
+            props.test_shared_file_host,
+            os.path.dirname(props.definition_file_path))
+        props.share_path(relative_test_shared_file_host, props.test_shared_file_image)
 
         props.test_file_content = 'Hello world!'
         with open(props.test_shared_file_host, 'w') as test_file:

@@ -216,6 +216,23 @@ class DefinitionProperties(object):
 
         return self._eval_regex.sub(eval_cb, in_string)
 
+    def abspath(self, path):
+        '''
+        Make `path` absolute (relative for the currently parsed definition file).
+
+        path:
+            The path to make absolute if it's relative.
+            If already absolute, the path is not changed.
+        Return value:
+            An absolute path.
+        '''
+        if path.startswith('/'):
+            return path
+
+        return os.path.normpath(
+                os.path.join(os.path.dirname(self._definition_file_path),
+                             path))
+
     def get_path_mappings(self):
         '''
         The list of resources shared between host and guest.
@@ -259,10 +276,16 @@ class DefinitionProperties(object):
         If `image_path` is None, then it will be accessible at the same location in both host
         and container.
 
-        host_path - the path on the host system of the directory or file to share.
-        image_path - the path in the container where the file or directory will be accessible,
-                     or None to use the same path in both host and container.
+        host_path:
+            The path on the host system of the directory or file to share.
+            If it's a relative path, then it's relative to the currently parse definition
+            file.
+        image_path:
+            The path in the container where the file or directory will be accessible,
+            or None to use the same path in both host and container.
         '''
+        host_path = self.abspath(host_path)
+
         if image_path is None:
             image_path = host_path
 
@@ -276,10 +299,7 @@ class DefinitionProperties(object):
             The path of the directory where the definition file is.
             It can be an absolute path or a path relative to the current definition file.
         '''
-        if not other_definition_directory.startswith('/'):
-            other_definition_directory = os.path.normpath(
-                os.path.join(os.path.dirname(self._definition_file_path),
-                             other_definition_directory))
+        other_definition_directory = self.abspath(other_definition_directory)
 
         setup_image, other_definition_path = \
             self._prepare_definition_import(other_definition_directory)
