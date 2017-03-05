@@ -22,17 +22,19 @@ from .log import verbose
 _DEFAULT_DEFINITION_FILE = '''\
 # This file defines how to build the image for "%(image_name)s".
 #
-# This is a standard Python file where you can use all the featurs you would use in a normal
-# Python script.
-# The file needs to contain a setup_image function which accepts a single argument.
+# This is a standard Python file where you can use all the features you would
+# use in a normal Python script.
+# The file needs to contain a setup_image function which accepts a single
+# argument of type DefinitionProperties.
 
 def setup_image(props):
     \'\'\'
     Called when "%(image_name)s" needs to be built.
 
-    The props argument allow you to set various properties for the image to be built.
-    See <https://github.com/karton/karton/blob/master/docs/props.md> for the full
-    documentation of the props object.
+    The props argument allow you to set various properties for the image to
+    be built.
+    See <https://github.com/karton/karton/blob/master/docs/props.md> for the
+    full documentation of the props object.
     \'\'\'
 
     # The Linux distribution to use.
@@ -46,31 +48,6 @@ def setup_image(props):
     # This name matches the name used by Docker.
     #props.distro = 'ubuntu:latest'
 
-    # The architecture to use for the image. Possible values are:
-    # x86_64 [default value if you don't specify anything]:
-    #     Also known as x64, x86-64, or amd64. This is the normal 64-bit architecture
-    #     for most computers.
-    # armv7:
-    #     32-bit ARMv7.
-    # aarch64:
-    #     64-bit ARMv8.
-    # Note that not every distro is supported on every architecture.
-    #props.architecture = 'aarch64'
-
-    # By default the username for the image is the same as the one on the host machine,
-    # this can be overwritten by setting the username property.
-    #props.username = 'john'
-
-    # Similarly the home directory is at the same location in both host and image, but
-    # it can be overwritten. The directory will be create automatically.
-    #props.user_home = '/home/john.smith'
-
-    # The props.eval method allow you to replace variables inside a string.
-    # The variables are in the form "$(VARIABLE_NAME)".
-    # For instance you could set the hostname of the image to be the name of the host
-    # hostname, followed by a dash and then followed by the image name:
-    #props.hostname = props.eval('$(host.hostname)-$(image.name)')
-
     # You will probably want to make some directory from the host accessible in the
     # image as well.
     # For instance you can share your ~/src directory like this:
@@ -78,25 +55,19 @@ def setup_image(props):
     # props.share_path_in_home will just share a path inside your home directory inside
     # the image's home directory. The path under the home will be the same in host and
     # image.
+
     # If you want to share a path outside your home you can use props.share_path:
     #props.share_path('/foo')
+
     # The path in the image and host system can be different:
     #props.share_path('/path/on/host', '/different/path/in/image')
+
     # Sharing is not limited to directories, but single files can be shared as well.
 
-    # The home directory from the image should be saved on the host or all the
-    # configuration files and other changes you make to your user will be lost.
-    # It's better not to share your host home directory in the image as that could lead
-    # to confusion and messing up of your configuration files (which could be accessed
-    # by two different version of the same program on host and inside the image).
-    # The props.image_home_path_on_host property allow you to set where to save
-    # the image home directory. If unset, it will be in a sub-directory of "~/.karton".
-    #props.image_home_path_on_host = props.eval('$(host.userhome)/MyImageHomeDir')
-
-    # You are likely to want to install some extra packages inside the image.
+    # Probably you will want to install some extra packages inside the image.
     # props.packages is a list of packages to be installed and you can add more if you
     # want.
-    #props.packages.extend(['vim', 'some-package-I-need'])
+    #props.packages.extend(['gcc', 'some-other-package-name'])
 '''
 
 
