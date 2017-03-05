@@ -230,8 +230,8 @@ class DefinitionProperties(object):
             return path
 
         return os.path.normpath(
-                os.path.join(os.path.dirname(self._definition_file_path),
-                             path))
+            os.path.join(os.path.dirname(self._definition_file_path),
+                         path))
 
     def get_path_mappings(self):
         '''
