@@ -31,6 +31,8 @@ def setup_image(props):
     Called when "%(image_name)s" needs to be built.
 
     The props argument allow you to set various properties for the image to be built.
+    See <https://github.com/karton/karton/blob/master/docs/props.md> for the full
+    documentation of the props object.
     \'\'\'
 
     # The Linux distribution to use.
