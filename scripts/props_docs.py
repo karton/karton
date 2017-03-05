@@ -33,9 +33,10 @@ def generate_attribute(md_out, attr_name, attr_lines):
     if attr_name.startswith('_'):
         return
 
-    attr_name_mangled = re.sub(r'\(.*\)', '(...)', attr_name)
+    attr_name_mangled = re.sub('self, *', '', attr_name)
+    attr_name_mangled = re.sub('self\)', ')', attr_name_mangled)
     md_out.write('\n`%s`\n' % attr_name_mangled)
-    md_out.write('-' * 30 + '\n')
+    md_out.write('-' * (len(attr_name_mangled) + 2) + '\n')
 
     inside_dl = False
     attr_lines_count = len(attr_lines)

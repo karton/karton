@@ -6,8 +6,8 @@ to install, which base distro to use, which files and directories to share, etc.
 
 
 
-`abspath(...)`
-------------------------------
+`abspath(path)`
+---------------
 Make `path` absolute.
 
 If `path` is relative, it is considered relative to the definition file which is
@@ -23,18 +23,18 @@ If it's already absolutem then nothing is done.
 </dd>
 </dl>
 
-`distro_tag(...)`
-------------------------------
+`distro_tag()`
+--------------
 The tag part of the distro name.
 
-`eval(...)`
-------------------------------
+`eval(in_string)`
+-----------------
 Replace variables in `in_string` and return the new string.
 
 FIXME: Document the variable syntax and valid variables.
 
-`get_path_mappings(...)`
-------------------------------
+`get_path_mappings()`
+---------------------
 The list of resources shared between host and guest.
 
 You should call this only after setting things like the home directory location which
@@ -49,8 +49,8 @@ The second is the location inside the image.
 </dd>
 </dl>
 
-`import_definition(...)`
-------------------------------
+`import_definition(other_definition_directory)`
+-----------------------------------------------
 Import an existing definition file.
 
 <dl>
@@ -60,8 +60,8 @@ It can be an absolute path or a path relative to the current definition file.
 </dd>
 </dl>
 
-`share_path(...)`
-------------------------------
+`share_path(host_path, image_path=None)`
+----------------------------------------
 Share the directory or file at `host_path` with the image where it will be
 accessible as `image_path`.
 
@@ -81,8 +81,8 @@ Defaults to <code>None</code>.
 </dd>
 </dl>
 
-`share_path_in_home(...)`
-------------------------------
+`share_path_in_home(relative_path)`
+-----------------------------------
 Share the directory or file at `relative_path` between host and image.
 
 The path should be relative to the home directory and will be shared in
@@ -98,7 +98,7 @@ image.
 </dl>
 
 `additional_archs`
-------------------------------
+------------------
 A list of additional architectures to support in the image.
 
 This is, for instance, useful to install 32-bit packages on a 64-bit distro.
@@ -107,7 +107,7 @@ The only value currently supported is `'i386'` and is supported only on Debian
 and Ubuntu.
 
 `architecture`
-------------------------------
+--------------
 The architecture for the image.
 
 Possible values are:
@@ -120,15 +120,15 @@ Possible values are:
 Note that not every distro is supported on every architecture.
 
 `deb_based`
-------------------------------
+-----------
 Whether the currently selected distro is based on Debian (i.e. it's Debian or Ubuntu).
 
 `definition_file_path`
-------------------------------
+----------------------
 The path to the current definition file.
 
 `distro`
-------------------------------
+--------
 The distro used for the image.
 
 This is in the Docker format, i.e. the distro name, a colon and the tag name.
@@ -138,28 +138,28 @@ The default distro is `ubuntu:latest`, that is the most recent LTS version
 of Ubuntu.
 
 `distro_components`
-------------------------------
+-------------------
 The distro used for the image as a tuple.
 The first item is the distro name, the second the tag.
 
 `distro_name`
-------------------------------
+-------------
 The name of the distro without any tag.
 
 `docker_distro_full_name`
-------------------------------
+-------------------------
 The name of the distro as it will be used in the Dockerfile.
 
 This may be different from `distro` if an architecture was specified.
 
 `hostname`
-------------------------------
+----------
 The hostname for the image.
 
 The default value is `IMAGE_NAME-on-HOST-HOSTNAME`.
 
 `image_home_path_on_host`
-------------------------------
+-------------------------
 The path on the host where to store the content of the non-root user home directory.
 
 By default, the home directory of the non-root user gets saved on the host. This
@@ -172,11 +172,11 @@ program running on the host and inside the image.
 By default, this is set to `~/.karton/home-dirs/IMAGE-NAME`.
 
 `image_name`
-------------------------------
+------------
 The mame of the image.
 
 `packages`
-------------------------------
+----------
 A list of packages to install in the image.
 
 The package names are those used by the distro you are using for the image.
@@ -186,12 +186,12 @@ Karton as they are needed for it to work. You should not rely on this and
 explicitly install everything you need.
 
 `rpm_based`
-------------------------------
+-----------
 Whether the currently selected distro is based on RPM packages (i.e. it's CentOS or
 Fedora).
 
 `sudo`
-------------------------------
+------
 Whether to install the `sudo` command and whether passwordless `sudo` should
 be allowed.
 
@@ -205,7 +205,7 @@ Possible values are:
   don't install `sudo`.
 
 `user_home`
-------------------------------
+-----------
 The path (valid inside the image) of the non-root user home directory.
 
 It's recommended to keep the home directory identical in the host and image.
@@ -213,7 +213,7 @@ This helps in case any tool writes an image path into a file which is later
 accessed on the host.
 
 `username`
-------------------------------
+----------
 The name of the normal non-root user.
 
 This defaults to the same user name used on the host.
