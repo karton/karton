@@ -141,7 +141,8 @@ def props_property(fget, *args, **kwargs):
 
 class DefinitionProperties(object):
     '''
-    Instructions on how to generate the image and what to include in it.
+    The `DefinitionProperties` class defines how to generate an image: which packages
+    to install, which base distro to use, which files and directories to share, etc.
     '''
 
     _eval_regex = re.compile(r'\$\(([a-zA-Z0-9._-]*)\)')
@@ -204,7 +205,7 @@ class DefinitionProperties(object):
         '''
         Replace variables in `in_string` and return the new string.
 
-        FIXME: Document the variable syntanx and valid variables.
+        FIXME: Document the variable syntax and valid variables.
         '''
         def eval_cb(match):
             var_name = match.group(1)
@@ -220,11 +221,14 @@ class DefinitionProperties(object):
 
     def abspath(self, path):
         '''
-        Make `path` absolute (relative for the currently parsed definition file).
+        Make `path` absolute.
+
+        If `path` is relative, it is considered relative to the definition file which is
+        currently being parsed.
+        If it's already absolutem then nothing is done.
 
         path:
             The path to make absolute if it's relative.
-            If already absolute, the path is not changed.
         Return value:
             An absolute path.
         '''
@@ -264,27 +268,33 @@ class DefinitionProperties(object):
         '''
         Share the directory or file at `relative_path` between host and image.
 
+        The path should be relative to the home directory and will be shared in
+        the image at the same relative path.
+        By default the paths will be identical because the home directory in the
+        image and host match, but this can be changes by setting `user_home`.
+
         relative_path:
-            The path to share at the same location in both host and image.
-            The path must a subdirectory of the home directory and relative to it.
+            The path, relative to the home directory, to share between host and
+            image.
         '''
         self._shared_home_paths.append(relative_path)
 
     def share_path(self, host_path, image_path=None):
         '''
-        Share the directory or file at `host_path` with the image where it will be accessible
-        as `image_path`.
+        Share the directory or file at `host_path` with the image where it will be
+        accessible as `image_path`.
 
-        If `image_path` is None, then it will be accessible at the same location in both host
-        and container.
+        If `image_path` is `None` (the default), then it will be accessible at the
+        same location in both host and container.
 
         host_path:
             The path on the host system of the directory or file to share.
-            If it's a relative path, then it's relative to the currently parse definition
-            file.
+            If it's a relative path, then it's relative to the currently parsed
+            definition file.
         image_path:
             The path in the container where the file or directory will be accessible,
             or None to use the same path in both host and container.
+            Defaults to `None`.
         '''
         host_path = self.abspath(host_path)
 
@@ -331,6 +341,8 @@ class DefinitionProperties(object):
     def username(self):
         '''
         The name of the normal non-root user.
+
+        This defaults to the same user name used on the host.
         '''
         return self._username
 
@@ -342,10 +354,10 @@ class DefinitionProperties(object):
     @props_property
     def user_home(self):
         '''
-        The path (valid inside the image) of the normal non-root user home directory.
+        The path (valid inside the image) of the non-root user home directory.
 
         It's recommended to keep the home directory identical in the host and image.
-        This helps in case any tool write an image path into a file which is later
+        This helps in case any tool writes an image path into a file which is later
         accessed on the host.
         '''
         return self._user_home
@@ -357,11 +369,16 @@ class DefinitionProperties(object):
     @props_property
     def image_home_path_on_host(self):
         '''
-        The path on the host where to store the content of the home directory from the
-        image.
+        The path on the host where to store the content of the non-root user home directory.
+
+        By default, the home directory of the non-root user gets saved on the host. This
+        allows configuration files to persist across invocations.
 
         You should not set this to the host home directory to avoid messing up your
-        configuration files.
+        configuration files, for instance if you have different versions of the same
+        program running on the host and inside the image.
+
+        By default, this is set to `~/.karton/home-dirs/IMAGE-NAME`.
         '''
         return self._image_home_path_on_host
 
@@ -371,6 +388,15 @@ class DefinitionProperties(object):
 
     @props_property
     def packages(self):
+        '''
+        A list of packages to install in the image.
+
+        The package names are those used by the distro you are using for the image.
+
+        Note that somwe packages, like `python`, will be installed automatically by
+        Karton as they are needed for it to work. You should not rely on this and
+        explicitly install everything you need.
+        '''
         return self._packages
 
     @props_property
@@ -378,7 +404,7 @@ class DefinitionProperties(object):
         '''
         The hostname for the image.
 
-        The default value is "IMAGE_NAME-on-HOST-HOSTNAME".
+        The default value is `IMAGE_NAME-on-HOST-HOSTNAME`.
         '''
         if self._hostname is not None:
             return self._hostname
@@ -396,6 +422,9 @@ class DefinitionProperties(object):
 
         This is in the Docker format, i.e. the distro name, a colon and the tag name.
         If you don't specify the tag when setting the distro, "latest" is used.
+
+        The default distro is `ubuntu:latest`, that is the most recent LTS version
+        of Ubuntu.
         '''
         return self._distro
 
@@ -420,7 +449,8 @@ class DefinitionProperties(object):
     @props_property
     def distro_components(self):
         '''
-        The distro used for the image, split into the distro name and the tag.
+        The distro used for the image as a tuple.
+        The first item is the distro name, the second the tag.
         '''
         split = self._distro.split(':')
         assert len(split) == 2
@@ -459,10 +489,9 @@ class DefinitionProperties(object):
     @props_property
     def docker_distro_full_name(self):
         '''
-        The name of the distro to use in the Dockerfile.
+        The name of the distro as it will be used in the Dockerfile.
 
-        This may be different from `DefinitionProperties.distro` if an architecture was
-        specified.
+        This may be different from `distro` if an architecture was specified.
         '''
         return self._ARCHITECTURES[self._architecture] + self.distro
 
@@ -470,6 +499,15 @@ class DefinitionProperties(object):
     def architecture(self):
         '''
         The architecture for the image.
+
+        Possible values are:
+
+        - x86_64 (default value if you don't specify anything): Also known as x64, x86-64,
+          or amd64. This is the normal 64-bit architecture for most computers.
+        - armv7: 32-bit ARMv7.
+        - aarch64: 64-bit ARMv8.
+
+        Note that not every distro is supported on every architecture.
         '''
         return self._architecture
 
@@ -485,10 +523,31 @@ class DefinitionProperties(object):
 
     @props_property
     def additional_archs(self):
+        '''
+        A list of additional architectures to support in the image.
+
+        This is, for instance, useful to install 32-bit packages on a 64-bit distro.
+
+        The only value currently supported is `'i386'` and is supported only on Debian
+        and Ubuntu.
+        '''
         return self._additional_archs
 
     @props_property
     def sudo(self):
+        '''
+        Whether to install the `sudo` command and whether passwordless `sudo` should
+        be allowed.
+
+        Possible values are:
+
+        - `DefinitionProperties.SUDO_PASSWORDLESS` (the default):
+          install `sudo` and don't require a password.
+        - `DefinitionProperties.SUDO_WITH_PASSWORD`:
+          install `sudo` but require a password.
+        - `DefinitionProperties.SUDO_NO`:
+          don't install `sudo`.
+        '''
         return self._sudo
 
     @sudo.setter
