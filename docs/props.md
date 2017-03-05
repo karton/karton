@@ -23,10 +23,6 @@ If it's already absolutem then nothing is done.
 </dd>
 </dl>
 
-`distro_tag()`
---------------
-The tag part of the distro name.
-
 `eval(in_string)`
 -----------------
 Replace variables in `in_string` and return the new string.
@@ -145,6 +141,10 @@ The first item is the distro name, the second the tag.
 `distro_name`
 -------------
 The name of the distro without any tag.
+
+`distro_tag`
+------------
+The tag part of the distro name.
 
 `docker_distro_full_name`
 -------------------------

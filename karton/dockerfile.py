@@ -435,6 +435,7 @@ class DefinitionProperties(object):
         # pylint: disable=unsubscriptable-object
         return self.distro_components[0]
 
+    @props_property
     def distro_tag(self):
         '''
         The tag part of the distro name.
