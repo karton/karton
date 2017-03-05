@@ -6,7 +6,7 @@ import sys
 
 # pylint: disable=wildcard-import,unused-wildcard-import
 
-if sys.version_info[0] == 3:
+if sys.version_info[0] >= 3:
     from .compat3 import *
 elif sys.version_info[:2] == (2, 7):
     from .compat2 import *
