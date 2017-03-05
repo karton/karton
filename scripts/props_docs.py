@@ -67,7 +67,7 @@ def generate_attribute(md_out, attr_name, attr_lines):
                         break
                     i += 1
                     arg_line = arg_line[4:]
-                    assert '`' not in arg_line
+                    arg_line = re.sub('`([a-zA-Z0-9_]+)`', r'<code>\1</code>', arg_line)
                     md_out.write(arg_line + '\n')
                 md_out.write('</dd>\n')
         else:
