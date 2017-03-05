@@ -4,9 +4,11 @@ from __future__ import print_function
 
 import collections
 import datetime
+import os
 import re
 import subprocess
 import sys
+import tempfile
 import textwrap
 
 
@@ -83,6 +85,24 @@ def parse_changelog():
 
 
 def prepare():
+    # Check the docs are updated.
+
+    tmp_docs_fileno, tmp_docs_path = tempfile.mkstemp()
+    os.close(tmp_docs_fileno)
+
+    subprocess.check_call(
+        ['./scripts/props_docs.py', tmp_docs_path])
+
+    with open(tmp_docs_path) as tmp_docs_file:
+        tmp_docs_content = tmp_docs_file.read()
+
+    with open('docs/props.md') as committed_doc_file:
+        committed_doc_content = committed_doc_file.read()
+
+    if tmp_docs_content != committed_doc_content:
+        die('The documentation for props.md is outdated.\n'
+            'Run "make docs" and commit the result first.')
+
     # Ask for the version.
 
     while True:
