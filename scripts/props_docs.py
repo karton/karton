@@ -34,7 +34,7 @@ def generate_attribute(md_out, attr_name, attr_lines):
         return
 
     attr_name_mangled = re.sub(r'\(.*\)', '(...)', attr_name)
-    md_out.write('`%s`\n' % attr_name_mangled)
+    md_out.write('\n`%s`\n' % attr_name_mangled)
     md_out.write('-' * 30 + '\n')
 
     inside_dl = False
@@ -47,10 +47,6 @@ def generate_attribute(md_out, attr_name, attr_lines):
         if line.endswith(':'):
             arg_name = line[:-1]
 
-            if not inside_dl:
-                md_out.write('<dl>\n')
-                inside_dl = True
-
             is_arg_or_return = False
             if arg_name == 'Return value':
                 is_arg_or_return = True
@@ -59,6 +55,10 @@ def generate_attribute(md_out, attr_name, attr_lines):
                 arg_name = '<code>%s</code>' % arg_name
 
             if is_arg_or_return:
+                if not inside_dl:
+                    md_out.write('<dl>\n')
+                    inside_dl = True
+
                 md_out.write('<dt>%s:</dt>\n' % arg_name)
                 md_out.write('<dd>')
                 while i < attr_lines_count:
@@ -70,14 +70,14 @@ def generate_attribute(md_out, attr_name, attr_lines):
                     arg_line = re.sub('`([a-zA-Z0-9_]+)`', r'<code>\1</code>', arg_line)
                     md_out.write(arg_line + '\n')
                 md_out.write('</dd>\n')
-        else:
-            assert not inside_dl
-            md_out.write(line + '\n')
+
+                continue
+
+        assert not inside_dl
+        md_out.write(line + '\n')
 
     if inside_dl:
         md_out.write('</dl>\n')
-
-    md_out.write('\n')
 
 
 def process(md_out_path):
