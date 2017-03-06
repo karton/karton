@@ -105,8 +105,11 @@ def prepare():
 
     # Ask for the version.
 
+    latest_version, _ = parse_changelog().items()[0]
+
     while True:
-        version = ask('Which version do you want to release?')
+        version = ask('Which version do you want to release (the latest one is %s)?' %
+                      latest_version)
         if yes_no('Do you really want to release version <%s>?' % version):
             break
         else:
