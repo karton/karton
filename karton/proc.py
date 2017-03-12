@@ -2,12 +2,18 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+import os
 import subprocess
 
 from .log import verbose
 
 
 CalledProcessError = subprocess.CalledProcessError
+
+class _DevNull(object):
+    pass
+
+DEVNULL = _DevNull()
 
 
 def call(cmd_args, *args, **kwargs):
@@ -38,13 +44,24 @@ def check_output(cmd_args, *args, **kwargs):
     '''
     verbose('Calling (using check_output):\n%s' % cmd_args)
 
-    if 'stderr' not in kwargs:
-        kwargs['stderr'] = subprocess.STDOUT
-    elif kwargs['stderr'] is None:
-        del kwargs['stderr']
+    devnull_file = None
 
-    if 'universal_newlines' not in kwargs:
-        kwargs['universal_newlines'] = True
+    try:
+        if 'stderr' not in kwargs:
+            kwargs['stderr'] = subprocess.STDOUT
+        elif kwargs['stderr'] is DEVNULL:
+            # Python 2 doesn't have subprocess.DEVNULL.
+            devnull_file = open(os.devnull, 'w')
+            kwargs['stderr'] = devnull_file
+        elif kwargs['stderr'] is None:
+            del kwargs['stderr']
 
-    # Without universal_newlines, in Python 3, this returns a byte instance.
-    return subprocess.check_output(cmd_args, *args, **kwargs)
+        if 'universal_newlines' not in kwargs:
+            kwargs['universal_newlines'] = True
+
+        # Without universal_newlines, in Python 3, this returns a byte instance.
+        return subprocess.check_output(cmd_args, *args, **kwargs)
+
+    finally:
+        if devnull_file is not None:
+            devnull_file.close()
