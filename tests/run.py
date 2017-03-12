@@ -17,6 +17,7 @@ import tracked
 ALL_TESTS = [
     'test_internal',
     'test_no_image',
+    'test_docker_check',
     'test_dockerfile',
     'test_images',
     'test_run',

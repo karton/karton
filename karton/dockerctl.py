@@ -2,21 +2,18 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+import grp
+import json
+import os
+import pwd
+import sys
+import textwrap
+
 from . import (
     proc,
     )
 
 from .log import die, verbose
-
-
-def die_docker_not_running(output):
-    '''
-    Docker is not running, so Karton cannot work and needs to abort.
-
-    output:
-        The output of a Docker invokation.
-    '''
-    die('Failed to run docker. Is it running?\nProgram output:\n\n%s' % output)
 
 
 class Docker(object):
@@ -27,22 +24,210 @@ class Docker(object):
     def __init__(self):
         '''
         Initialize a Docker object.
+
+        docker_command:
+            The name of the command to use to invoke Docker.
         '''
         self._docker_command = 'docker'
+        self._did_check_docker = False
+
+    # Docker could be launched.
+    _DOCKER_SUCCESS = 1
+    # The command to invoke Docker couldn't be found.
+    _DOCKER_NO_COMMAND = 2
+    # The Docker server couldn't be contacted.
+    _DOCKER_NO_SERVER = 3
+    # Another, unexpected, error happened while trying to use a Docker command.
+    _DOCKER_OTHER_ERROR = 10
+
+    def _try_docker(self):
+        '''
+        Try running Docker to check its availability.
+
+        Return value:
+            A value indicating where Docker could be run, it wasn't found, the server
+            is not available, or an error occurred.
+        '''
+        version = {}
+        json_output = None
+        error_return_code = False
+
+        try:
+            json_output = proc.check_output(
+                [self._docker_command, 'version', '--format', '{{ json . }}'],
+                stderr=proc.DEVNULL)
+        except OSError as exc:
+            return self._DOCKER_NO_COMMAND
+        except proc.CalledProcessError as exc:
+            # The most common case for this is that the server cannot be contacted, so
+            # Docker prints out the client version info, but not the server one.
+            json_output = exc.output
+            error_return_code = True
+
+        assert json_output is not None
+
+        try:
+            version = json.loads(json_output)
+        except ValueError:
+            verbose('The "docker version" command was run, but it didn\'t return valid data.\n'
+                    'The output was:\n%s' % json_output)
+            return self._DOCKER_OTHER_ERROR
+
+        if version.get('Client') is None:
+            verbose('The "docker version" command was run, but it didn\'t return a version?\n'
+                    'The output was:\n%s' % json_output)
+            return self._DOCKER_OTHER_ERROR
+        elif version.get('Server') is None:
+            return self._DOCKER_NO_SERVER
+
+        if error_return_code:
+            verbose('Inconsistent result from docker.\n'
+                    'The docker command failed, but its output doesn\'t report '
+                    'any failure.\n'
+                    'Ignoring.')
+
+        return self._DOCKER_SUCCESS
+
+    _DOCKER_GROUP_UNAVAILABLE = 1
+    _DOCKER_GROUP_DOES_NOT_EXIST = 2
+    _DOCKER_GROUP_NOT_IN_GROUP = 3
+    _DOCKER_GROUP_CONTAINS_USER = 4
+
+    def _check_docker_group(self):
+        if sys.platform == 'darwin':
+            return self._DOCKER_GROUP_UNAVAILABLE
+
+        try:
+            docker_group = grp.getgrnam('docker')
+        except KeyError:
+            return self._DOCKER_GROUP_DOES_NOT_EXIST
+
+        current_username = pwd.getpwuid(os.getuid()).pw_name
+        if current_username in docker_group.gr_mem:
+            return self._DOCKER_GROUP_CONTAINS_USER
+        else:
+            return self._DOCKER_GROUP_NOT_IN_GROUP
+
+    def _ensure_docker(self):
+        '''
+        Check whether we can use the Docker command.
+        '''
+        if self._did_check_docker:
+            return
+
+        self._did_check_docker = True
+
+        verbose('Checking for Docker availability.')
+
+        status = self._try_docker()
+
+        if status == self._DOCKER_SUCCESS:
+            return
+
+        elif status == self._DOCKER_NO_COMMAND:
+            if sys.platform == 'darwin':
+                install_url = 'https://docs.docker.com/docker-for-mac/install/'
+            else:
+                install_url = 'https://docs.docker.com/engine/installation/linux/'
+            die(textwrap.dedent(
+                '''\
+                It looks like Docker is not installed.
+
+                You can install using the tools provided by your operating system or,
+                alternatively, install the official Docker release following the
+                instructions at <%s>.
+                ''') %
+                install_url)
+
+        elif status == self._DOCKER_OTHER_ERROR:
+            die('Unexpected error while launching Docker.\n'
+                'Check it\'s installed correctly.')
+
+        assert status == self._DOCKER_NO_SERVER
+
+        docker_group = self._check_docker_group()
+
+        if docker_group == self._DOCKER_GROUP_CONTAINS_USER:
+            die(textwrap.dedent(
+                '''\
+                It looks like the Docker server is not running.\n
+                You can start it (on recent systems) with this command:
+
+                    sudo systemctl start docker
+
+
+                If this doesn't work, please read the documentation provided by Docker
+                at <https://docs.docker.com/engine/admin/>.
+                '''))
+
+        elif docker_group == self._DOCKER_GROUP_UNAVAILABLE:
+            # On macOS there's no "docker" group.
+            die(textwrap.dedent(
+                '''\
+                It looks like the Docker server is not running.
+
+                1 - Start the Docker app.
+                2 - Make sure the Docker whale icon is in the menu bar on the top right.
+                3 - Click the icon and make sure it says "Docker is running".
+                '''))
+
+        elif docker_group == self._DOCKER_GROUP_DOES_NOT_EXIST:
+            # The group doesn't exist even if Docker is installed.
+            # This is probably Fedora or similar using their own packages.
+            die('FIXME')
+
+        elif docker_group == self._DOCKER_GROUP_NOT_IN_GROUP:
+            # The group does exist, but the user is not in it.
+            import getpass
+            die(textwrap.dedent(
+                '''\
+                To be able to use Docker (which is required by Karton), you need to
+                add your user the the "docker" group. To do so, type this command:
+
+                    sudo usermod -a -G docker %s
+                ''' %
+                getpass.getuser()))
+
+        else:
+            die('Internal error, invalid Docker group option %s.' % docker_group)
+
+    @staticmethod
+    def _fail_later_docker_command(exc):
+        '''
+        The initial Docker check passed, but then invoking Docker failed with an
+        `OSError`.
+
+        This may mean that Docker just disappeared or, more likely, something is
+        wrong with Karton.
+        '''
+        die(textwrap.dedent(
+            '''\
+            Unexpected error while trying to run Docker: %s.
+
+            Try rerunning this command.
+            ''' % exc))
 
     def call(self, cmd_args, *args, **kwargs):
         '''
         Like `subprocess.call`, but the right command for docker is prepended to the
         arguments.
         '''
-        return proc.call([self._docker_command] + cmd_args, *args, **kwargs)
+        self._ensure_docker()
+        try:
+            return proc.call([self._docker_command] + cmd_args, *args, **kwargs)
+        except OSError as exc:
+            self._fail_later_docker_command(exc)
 
     def check_call(self, cmd_args, *args, **kwargs):
         '''
         Like `subprocess.check_call`, but the right command for docker is prepended
         to the arguments.
         '''
-        return proc.check_call([self._docker_command] + cmd_args, *args, **kwargs)
+        self._ensure_docker()
+        try:
+            return proc.check_call([self._docker_command] + cmd_args, *args, **kwargs)
+        except OSError as exc:
+            self._fail_later_docker_command(exc)
 
     def check_output(self, cmd_args, *args, **kwargs):
         '''
@@ -52,14 +237,15 @@ class Docker(object):
 
         See `proc.check_output` for details.
         '''
-        return proc.check_output([self._docker_command] + cmd_args, *args, **kwargs)
+        self._ensure_docker()
+        try:
+            return proc.check_output([self._docker_command] + cmd_args, *args, **kwargs)
+        except OSError as exc:
+            self._fail_later_docker_command(exc)
 
     def is_container_running(self, container_id):
         '''
         Whether the container with `container_id` as ID is running or not.
-
-        Note that this method assumes that Docker is running. If not it will call
-        `dockerctl.die_docker_not_running`.
 
         container_id:
             The ID of the container to query for its status.
@@ -72,17 +258,8 @@ class Docker(object):
             output = self.check_output(
                 ['inspect', '--format={{ .State.Running }}', container_id])
         except proc.CalledProcessError:
-            verbose('Cannot inspect the status of the Docker container.')
-
-            # Did inspect fail just because docker is not running?
-            try:
-                self.check_output(['images'])
-            except proc.CalledProcessError as exc:
-                die_docker_not_running(exc.output)
-
             verbose('Docker seems to be running, but we could not inspect the status of the '
                     'container. Assuming the Docker container is not running.')
-
             return False
 
         output = output.strip()

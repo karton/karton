@@ -12,7 +12,6 @@ import time
 
 from . import (
     alias,
-    dockerctl,
     dockerfile,
     lock,
     pathutils,
@@ -452,10 +451,10 @@ class Image(object):
 
         try:
             images = self.docker.check_output(['images', '-q', self.image_name])
-            images = images.strip()
         except proc.CalledProcessError as exc:
-            dockerctl.die_docker_not_running(exc.output)
+            die('Cannot list the available Docker images:\n\n%s' % exc.output)
 
+        images = images.strip()
         if not images:
             die('Image "%(image_name)s" is not available.\n\n'
                 'Did you forget to build it? You can build the image with:\n'
