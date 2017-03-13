@@ -28,7 +28,8 @@ class Docker(object):
         docker_command:
             The name of the command to use to invoke Docker.
         '''
-        self._docker_command = 'docker'
+        self._docker_command = ['docker']
+        self._sudo_command = ['sudo', '-n']
         self._did_check_docker = False
 
     # Docker could be launched.
@@ -54,7 +55,7 @@ class Docker(object):
 
         try:
             json_output = proc.check_output(
-                [self._docker_command, 'version', '--format', '{{ json . }}'],
+                self._docker_command + ['version', '--format', '{{ json . }}'],
                 stderr=proc.DEVNULL)
         except OSError as exc:
             return self._DOCKER_NO_COMMAND
@@ -107,6 +108,22 @@ class Docker(object):
             return self._DOCKER_GROUP_CONTAINS_USER
         else:
             return self._DOCKER_GROUP_NOT_IN_GROUP
+
+    def _can_use_sudo(self):
+        verbose('Checking if it\'s possible to use the "sudo" command')
+
+        assert len(self._docker_command) == 1
+
+        try:
+            proc.check_output(
+                self._sudo_command +
+                self._docker_command +
+                ['version'])
+        except (OSError, proc.CalledProcessError) as exc:
+            verbose('Cannot use "sudo": %s.' % exc)
+            return False
+
+        return True
 
     def _ensure_docker(self):
         '''
@@ -174,7 +191,25 @@ class Docker(object):
         elif docker_group == self._DOCKER_GROUP_DOES_NOT_EXIST:
             # The group doesn't exist even if Docker is installed.
             # This is probably Fedora or similar using their own packages.
-            die('FIXME')
+            if self._can_use_sudo():
+                self._docker_command = self._sudo_command + self._docker_command
+            else:
+                die(textwrap.dedent(
+                    '''\
+                    Cannot run Docker without "sudo".
+
+                    The maintainers of your distribution decided that, for security
+                    reasons, users should not be allowed to launch Docker without using the
+                    "sudo" command.
+
+                    You have two choices, either configure "sudo" to allow the execution of
+                    the "docker" command without a password, or add a "docker" user to the
+                    systems. For instructions, see
+                    <https://developer.fedoraproject.org/tools/docker/docker-installation.html>.
+
+                    Alternatively, you can install the official Docker packages from
+                    <https://docs.docker.com/engine/installation/linux/>.
+                    '''))
 
         elif docker_group == self._DOCKER_GROUP_NOT_IN_GROUP:
             # The group does exist, but the user is not in it.
@@ -214,7 +249,7 @@ class Docker(object):
         '''
         self._ensure_docker()
         try:
-            return proc.call([self._docker_command] + cmd_args, *args, **kwargs)
+            return proc.call(self._docker_command + cmd_args, *args, **kwargs)
         except OSError as exc:
             self._fail_later_docker_command(exc)
 
@@ -225,7 +260,7 @@ class Docker(object):
         '''
         self._ensure_docker()
         try:
-            return proc.check_call([self._docker_command] + cmd_args, *args, **kwargs)
+            return proc.check_call(self._docker_command + cmd_args, *args, **kwargs)
         except OSError as exc:
             self._fail_later_docker_command(exc)
 
@@ -239,7 +274,7 @@ class Docker(object):
         '''
         self._ensure_docker()
         try:
-            return proc.check_output([self._docker_command] + cmd_args, *args, **kwargs)
+            return proc.check_output(self._docker_command + cmd_args, *args, **kwargs)
         except OSError as exc:
             self._fail_later_docker_command(exc)
 

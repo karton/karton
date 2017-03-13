@@ -47,6 +47,8 @@ class DockerMixin(KartonMixin):
     Mixin which takes care of Docker-related issues and allow to generate images.
     '''
 
+    _docker_command = None
+
     # This is a prefix to distinguish easily our images form non-test ones.
     TEST_IMAGE_PREFIX = 'karton-test-'
 
@@ -71,17 +73,41 @@ class DockerMixin(KartonMixin):
     def create_docker(self):
         return dockerctl.Docker()
 
+    @staticmethod
+    def _ensure_docker_command():
+        if DockerMixin._docker_command is not None:
+            return
+
+        def run_version():
+            try:
+                subprocess.check_output(DockerMixin._docker_command + ['version'],
+                                        stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError:
+                return False
+            return True
+
+        DockerMixin._docker_command = ['docker']
+        if not run_version():
+            DockerMixin._docker_command = ['sudo', '-n'] + DockerMixin._docker_command
+            if not run_version():
+                raise Exception('Cannot run docker (neither with nor without sudo)')
+
+    @staticmethod
+    def _check_output_docker(cmd, *args, **kwargs):
+        DockerMixin._ensure_docker_command()
+
+        cmd = DockerMixin._docker_command + cmd
+        kwargs['stderr'] = subprocess.STDOUT
+        kwargs['universal_newlines'] = True
+
+        return subprocess.check_output(cmd, *args, **kwargs)
+
     def clear_running_test_containers(self):
         '''
         Stop all the test Docker containers.
         '''
         for container_id in self.get_running_test_containers():
-            subprocess.check_output(
-                ['docker',
-                 'stop',
-                 container_id,
-                ],
-                universal_newlines=True)
+            self._check_output_docker(['stop', container_id])
 
     @staticmethod
     def get_running_test_containers():
@@ -92,14 +118,11 @@ class DockerMixin(KartonMixin):
             A list of container IDs.
         '''
         # --filter doesn't accept wildcards nor a regexp.
-        output = subprocess.check_output(
-            ['docker',
-             'ps',
+        output = DockerMixin._check_output_docker(
+            ['ps',
              '--format',
-             '{{ .ID }}:{{ .Image }}',
-            ],
-            stderr=subprocess.STDOUT,
-            universal_newlines=True)
+             '{{ .ID }}:{{ .Image }}'],
+            stderr=subprocess.STDOUT)
 
         ids = []
         for line in output.split('\n'):

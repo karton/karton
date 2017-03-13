@@ -4,6 +4,7 @@
 
 import json
 import os
+import pipes
 import textwrap
 
 from karton import (
@@ -25,12 +26,20 @@ class FakeDocker(dockerctl.Docker):
         self._stderr_path = os.path.join(tmp_dir, 'fake-docker.stderr')
         self._fake_docker_path = os.path.join(tmp_dir, 'fake-docker')
 
+        self._fake_sudo_path = os.path.join(tmp_dir, 'fake-sudo')
+        self.set_sudo_result(2, 'Unexpected call to "sudo".')
+
         self._has_docker_group = False
         self._in_docker_group = False
         self.docker_group = 'INVALID'
 
         super(FakeDocker, self).__init__()
-        self._docker_command = self._fake_docker_path
+        self._docker_command = [self._fake_docker_path]
+        self._sudo_command = [self._fake_sudo_path, '-n']
+
+    @property
+    def command_length(self):
+        return len(self._docker_command)
 
     def _check_docker_group(self):
         return self.docker_group
@@ -68,6 +77,33 @@ class FakeDocker(dockerctl.Docker):
                 cat "$0.stderr" >&2
                 '''))
             os.fchmod(fake_docker_file.fileno(), 0o755)
+
+    def set_sudo_result(self, exit_code, output=''):
+        with open(self._fake_sudo_path, 'w') as fake_sudo_file:
+            fake_sudo_file.write(textwrap.dedent(
+                '''\
+                #! /bin/bash
+
+                output=%(output)s
+                if [ -n "$output" ]; then
+                    echo "$output"
+                fi
+
+                if [ "$1" != "-n" ]; then
+                    echo "The first argument should be '-n' but was '$1'" >&2
+                fi
+
+                if [ "$2" != "%(docker_path)s" ]; then
+                    echo "The second argument should be '%(docker_path)s' but was '$2'" >&2
+                fi
+
+                exit %(exit_code)d
+                ''' % dict(
+                    output=pipes.quote(output),
+                    exit_code=exit_code,
+                    docker_path=self._fake_docker_path,
+                    )))
+            os.fchmod(fake_sudo_file.fileno(), 0o755)
 
 
 class DockerCheckTestCase(DockerfileMixin,
@@ -116,13 +152,27 @@ class DockerCheckTestCase(DockerfileMixin,
         self.assert_exit_fail()
         self.assertIn('It looks like the Docker server is not running.', self.current_text)
 
-    def test_group_does_not_exist(self):
+    def test_sudo_not_available(self):
         self.docker.set_versions('1.2.3-X', None)
         self.docker.docker_group = self.docker._DOCKER_GROUP_DOES_NOT_EXIST
+        self.docker.set_sudo_result(1, 'sudo: a password is required')
+        self.assertEqual(self.docker.command_length, 1)
         self.try_run()
         self.assert_exit_fail()
-        # FIXME.
-        self.assertIn('FIXME', self.current_text)
+        self.assertIn('Cannot run Docker without "sudo".', self.current_text)
+        self.assertEqual(self.docker.command_length, 1)
+
+    def test_sudo_available(self):
+        self.docker.set_versions('1.2.3-X', None)
+        self.docker.docker_group = self.docker._DOCKER_GROUP_DOES_NOT_EXIST
+        fake_sudo_msg = 'This comes from the test fake "sudo".'
+        self.docker.set_sudo_result(0, fake_sudo_msg)
+        self.assertEqual(self.docker.command_length, 1)
+        self.try_run()
+        # It succeeds because the fake sudo script succeeds.
+        self.assert_exit_success()
+        self.assertIn(fake_sudo_msg, self.current_text)
+        self.assertEqual(self.docker.command_length, 3)
 
     def test_not_in_group(self):
         self.docker.set_versions('1.2.3-X', None)
@@ -141,6 +191,7 @@ class DockerCheckTestCase(DockerfileMixin,
     def test_success(self):
         self.docker.set_versions('1.2.3-X', '1.2.3-X')
         self.try_run()
+        # It fails because our fake Docker cannot run commands.
         self.assert_exit_fail()
         # This means that the check went fine and then we try to re-run our fake docker
         # command to check if the image is available, but our fake docker doesn't
