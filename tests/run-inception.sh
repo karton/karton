@@ -18,6 +18,9 @@ TARGETS+=" ubuntu:devel"
 TARGETS+=" centos:latest" # This is 7 at the time of writing.
 # 6 is ancient (first released in 2011)
 
+# Fedora.
+TARGETS+=" fedora:latest" # This is 25 at the time of writing.
+
 function _error() {
     echo >&2
     echo "$1" >&2

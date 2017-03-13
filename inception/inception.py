@@ -31,7 +31,13 @@ FROM %(distro_and_tag)s
 
 ADD /sudoers.txt /etc/sudoers
 
-RUN useradd -m -s /bin/bash -G docker test-user
+# The docker group doesn't exist in RPM-based systems when using distro packages. See
+# http://www.projectatomic.io/blog/2015/08/why-we-dont-let-non-root-users-run-docker-in-centos-fedora-or-rhel/
+RUN \
+    useradd -m -s /bin/bash test-user && \
+    if cat /etc/group | grep docker > /dev/null; then \
+        usermod -a -G docker test-user; \
+    fi
 
 ENV USER test-user
 USER test-user
@@ -72,11 +78,31 @@ RUN \
     yum -y install docker-engine
 '''
 
+# For Fedora we use the distro packages.
+FEDORA_BASIC_SETUP = '''\
+RUN \
+    yum makecache fast && \
+    yum install -y \
+        docker-engine \
+        make \
+        python \
+        sudo \
+        yum-utils \
+        which
+
+# This is needed because we start dockerd without using systemd.
+RUN \
+    for current in /usr/bin/dockerd-current /usr/libexec/docker/docker-*-current; do \
+        link=$(echo "$current" | sed -e 's,-current$,,'); \
+        ln -s "$current" "$link"; \
+    done
+'''
+
 SUDOERS = '''\
 root ALL=(ALL) ALL
 test-user ALL=(ALL) NOPASSWD: ALL
 Defaults    env_reset
-Defaults    secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Defaults    secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/libexec/docker"
 '''
 
 CONTAINER_RUNNER_SCRIPT = '''\
@@ -87,7 +113,7 @@ if [ "$host_date" != "NOSYNC" ]; then
     sudo date -s "@$host_date" > /dev/null
 fi
 
-if which dockerd > /dev/null; then
+if which dockerd > /dev/null 2>&1; then
     dockerd_command="dockerd"
 else
     dockerd_command="docker daemon"
@@ -261,7 +287,7 @@ def main(arguments):
         'distro_and_tag',
         metavar='DISTRO',
         help='the distro to use in Docker format '
-        '(for instance "ubuntu:latest", "debian:testing" or "centos")')
+        '(for instance "ubuntu:latest", "debian:testing", "centos", "fedora:latest", etc.)')
 
     parser.add_argument(
         'remainder',
@@ -281,7 +307,7 @@ def main(arguments):
     else:
         die('Invalid distribution: "%s".' % parsed_args.distro_and_tag)
 
-    if distro_name not in ('ubuntu', 'debian', 'centos'):
+    if distro_name not in ('ubuntu', 'debian', 'centos', 'fedora'):
         die('Invalid distro name: "%s".' % distro_name)
 
     if not distro_tag:
@@ -295,6 +321,8 @@ def main(arguments):
         basic_setup = DEB_BASIC_SETUP
     elif distro_name == 'centos':
         basic_setup = CENTOS_BASIC_SETUP
+    elif distro_name == 'fedora':
+        basic_setup = FEDORA_BASIC_SETUP
     else:
         assert False, 'Unexpected distro "%s" even if we already checked earlier' % distro_name
 
