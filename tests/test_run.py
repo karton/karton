@@ -5,6 +5,7 @@
 import os
 import sys
 import time
+import unittest
 
 from karton import (
     pathutils,
@@ -203,6 +204,7 @@ class RunTestCase(DockerMixin,
         self.spawn_karton(['run', '--no-cd', image_name, 'which', 'yum'])
         self.assertIn('/usr/bin/yum', self.current_text)
 
+    @unittest.skip('aarch64 support seems broken for both Ubuntu and Fedora at the moment')
     def test_aarch64(self):
         image_name = self.build_current_aarch64_with_gcc()
         self.run_compilation_test(

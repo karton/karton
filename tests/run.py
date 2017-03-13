@@ -60,10 +60,6 @@ def summarize_results(result):
         test_test_details['fail-style'] = 'error'
         test_test_details['error'] = exception_string
 
-    # There are no skipped tests in the current test setup, so we don't deal with
-    # result.skipped yet.
-    assert not result.skipped
-
     fail_count = len(result.failures)
     error_count = len(result.errors)
     total_count = len(tracked.TrackedTestCase.all_run_tests)
