@@ -10,9 +10,17 @@ from distutils.core import setup
 from karton import __version__
 
 long_description = '''
-Karton is a tool to transparently run Linux programs on macOS or on another Linux distro.
+Karton is a tool which can transparently run Linux programs on macOS,
+a different Linux distro, or a different architecture.
+To do this, you just need to tell Karton which distro to use, which
+packages to install, and which directories to make accessible. This is
+called an image.
 
-Underneath, Karton uses Docker to allow running programs and manage semi-persistent containers.
+Then you can run your commands inside the image just by adding
+"karton run image-name" in front of your commands.
+
+Underneath, Karton uses Docker to allow running programs and manage
+semi-persistent containers.
 '''.strip()
 
 # https://pypi.python.org/pypi?%3Aaction=list_classifiers
@@ -33,7 +41,7 @@ classifiers = [
 config = {
     # Info about the package:
     'name': 'karton',
-    'description': 'Karton is a tool to transparently run Linux programs on macOS or on another Linux distro',
+    'description': 'Run Linux programs on macOS, a different Linux distro, or a different architecture',
     'long_description': long_description,
     'version': __version__,
     'author': 'Marco Barisione',
