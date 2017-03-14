@@ -281,7 +281,7 @@ class RunTestCase(DockerMixin,
             self.run_karton(cmd, ignore_fail=ignore_fail)
 
             if expected_dir is error:
-                self.assertIn('cannot be accessed in the image.', self.current_text)
+                self.assertIn('cannot be accessed in the image', self.current_text)
             else:
                 self.assertEqual(expected_dir, self.current_text.strip())
 

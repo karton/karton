@@ -35,7 +35,25 @@ class CDError(OSError):
         '''
         super(CDError, self).__init__(
             errno.ENOENT,
-            'Host directory "%s" cannot be accessed in the image' % directory)
+            textwrap.dedent(
+                '''\
+                The current directory cannot be accessed in the image:
+                    %s
+
+                If you want to make this directory accessible inside the image, you
+                can modify the definition.py file and share it using one of the
+                sharing methods:
+                    - props.share_path(host_path, image_path=None)
+                    - props.share_path_in_home(relative_path)
+                For more information, see the DefinitionProperties documentation
+                at <https://github.com/karton/karton/blob/master/docs/props.md>.
+
+                If you want to execute the command without caring about the current
+                directory, see the documentation about --no-cd and --auto-cd by
+                typing:
+
+                    karton help run
+                ''' % directory).strip())
 
 
 class Image(object):
@@ -132,7 +150,7 @@ class Image(object):
         try:
             exit_code = self.exec_command(cmd_args, cd_mode)
         except CDError as exc:
-            die('%s.' % exc.strerror)
+            die('%s' % exc.strerror)
 
         raise SystemExit(exit_code)
 
@@ -148,7 +166,7 @@ class Image(object):
         try:
             exit_code = self.exec_command(['bash', '-i'], cd_mode)
         except CDError as exc:
-            die('%s.' % exc.strerror)
+            die('%s' % exc.strerror)
 
         raise SystemExit(exit_code)
 
