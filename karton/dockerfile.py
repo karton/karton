@@ -364,7 +364,7 @@ class DefinitionProperties(object):
 
         The package names are those used by the distro you are using for the image.
 
-        Note that somwe packages, like `python`, will be installed automatically by
+        Note that some packages, like `python`, will be installed automatically by
         Karton as they are needed for it to work. You should not rely on this and
         explicitly install everything you need.
         '''
