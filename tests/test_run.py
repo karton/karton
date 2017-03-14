@@ -13,6 +13,7 @@ from karton import (
 
 from mixin_docker import DockerMixin
 from mixin_dockerfile import DockerfileMixin
+from testutils import WorkDir
 from tracked import TrackedTestCase
 
 
@@ -256,3 +257,47 @@ class RunTestCase(DockerMixin,
         self.assertIn('Image time: 2001-09-', self.current_text)
 
         assert_time_correct()
+
+    def test_cd(self):
+        image_name = self.build_ubuntu_latest_with_gcc()
+        self.assert_not_running(image_name)
+
+        shared_host_path = os.path.join(self.tmp_dir, 'shared')
+        shared_image_path = '/shared'
+        home_dir = '/foo/bar/testUserHome'
+
+        class Error(object):
+            pass
+
+        error = Error()
+
+        def assert_karton_pwd(cd_mode, expected_dir):
+            cmd = ['run', image_name, 'pwd']
+            if cd_mode is not None:
+                cmd.insert(1, cd_mode)
+
+            ignore_fail = (expected_dir is error)
+
+            self.run_karton(cmd, ignore_fail=ignore_fail)
+
+            if expected_dir is error:
+                self.assertIn('cannot be accessed in the image.', self.current_text)
+            else:
+                self.assertEqual(expected_dir, self.current_text.strip())
+
+        assert_karton_pwd('--no-cd', home_dir)
+        assert_karton_pwd('--auto-cd', home_dir)
+        assert_karton_pwd(None, error)
+
+        with WorkDir(shared_host_path):
+            assert_karton_pwd('--no-cd', home_dir)
+            assert_karton_pwd('--auto-cd', shared_image_path)
+            assert_karton_pwd(None, shared_image_path)
+
+        shared_host_subdir_path = os.path.join(shared_host_path, 'subdir')
+        shared_image_subdir_path = os.path.join(shared_image_path, 'subdir')
+        pathutils.makedirs(shared_host_subdir_path)
+        with WorkDir(shared_host_subdir_path):
+            assert_karton_pwd('--no-cd', home_dir)
+            assert_karton_pwd('--auto-cd', shared_image_subdir_path)
+            assert_karton_pwd(None, shared_image_subdir_path)

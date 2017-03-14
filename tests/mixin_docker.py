@@ -236,6 +236,9 @@ class DockerMixin(KartonMixin):
         props.distro = 'ubuntu'
         props.packages.extend(['gcc', 'libc6-dev', 'file'])
 
+        props.share_path(os.path.join(self.tmp_dir, 'shared'),
+                         '/shared')
+
     @make_image('ubuntu-gcc-x32')
     def build_ubuntu_old_with_gcc_x32(self, props=None):
         props.distro = 'ubuntu:trusty'
