@@ -178,6 +178,7 @@ def push():
     message = 'Release Karton %s' % version
     tag_name = 'v' + version
 
+    print()
     if not yes_no('Should I commit this with message "%s" and tag "%s"?' % (message, tag_name)):
         die('Aborting release.')
 
@@ -185,7 +186,7 @@ def push():
 
     call('git', 'tag', '--annotate', '-m', message, tag_name)
 
-    print('Changes committed locally. This is your last chance to change your mind!')
+    print('\nChanges committed locally. This is your last chance to change your mind!\n')
     if not yes_no('Are you sure you want to proceed pushing release %s?' % version):
         die('Aborting release. You should revert the changes made and remove the local tag.')
 
@@ -197,6 +198,7 @@ def push():
 
     print(textwrap.dedent(
         '''\
+
         Source release for version %s made and pushed.
 
         Check the github link above and then push the pip release:
