@@ -85,3 +85,38 @@ class InternalTestCase(TrackedTestCase):
 
         self.assertNotIn(tmpdir, pathutils.get_system_executable_paths()[0])
         self.assertFalse(subprocess_check_in_path())
+
+    def test_work_dir(self):
+        def get_pwd():
+            cmd_pwd = subprocess.check_output(['pwd'], universal_newlines=True).strip()
+            py_pwd = os.getcwd()
+            self.assertEqual(cmd_pwd, py_pwd)
+            return cmd_pwd
+
+        def assert_equal_real_path(path1, path2):
+            self.assertEqual(
+                os.path.realpath(path1),
+                os.path.realpath(path2))
+
+        def assert_not_equal_real_path(path1, path2):
+            self.assertNotEqual(
+                os.path.realpath(path1),
+                os.path.realpath(path2))
+
+        initial_dir = get_pwd()
+        assert_not_equal_real_path(initial_dir, '/')
+
+        with testutils.WorkDir('/'):
+            assert_equal_real_path(get_pwd(), '/')
+
+        assert_equal_real_path(get_pwd(), initial_dir)
+
+        with testutils.WorkDir('/var'):
+            assert_equal_real_path(get_pwd(), '/var')
+            with testutils.WorkDir('/etc'):
+                assert_equal_real_path(get_pwd(), '/etc')
+            assert_equal_real_path(get_pwd(), '/var')
+            os.chdir('/etc')
+            assert_equal_real_path(get_pwd(), '/etc')
+
+        assert_equal_real_path(get_pwd(), initial_dir)

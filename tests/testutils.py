@@ -102,3 +102,37 @@ class BinPathAdder(object):
     def __exit__(self, exception_type, exception_value, traceback):
         assert os.environ['PATH'].startswith(self._dir_and_separator)
         os.environ['PATH'] = os.environ['PATH'][len(self._dir_and_separator):]
+
+
+class WorkDir(object):
+    '''
+    Temporarily change the current working directory.
+
+    This is supposed to be used to be used with a `with` block. Inside the
+    block, the directory is changed, but the previous one is restored when
+    the block exits.
+    '''
+
+    def __init__(self, new_work_dir):
+        '''
+        Initialize a `WorkDir`.
+
+        new_work_dir:
+        '''
+        self._old_work_dir = None
+        self._new_work_dir = new_work_dir
+
+    def __enter__(self):
+        assert self._old_work_dir is None
+        assert self._new_work_dir is not None
+
+        self._old_work_dir = os.getcwd()
+        os.chdir(self._new_work_dir)
+
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        assert self._old_work_dir is not None
+
+        os.chdir(self._old_work_dir)
+        self._old_work_dir = None
