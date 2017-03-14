@@ -474,10 +474,10 @@ class DefinitionProperties(object):
 
         Possible values are:
 
-        - x86_64 (default value if you don't specify anything): Also known as x64, x86-64,
+        - `x86_64` (default value if you don't specify anything): Also known as x64, x86-64,
           or amd64. This is the normal 64-bit architecture for most computers.
-        - armv7: 32-bit ARMv7.
-        - aarch64: 64-bit ARMv8.
+        - `armv7`: 32-bit ARMv7.
+        - `aarch64`: 64-bit ARMv8.
 
         Note that not every distro is supported on every architecture.
         In particular, the Docker support for ARM is experimental and may break at any
