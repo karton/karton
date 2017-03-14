@@ -5,6 +5,8 @@
 import errno
 import os
 import shutil
+import sys
+import tempfile
 
 from .log import verbose
 
@@ -76,3 +78,39 @@ def get_system_executable_paths():
     '''
     paths = os.environ.get('PATH', '').split(os.pathsep)
     return [path.strip('"').strip('\'') for path in paths if path]
+
+
+def get_user_cache_dir():
+    '''
+    Get a user-specific directory for non-essential cached files.
+
+    On macOS, this is the per-user temporary directory.
+
+    Return value:
+        A directory path which may or may not exist.
+    '''
+    xdg_cache_dir = os.environ.get('XDG_CACHE_HOME')
+    if xdg_cache_dir is not None:
+        return xdg_cache_dir
+
+    if sys.platform == 'darwin':
+        return tempfile.gettempdir()
+
+    return os.path.expanduser(os.path.join('~', '.cache'))
+
+
+def get_user_runtime_path():
+    '''
+    Get a user-specific directory directory for runtime files.
+
+    If not specified according to the XDG Base Directory Specification, then
+    the directory returned by `get_user_cache_dir` is used.
+
+    Return value:
+        A directory path which may or may not exist.
+    '''
+    xdg_runtime_dir = os.environ.get('XDG_RUNTIME_DIR')
+    if xdg_runtime_dir is not None:
+        return xdg_runtime_dir
+
+    return get_user_cache_dir()

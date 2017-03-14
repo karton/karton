@@ -5,11 +5,11 @@
 import getpass
 import os
 import socket
-import tempfile
 
 from . import (
     configuration,
     dockerctl,
+    pathutils,
     )
 
 
@@ -90,7 +90,7 @@ class Session(object):
         # FIXME: We should not use a directory in the temp dir and we should take
         # care of dealing with multiple users.
         return Session(
-            os.path.join(tempfile.gettempdir(), 'karton'),
+            os.path.join(pathutils.get_user_runtime_path(), 'io.github.karton'),
             HostSystem(),
             configuration.GlobalConfig(Session.configuration_dir()),
             dockerctl.Docker())
