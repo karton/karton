@@ -4,7 +4,6 @@
 
 import imp
 import os
-import re
 import shutil
 import textwrap
 import traceback
@@ -116,8 +115,6 @@ class DefinitionProperties(object):
     to install, which base distro to use, which files and directories to share, etc.
     '''
 
-    _eval_regex = re.compile(r'\$\(([a-zA-Z0-9._-]*)\)')
-
     SUDO_WITH_PASSWORD = 101
     SUDO_PASSWORDLESS = 102
     SUDO_NO = 103
@@ -152,13 +149,6 @@ class DefinitionProperties(object):
 
         self.maintainer = None
 
-        self._eval_map = {
-            'host.username': lambda: self._host_system.username,
-            'host.userhome': lambda: self._host_system.user_home,
-            'host.hostname': lambda: self._host_system.hostname,
-            'image.name': lambda: self._image_name,
-            }
-
     def __str__(self):
         res = [
             'DefinitionProperties(image_name=%s, definition_file_path=%s, host_system=%s)' %
@@ -171,24 +161,6 @@ class DefinitionProperties(object):
         for prop_name, getter in _g_props_all_properties.iteritems():
             res.append('    %s = %s' % (prop_name, repr(getter(self))))
         return '\n'.join(res)
-
-    def eval(self, in_string):
-        '''
-        Replace variables in `in_string` and return the new string.
-
-        FIXME: Document the variable syntax and valid variables.
-        '''
-        def eval_cb(match):
-            var_name = match.group(1)
-            replacement_cb = self._eval_map.get(var_name)
-            if replacement_cb is None:
-                raise DefinitionError(
-                    self._definition_file_path,
-                    'The variable "$(%s)" is not valid (in string "%s")' %
-                    (var_name, match.string))
-            return replacement_cb()
-
-        return self._eval_regex.sub(eval_cb, in_string)
 
     def abspath(self, path):
         '''
@@ -380,7 +352,7 @@ class DefinitionProperties(object):
         if self._hostname is not None:
             return self._hostname
         else:
-            return self.eval('$(image.name)-on-$(host.hostname)')
+            return '%s-on-%s' % (self._image_name, self._host_system.hostname)
 
     @hostname.setter
     def hostname(self, hostname):
