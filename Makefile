@@ -91,8 +91,8 @@ distcheck:
 
 .PHONY: distcheck-fast
 distcheck-fast:
-	# Locally, we only run Python 3 tests as the Python2 ones will be run
-	# in inception.
+	@# Locally, we only run Python 3 tests as the Python2 ones will be run
+	@# in inception.
 	@rm test-results/local.json 2> /dev/null || true
 	-$(MAKE) -f $(CURRENT_MAKEFILE) check-python3
 	-$(MAKE) -f $(CURRENT_MAKEFILE) check-inception TARGETS="ubuntu:devel"
