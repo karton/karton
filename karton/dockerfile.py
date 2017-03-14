@@ -168,7 +168,7 @@ class DefinitionProperties(object):
 
         If `path` is relative, it is considered relative to the definition file which is
         currently being parsed.
-        If it's already absolutem then nothing is done.
+        If it's already absolute, then nothing is done.
 
         path:
             The path to make absolute if it's relative.
@@ -214,7 +214,7 @@ class DefinitionProperties(object):
         The path should be relative to the home directory and will be shared in
         the image at the same relative path.
         By default the paths will be identical because the home directory in the
-        image and host match, but this can be changes by setting `user_home`.
+        image and host match, but this can be changed by setting `user_home`.
 
         relative_path:
             The path, relative to the home directory, to share between host and
