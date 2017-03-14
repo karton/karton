@@ -458,7 +458,8 @@ class Image(object):
         if not images:
             die('Image "%(image_name)s" is not available.\n\n'
                 'Did you forget to build it? You can build the image with:\n'
-                '    $ karton build %(image_name)s' %
+                '\n'
+                '    karton build %(image_name)s' %
                 dict(image_name=self.image_name))
 
         args = [
@@ -740,13 +741,15 @@ class Image(object):
                 %(definition_file_path)s
 
             When you are done, build the image:
-                $ karton build %(image_name)s
+
+                karton build %(image_name)s
 
             After the image is built, you will only have to build it again if you
             change the definition file.
 
             You can then run commands in the image like this:
-                $ karton run %(image_name)s COMMAND_NAME ARGUMENT1 ARGUMENT2 ...
+
+                karton run %(image_name)s COMMAND_NAME ARGUMENT1 ARGUMENT2 ...
             ''' %
             dict(
                 image_name=image_name,

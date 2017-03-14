@@ -200,7 +200,8 @@ def push():
         Source release for version %s made and pushed.
 
         Check the github link above and then push the pip release:
-            $ python setup.py sdist upload -r pypi
+
+            python setup.py sdist upload -r pypi
         ''' % version))
 
 

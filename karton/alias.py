@@ -221,10 +221,12 @@ class AliasManager(object):
             '''\
             Assuming you use the bash shell (the default for most distros), create
             a directory called "~/bin" like this:
-                $ mkdir ~/bin
+
+                mkdir ~/bin
 
             Now edit the file called ".bashrc" in your home directory and add this
             like at the very end:
+
                 PATH="~/bin:$PATH"
 
             Close the terminal, open a new one and re-run this Karton command.
