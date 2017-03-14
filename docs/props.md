@@ -12,7 +12,7 @@ Make `path` absolute.
 
 If `path` is relative, it is considered relative to the definition file which is
 currently being parsed.
-If it's already absolutem then nothing is done.
+If it's already absolute, then nothing is done.
 
 <dl>
 <dt><code>path</code>:</dt>
@@ -22,12 +22,6 @@ If it's already absolutem then nothing is done.
 <dd>An absolute path.
 </dd>
 </dl>
-
-`eval(in_string)`
------------------
-Replace variables in `in_string` and return the new string.
-
-FIXME: Document the variable syntax and valid variables.
 
 `get_path_mappings()`
 ---------------------
@@ -84,7 +78,7 @@ Share the directory or file at `relative_path` between host and image.
 The path should be relative to the home directory and will be shared in
 the image at the same relative path.
 By default the paths will be identical because the home directory in the
-image and host match, but this can be changes by setting `user_home`.
+image and host match, but this can be changed by setting `user_home`.
 
 <dl>
 <dt><code>relative_path</code>:</dt>
@@ -108,12 +102,14 @@ The architecture for the image.
 
 Possible values are:
 
-- x86_64 (default value if you don't specify anything): Also known as x64, x86-64,
+- `x86_64` (default value if you don't specify anything): Also known as x64, x86-64,
   or amd64. This is the normal 64-bit architecture for most computers.
-- armv7: 32-bit ARMv7.
-- aarch64: 64-bit ARMv8.
+- `armv7`: 32-bit ARMv7.
+- `aarch64`: 64-bit ARMv8.
 
 Note that not every distro is supported on every architecture.
+In particular, the Docker support for ARM is experimental and may break at any
+point (and it actually does, quite often).
 
 `deb_based`
 -----------
@@ -181,7 +177,7 @@ A list of packages to install in the image.
 
 The package names are those used by the distro you are using for the image.
 
-Note that somwe packages, like `python`, will be installed automatically by
+Note that some packages, like `python`, will be installed automatically by
 Karton as they are needed for it to work. You should not rely on this and
 explicitly install everything you need.
 
