@@ -480,6 +480,8 @@ class DefinitionProperties(object):
         - aarch64: 64-bit ARMv8.
 
         Note that not every distro is supported on every architecture.
+        In particular, the Docker support for ARM is experimental and may break at any
+        point (and it actually does, quite often).
         '''
         return self._architecture
 
