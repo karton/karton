@@ -104,11 +104,11 @@ distcheck-fast:
 
 .PHONY: rm-test-images
 rm-test-images:
-	docker rmi --force \
+	-docker rmi --force \
 	    $$( docker images -q --format '{{ .Repository }} {{ .ID }}' | \
 	        grep '^karton-test-' | \
 	        awk '{ print $$2 }' )
-	docker rmi \
+	-docker rmi --force \
 	    $$( docker images --filter "dangling=true" --quiet )
 
 
