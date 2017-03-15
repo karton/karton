@@ -14,9 +14,9 @@ $ # Run the compiler in the Ubuntu image we use for work
 $ # (which we called "ubuntu-work"):
 $ karton run ubuntu-work gcc -o test_linux test.c
 
-$ # Verify that the program is actually a Linux one, the
-$ # files are shared and available both on your system
-$ # and in the image:
+$ # Verify that the program is actually a Linux one.
+$ # The files are shared and available both on your
+$ # system and in the image:
 $ file test_linux
 test_linux: ELF 64-bit LSB executable, x86-64, [...]
 
