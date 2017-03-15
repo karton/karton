@@ -72,10 +72,10 @@ RUN \
         && \
     yum-config-manager \
         --add-repo \
-        https://docs.docker.com/engine/installation/linux/repo_files/centos/docker.repo \
+        https://download.docker.com/linux/centos/docker-ce.repo \
         && \
     yum makecache fast && \
-    yum -y install docker-engine
+    yum -y install docker-ce
 '''
 
 # For Fedora we use the distro packages.
