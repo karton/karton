@@ -139,6 +139,7 @@ class DefinitionProperties(object):
         self._image_home_path_on_host = os.path.join(
             runtime.Session.configuration_dir(), 'home-dirs', self._image_name)
         self._username = host_system.username
+        self._uid = host_system.uid
         self._user_home = host_system.user_home
         self._hostname = None
         self._distro = 'ubuntu:latest'
@@ -293,6 +294,19 @@ class DefinitionProperties(object):
     def username(self, username):
         # FIXME: check for the validity of the new username
         self._username = username
+    
+    @props_property
+    def uid(self):
+        '''
+        The uid of the normal non-root user.
+        
+        This defaults to the same uid used on the host.
+        '''
+        return self._uid
+    
+    @uid.setter
+    def uid(self, uid):
+        self._uid = uid
 
     @props_property
     def user_home(self):
@@ -775,13 +789,14 @@ class Builder(object):
             r'''
             RUN \
                 mkdir -p $(dirname %(user_home)s) && \
-                useradd -m -s /bin/bash --home-dir %(user_home)s %(username)s && \
+                useradd -m -s /bin/bash --home-dir %(user_home)s --uid %(uid)s %(username)s && \
                 chown %(username)s %(user_home)s
             ENV USER %(username)s
             USER %(username)s
             '''
             % dict(
                 username=props.username,
+                uid=props.uid,
                 user_home=props.user_home,
                 ))
 
