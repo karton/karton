@@ -26,6 +26,13 @@ class HostSystem(object):
         return getpass.getuser()
 
     @property
+    def uid(self):
+        '''
+        The uid of the active user.
+        '''
+        return os.getuid()
+    
+    @property
     def user_home(self):
         '''
         The home directory for the current user (on the host).
