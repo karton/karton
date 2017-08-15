@@ -203,7 +203,7 @@ def push():
 
         Check the github link above and then push the pip release:
 
-            python setup.py sdist upload -r pypi
+            python3 setup.py sdist upload -r pypi
         ''' % version))
 
 
