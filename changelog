@@ -1,3 +1,8 @@
+Karton 0.1.1 - 2017-08-15 Marco Barisione <marco@barisione.org>
+
+    * Remove a stray quote which made image generation fail with recent
+      versions of Docker. (#3)
+
 Karton 0.1 - 2017-03-15 Marco Barisione <marco@barisione.org>
 
     * Detect Docker availability and status better.
