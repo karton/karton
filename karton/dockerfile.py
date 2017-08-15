@@ -763,7 +763,7 @@ class Builder(object):
             copyable_path = self._make_file_copyable(path)
             emit(
                 r'''
-                ADD %(copyable_path)s /karton/%(container_script)s'
+                ADD %(copyable_path)s /karton/%(container_script)s
                 RUN chmod +x /karton/%(container_script)s
                 '''
                 % dict(
