@@ -25,6 +25,7 @@ class FakeHostSystem(object):
 
     def __init__(self):
         self.username = 'testUser'
+        self.uid = 1000
         self.user_home = '/foo/bar/testUserHome'
         self.hostname = 'test-host-hostname'
 

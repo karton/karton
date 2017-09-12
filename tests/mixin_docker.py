@@ -274,6 +274,9 @@ class DockerMixin(KartonMixin):
     def build_fedora_latest(self, props=None):
         props.distro = 'fedora:latest'
         props.packages.append('which')
+        props.username = 'testFedoraUser'
+        props.uid = 1234
+        props.user_home = '/foo/bar/testFedoraUserHome'
 
     def _build_current_with_gcc_for_arch(self, props, arch, unavailable_distros=()):
         props.distro = self.get_distro_matching_current()

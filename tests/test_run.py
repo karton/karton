@@ -202,8 +202,15 @@ class RunTestCase(DockerMixin,
 
     def test_fedora(self):
         image_name = self.build_fedora_latest()
+
         self.spawn_karton(['run', '--no-cd', image_name, 'which', 'yum'])
         self.assertIn('/usr/bin/yum', self.current_text)
+
+        self.spawn_karton(['run', '--no-cd', image_name, 'id'])
+        self.assertIn('uid=1234(testFedoraUser) ' +
+                      'gid=1234(testFedoraUser) ' +
+                      'groups=1234(testFedoraUser)',
+                      self.current_text)
 
     @unittest.skip('aarch64 support seems broken for both Ubuntu and Fedora at the moment')
     def test_aarch64(self):

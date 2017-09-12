@@ -48,6 +48,7 @@ class DockerfileTestCase(DockerfileMixin,
             'maintainer': ('myself', '\nMAINTAINER %s\n'),
             'distro': ('debian:testing', '\nFROM %s\n'),
             'username': ('anotherUser', '\nUSER %s\n'),
+            'uid': (666, '--uid %s '),
             'user_home': ('/home/blahBlah', '--home-dir %s '),
             'hostname': ('xyz', None),
             }
