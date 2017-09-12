@@ -31,7 +31,7 @@ class HostSystem(object):
         The uid of the active user.
         '''
         return os.getuid()
-    
+
     @property
     def user_home(self):
         '''

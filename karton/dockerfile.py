@@ -294,16 +294,16 @@ class DefinitionProperties(object):
     def username(self, username):
         # FIXME: check for the validity of the new username
         self._username = username
-    
+
     @props_property
     def uid(self):
         '''
         The uid of the normal non-root user.
-        
+
         This defaults to the same uid used on the host.
         '''
         return self._uid
-    
+
     @uid.setter
     def uid(self, uid):
         self._uid = uid
