@@ -119,6 +119,10 @@ class DefinitionProperties(object):
     SUDO_PASSWORDLESS = 102
     SUDO_NO = 103
 
+    CONSISTENCY_CONSISTENT = 'consistent'
+    CONSISTENCY_CACHED = 'cached'
+    CONSISTENCY_DELEGATED = 'delegated'
+
     _ARCHITECTURES = {
         'x86_64': '',
         'aarch64': 'aarch64/',
@@ -147,6 +151,7 @@ class DefinitionProperties(object):
         self._packages = []
         self._additional_archs = []
         self._sudo = DefinitionProperties.SUDO_PASSWORDLESS
+        self._default_consistency = DefinitionProperties.CONSISTENCY_CONSISTENT
 
         self.maintainer = None
 
@@ -195,20 +200,21 @@ class DefinitionProperties(object):
             The first element of the tuple is the location of the shared directory or file on
             the host.
             The second is the location inside the image.
+            The third is the consistency.
         '''
         resources = [(self.image_home_path_on_host, self.user_home)]
 
-        for rel_path in self._shared_home_paths:
+        for rel_path, consistency in self._shared_home_paths:
             host_path = os.path.join(self._host_system.user_home, rel_path)
             image_path = os.path.join(self.user_home, rel_path)
-            resources.append((host_path, image_path))
+            resources.append((host_path, image_path, consistency))
 
-        for host_path, image_path in self._shared_paths:
-            resources.append((host_path, image_path))
+        for host_path, image_path, consistency in self._shared_paths:
+            resources.append((host_path, image_path, consistency))
 
         return resources
 
-    def share_path_in_home(self, relative_path):
+    def share_path_in_home(self, relative_path, consistency=None):
         '''
         Share the directory or file at `relative_path` between host and image.
 
@@ -220,10 +226,17 @@ class DefinitionProperties(object):
         relative_path:
             The path, relative to the home directory, to share between host and
             image.
+        consistency:
+            The consistency level to use to share this path. See `default_consistency`
+            for details.
+            Use `None` if you want to use the default consistency as set by the
+            `default_consistency` property.
+            This is ignored on Linux.
         '''
-        self._shared_home_paths.append(relative_path)
+        self._check_consistency_valid(consistency, allow_none=True)
+        self._shared_home_paths.append((relative_path, consistency))
 
-    def share_path(self, host_path, image_path=None):
+    def share_path(self, host_path, image_path=None, consistency=None):
         '''
         Share the directory or file at `host_path` with the image where it will be
         accessible as `image_path`.
@@ -239,13 +252,20 @@ class DefinitionProperties(object):
             The path in the container where the file or directory will be accessible,
             or None to use the same path in both host and container.
             Defaults to `None`.
+        consistency:
+            The consistency level to use to share this path. See `default_consistency`
+            for details.
+            Use `None` if you want to use the default consistency as set by the
+            `default_consistency` property.
+            This is ignored on Linux.
         '''
         host_path = self.abspath(host_path)
 
         if image_path is None:
             image_path = host_path
 
-        self._shared_paths.append((host_path, image_path))
+        self._check_consistency_valid(consistency, allow_none=True)
+        self._shared_paths.append((host_path, image_path, consistency))
 
     def import_definition(self, other_definition_directory):
         '''
@@ -519,6 +539,60 @@ class DefinitionProperties(object):
                                   'Invalid sudo policy value: "%s"' % sudo)
 
         self._sudo = sudo
+
+    def _check_consistency_valid(self, consistency, allow_none):
+        valid_values = [
+            'consistent',
+            'cached',
+            'delegated',
+            ]
+        if allow_none:
+            valid_values.append(None)
+        if consistency not in  valid_values:
+            raise DefinitionError(self._definition_file_path,
+                                  'Invalid consistency value: "%s"' % consistency)
+
+    @props_property
+    def default_consistency(self):
+        '''
+        Content shared between images and host need to be kept consistent.
+        If you modify a file on the host it must be updated also in the image
+        and vice versa.
+
+        On MacOS, if you don't need perfect instant consistency between the
+        two, you can selected a different level of consistency allowing some
+        delay in updating either the host or image.
+        This slight delay allows for increased performances.
+
+        On Linux, this option is ignored.
+
+        You can select a per-path level of consistency with the `consistency`
+        argument to `share_path` and `share_path_in_home`.
+
+        If you have multiple paths to share, you can specify a default consistency
+        to use with the `default_consistency` property.
+
+        Valid values are:
+
+        - `DefinitionProperties.CONSISTENCY_CONSISTENT` (the default):
+           perfect consistency, i.e. host and image alway have an identical view
+           of the file system content.
+        - `DefinitionProperties.CONSISTENCY_CACHED`:
+           The host's view is authoritative, i.e. updates from the host can be
+           delayed before appearing in the image.
+        - `DefinitionProperties.CONSISTENCY_DELEGATED`:
+           The image's view is authoritative, i.e. updates from the image can be
+           delayed before appearing in the host.
+
+        See the [Docker documentation](https://docs.docker.com/docker-for-mac/osxfs-caching/)
+        for more details.
+        '''
+        return self._default_consistency
+
+    @default_consistency.setter
+    def default_consistency(self, consistency):
+        self._check_consistency_valid(consistency, allow_none=False)
+        self._default_consistency = consistency
 
 
 class Builder(object):
@@ -808,6 +882,7 @@ class Builder(object):
             output.write(content)
 
         self._image_config.shared_paths = props.get_path_mappings()
+        self._image_config.default_consistency = props.default_consistency
         self._image_config.hostname = props.hostname
         self._image_config.user_home = props.user_home
         self._image_config.save()

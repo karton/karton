@@ -139,17 +139,38 @@ class ImageConfig(object):
     @property
     def shared_paths(self):
         '''
-        A sequence of two-items tuples representing the directories or files shared between
+        A sequence of three-items tuples representing the directories or files shared between
         host and image.
 
         The first tuple element is the path on the host, the second one is the path in the
-        image.
+        image, the third is the consistency level.
         '''
-        return tuple(self._content.get('shared-paths', ()))
+        result = []
+
+        for shared_details in self._content.get('shared-paths', ()):
+            if len(shared_details) == 2:
+                # Old versions didn't have the consistency value.
+                shared_details = (shared_details[0], shared_details[1], None)
+            result.append(shared_details)
+
+        return tuple(result)
 
     @shared_paths.setter
     def shared_paths(self, paths):
         self._content['shared-paths'] = paths
+
+    @property
+    def default_consistency(self):
+        '''
+        The default consistency to use for all the paths without a specified consistency.
+
+        See `DefinitionProperties.default_consistency` for details.
+        '''
+        return self._content.get('default-consistency', None)
+
+    @default_consistency.setter
+    def default_consistency(self, default_consistency):
+        self._content['default-consistency'] = default_consistency
 
     @property
     def hostname(self):

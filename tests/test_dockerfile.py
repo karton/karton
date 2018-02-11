@@ -168,3 +168,24 @@ class DockerfileTestCase(DockerfileMixin,
 
     def test_import_relative(self):
         self._test_import(make_relative=True)
+
+    def test_consistency(self):
+        def setup_image_default(props):
+            pass
+
+        def setup_image_cached(props):
+            props.consistency = props.CONSISTENCY_CACHED
+
+        def get_content(setup_image):
+            build_info = self.make_builder(setup_image, 'new-image-' + setup_image.__name__)
+            build_info.builder.generate()
+
+            with open(build_info.dockerfile_path) as dockerfile_file:
+                content = dockerfile_file.read()
+
+            return content
+
+        # The different consistency should not affect the Dockerfile as it's
+        # passed to the docker run command with -v.
+        self.assertEqual(get_content(setup_image_default),
+                         get_content(setup_image_cached))

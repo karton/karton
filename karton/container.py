@@ -6,6 +6,7 @@ import errno
 import glob
 import json
 import os
+import sys
 import tempfile
 import textwrap
 import time
@@ -452,7 +453,7 @@ class Image(object):
 
         host_dir = normalize_dir(host_dir)
 
-        for mounted_host_dir, mounted_container_dir in reversed(self._image_config.shared_paths):
+        for mounted_host_dir, mounted_container_dir, _ in reversed(self._image_config.shared_paths):
             mounted_host_dir = normalize_dir(mounted_host_dir)
             mounted_container_dir = normalize_dir(mounted_container_dir)
 
@@ -489,12 +490,24 @@ class Image(object):
             '--env', 'KARTON_IMAGE=' + self.image_name,
             ]
 
-        for host_path, container_path in self._image_config.shared_paths:
+        default_consistency = self._image_config.default_consistency
+        if default_consistency is None:
+            # For compatibility with old versions.
+            default_consistency = 'consistent'
+
+        supports_consistency = (sys.platform == 'darwin')
+
+        for host_path, container_path, consistency in self._image_config.shared_paths:
             if not os.path.exists(host_path):
                 # If the shared path doesn't exist, then Docker creates it. On Linux this means
                 # that the new path is owned by root isntead of being owned by the current user.
                 pathutils.makedirs(host_path)
-            args += ['-v', '%s:%s' % (host_path, container_path)]
+            if consistency is None:
+                consistency = default_consistency
+            path_option = '%s:%s' % (host_path, container_path)
+            if supports_consistency:
+                path_option += ':' + consistency
+            args += ['-v', path_option]
 
         args += [
             self.image_name,

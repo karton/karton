@@ -244,6 +244,20 @@ class DockerMixin(KartonMixin):
         props.distro = 'ubuntu:trusty'
         props.packages.extend(['gcc', 'libc6-dev', 'gcc-multilib', 'file'])
 
+        props.default_consistency = props.CONSISTENCY_CACHED
+
+        props.share_path(os.path.join(self.tmp_dir, 'shared-default'),
+                         '/shared-default')
+        props.share_path(os.path.join(self.tmp_dir, 'shared-consistent'),
+                         '/shared-consistent',
+                         props.CONSISTENCY_CONSISTENT)
+        props.share_path(os.path.join(self.tmp_dir, 'shared-cached'),
+                         '/shared-cached',
+                         props.CONSISTENCY_CACHED)
+        props.share_path(os.path.join(self.tmp_dir, 'shared-delegated'),
+                         '/shared-delegated',
+                         props.CONSISTENCY_DELEGATED)
+
     # We cannot skip the build stage as we need to generate some on-disk content.
     @make_image('ubuntu-shared-dirs')
     def build_ubuntu_devel_with_shared_dirs(self, props=None):

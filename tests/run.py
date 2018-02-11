@@ -22,6 +22,7 @@ ALL_TESTS = [
     'test_images',
     'test_run',
     'test_alias',
+    'test_consistency',
     ]
 
 
