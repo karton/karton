@@ -689,7 +689,6 @@ class Builder(object):
                     r'''
                     # Installing %(what)s.
                     RUN \
-                        yum makecache fast && \
                         yum install -y \
                             %(what)s
                     ''' %

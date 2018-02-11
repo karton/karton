@@ -62,7 +62,6 @@ RUN \
 # For CentOS we use the official upstream packages.
 CENTOS_BASIC_SETUP = '''\
 RUN \
-    yum makecache fast && \
     yum install -y \
         make \
         python \
@@ -74,14 +73,12 @@ RUN \
         --add-repo \
         https://download.docker.com/linux/centos/docker-ce.repo \
         && \
-    yum makecache fast && \
     yum -y install docker-ce
 '''
 
 # For Fedora we use the distro packages.
 FEDORA_BASIC_SETUP = '''\
 RUN \
-    yum makecache fast && \
     yum install -y \
         docker-engine \
         make \
