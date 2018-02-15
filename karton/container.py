@@ -85,7 +85,7 @@ class Image(object):
         self._session = session
         self._image_config = image_config
 
-        self._cached_container_id = None
+        self._cached_container_content = None
 
     def command_build(self):
         '''
@@ -383,7 +383,7 @@ class Image(object):
         return image_data_dir
 
     @property
-    def _running_container_id_file_path(self):
+    def _running_container_info_path(self):
         '''
         Get the path of the file used to store the currently running container ID.
         '''
@@ -420,20 +420,54 @@ class Image(object):
                              timeout_cb=timeout_cb,
                              still_waiting_cb=still_waiting_cb)
 
-    def _get_container_id(self):
-        if self._cached_container_id is not None:
-            return self._cached_container_id
+    def _load_container_content(self):
+        if self._cached_container_content is not None:
+            return True
 
-        verbose('Loading Docker container ID from file "%s".' %
-                self._running_container_id_file_path)
+        verbose('Loading existing Docker container info from file "%s".' %
+                self._running_container_info_path)
         try:
-            with open(self._running_container_id_file_path, 'r') as container_file:
-                container_id = container_file.read().strip()
-                verbose('The stored Docker container ID is <%s>.' % container_id)
-                return container_id
+            with open(self._running_container_info_path, 'r') as container_file:
+                content_text = container_file.read()
         except IOError:
-            verbose('No stored Docker container ID at "%s".' % self._running_container_id_file_path)
-            return None
+            verbose('No stored Docker container ID at "%s".' %
+                    self._running_container_info_path)
+            return False
+
+        try:
+            content = json.loads(content_text)
+        except ValueError:
+            verbose('The stored content is not JSON, but just the ID')
+            content = {
+                'id': content_text.strip(),
+                }
+
+        if 'id' not in content:
+            verbose('Container info is missing some required fields: %s' % content)
+            return False
+
+        verbose('Loaded stored container info, the ID is <%s>.' % content['id'])
+        self._cached_container_content = content
+        return True
+
+    def _get_container_info(self, key, default=None):
+        if not self._load_container_content():
+            verbose('No cached container content; using default value for key "%s": %s' %
+                    (key, default))
+            return default
+
+        value = self._cached_container_content.get(key)
+        if value is not None:
+            verbose('Cached container content and key exist; value for key "%s": %s' %
+                    (key, value))
+            return value
+        else:
+            verbose('Cached container content exists, but there is no key "%s"; using default: %s' %
+                    (key, default))
+            return default
+
+    def _get_container_id(self):
+        return self._get_container_info('id')
 
     def _host_to_container_dir(self, host_dir):
         '''
@@ -521,7 +555,10 @@ class Image(object):
         new_container_id = new_container_id.strip()
         verbose('Started image "%s" with Docker container ID <%s>.' %
                 (self.image_name, new_container_id))
-        return new_container_id
+
+        return {
+            'id': new_container_id,
+            }
 
     def build(self):
         dest_path_base = os.path.join(self._session.data_dir, 'builder')
@@ -556,15 +593,19 @@ class Image(object):
             if container_id is not None:
                 if not self.docker.is_container_running(container_id):
                     container_id = None
+                    self._cached_container_content = None
 
             if container_id is None:
                 verbose('No existing Docker container running, starting a new one.')
-                new_container_id = self._run_main_container()
-                verbose('The new Docker container has ID <%s>.' % new_container_id)
-                assert new_container_id
-                with open(self._running_container_id_file_path, 'w') as container_file:
+                new_container_data = self._run_main_container()
+                assert new_container_data
+                verbose('The new Docker container has ID <%s>.' % new_container_data['id'])
+                with open(self._running_container_info_path, 'w') as container_file:
                     # The next call to _get_container_id() won't fail.
-                    container_file.write(new_container_id)
+                    json.dump(new_container_data,
+                              container_file,
+                              indent=4,
+                              separators=(',', ': '))
             else:
                 verbose('Docker container with ID <%s> already running.' % container_id)
 
@@ -588,10 +629,10 @@ class Image(object):
             die('Docker container with ID <%s> still running.' % container_id)
 
         try:
-            os.unlink(self._running_container_id_file_path)
+            os.unlink(self._running_container_info_path)
         except OSError as exc:
             verbose('Cannot delete running Docker container ID file at "%s": %s.' %
-                    (self._running_container_id_file_path, exc))
+                    (self._running_container_info_path, exc))
 
     def exec_command(self, cmd_args, cd_mode=CD_AUTO):
         '''
