@@ -9,7 +9,6 @@ import os
 import sys
 import tempfile
 import textwrap
-import time
 
 from . import (
     alias,
@@ -626,13 +625,19 @@ class Image(object):
         if container_dir is None:
             container_dir = self._image_config.user_home
 
+        # On macOS, HyperKit has some clock syncing problems.
+        # Docker has workarounds for a few problems, like the clock being out of sync after a
+        # resume, but that doesn't solve the problem completely, so we ask the command runner
+        # to fix the clock using hwclock.
+        do_sync_opt = 'sync' if self._image_config.auto_clock_sync else 'nosync'
+
         full_args = [
             'exec',
             '-it',
             container_id,
             '/karton/command_runner.py',
             container_dir,
-            str(int(time.time())),
+            do_sync_opt,
             ]
         full_args.extend(cmd_args)
 

@@ -23,6 +23,7 @@ import errno
 import glob
 import json
 import os
+import sys
 
 from . import (
     compat,
@@ -193,6 +194,26 @@ class ImageConfig(object):
     @user_home.setter
     def user_home(self, user_home):
         self._content['user-home'] = user_home
+
+    @property
+    def _platform_needs_clock_sync(self):
+        return sys.platform == 'darwin'
+
+    @property
+    def auto_clock_sync(self):
+        '''
+        Whether to automatically synchronise the image clock with the host one.
+
+        This is needed only on macOS, so the value is always False on Linux.
+        '''
+        return self._content.get('auto-clock-sync', self._platform_needs_clock_sync)
+
+    @auto_clock_sync.setter
+    def auto_clock_sync(self, auto_sync):
+        if not self._platform_needs_clock_sync:
+            return
+
+        self._content['auto-clock-sync'] = auto_sync
 
 
 class GlobalConfig(object):

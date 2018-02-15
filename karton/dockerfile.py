@@ -885,6 +885,8 @@ class Builder(object):
         self._image_config.default_consistency = props.default_consistency
         self._image_config.hostname = props.hostname
         self._image_config.user_home = props.user_home
+        # We can set the clock only if we have passwordless sudo.
+        self._image_config.auto_clock_sync = props.sudo == DefinitionProperties.SUDO_PASSWORDLESS
         self._image_config.save()
 
     def cleanup(self):

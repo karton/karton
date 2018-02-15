@@ -229,12 +229,11 @@ class RunTestCase(DockerMixin,
             4,
             'ELF 32-bit LSB executable, ARM, EABI5')
 
+    # This test tests a workaround for OS X. It would not work on Linux as setting the
+    # time in the container also sets it on the host.
+    @unittest.skipUnless(sys.platform == 'darwin',
+                         'date syncing is only needed on macOS')
     def test_date(self):
-        if sys.platform != 'darwin':
-            # This test tests a workaround for OS X. It would not work on Linux as setting the
-            # time in the container also sets it on the host.
-            return
-
         image_name = self.build_ubuntu_latest_with_gcc()
 
         def now():
@@ -247,10 +246,12 @@ class RunTestCase(DockerMixin,
         def assert_time_correct():
             image_time_now = image_time()
             host_time_now = now()
-            self.assertTrue(host_time_now - 5 <= image_time_now <= host_time_now + 15)
+            self.assertTrue(host_time_now - 1 <= image_time_now <= host_time_now + 10)
 
         def do_nothing_in_image():
-            self.run_karton(['run', '--no-cd', image_name, 'true'])
+            # Updating time is done in parallel, so we make sure there's ernough time
+            # to actually do it.
+            self.run_karton(['run', '--no-cd', image_name, 'sleep', '5'])
 
         do_nothing_in_image() # Force the time to be initially correct.
         assert_time_correct()
@@ -260,9 +261,6 @@ class RunTestCase(DockerMixin,
         self.assertIn('2001', self.current_text)
 
         do_nothing_in_image() # Make the time correct.
-        self.assertIn('out of sync with the host', self.current_text)
-        self.assertIn('Image time: 2001-09-', self.current_text)
-
         assert_time_correct()
 
     def test_cd(self):
