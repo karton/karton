@@ -6,6 +6,10 @@ import os
 import sys
 import tempfile
 
+from karton import (
+    version,
+    )
+
 
 class Redirector(object):
     '''
@@ -136,3 +140,41 @@ class WorkDir(object):
 
         os.chdir(self._old_work_dir)
         self._old_work_dir = None
+
+
+class OverwriteVersion(object):
+    '''
+    Temporarily changes Karton's numeric version.
+
+    This is supposed to be used with a `with` block. Inside the version in
+    `version.numeric_version` is overwritten, but the previous version is
+    restored when the block exits.
+    '''
+
+    @staticmethod
+    def version_as_text(numeric_version):
+        return '.'.join(str(v) for v in numeric_version)
+
+    def __init__(self, numeric_version=(0, 0, 0)):
+        '''
+        Initialize a `OverwriteVersion`.
+
+        numeric_version:
+            The version to temporarily use.
+        '''
+        self._fake_version = numeric_version
+
+        assert self.version_as_text(version.numeric_version) == version.__version__
+        self._real_version = version.numeric_version
+
+    def _set_text_version_from_numeric(self):
+        version.__version__ = self.version_as_text(version.numeric_version)
+
+    def __enter__(self):
+        version.numeric_version = self._fake_version
+        self._set_text_version_from_numeric()
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        version.numeric_version = self._real_version
+        self._set_text_version_from_numeric()
