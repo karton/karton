@@ -73,6 +73,16 @@ class DockerMixin(KartonMixin):
     def create_docker(self):
         return dockerctl.Docker()
 
+    def forget_cached_props(self, image_name):
+        '''
+        Delete the cached properties for `image_name`. This allows the image to be rebuilt.
+
+        image_name:
+            The image to forget about.
+        '''
+        self.assertIn(image_name, self.cached_props)
+        del self.cached_props[image_name]
+
     @staticmethod
     def _ensure_docker_command():
         if DockerMixin._docker_command is not None:

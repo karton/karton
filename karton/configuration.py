@@ -215,6 +215,30 @@ class ImageConfig(object):
 
         self._content['auto-clock-sync'] = auto_sync
 
+    @property
+    def built_with_version(self):
+        '''
+        A tuple of integers representing the Karton version used to build the
+        image.
+        '''
+        return tuple(self._content.get('built-with-version', (0, 0, 0)))
+
+    @built_with_version.setter
+    def built_with_version(self, version):
+        self._content['built-with-version'] = version
+
+    @property
+    def build_time(self):
+        '''
+        A floating number representing the time (in seconds since the epoch) when
+        this image was built last.
+        '''
+        return self._content.get('build-time', 0.0)
+
+    @build_time.setter
+    def build_time(self, build_time):
+        self._content['build-time'] = build_time
+
 
 class GlobalConfig(object):
     '''

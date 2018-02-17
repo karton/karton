@@ -9,6 +9,7 @@ import os
 import sys
 import tempfile
 import textwrap
+import time
 
 from . import (
     alias,
@@ -16,6 +17,7 @@ from . import (
     lock,
     pathutils,
     proc,
+    version,
     )
 
 from .log import die, info, verbose
@@ -495,6 +497,49 @@ class Image(object):
 
         return None
 
+    def _die_if_old_build_version(self):
+        '''
+        Check that image was built with the current version of Karton.
+
+        This should only be called when you know there's a built image or the
+        result is undefined.
+        '''
+        if version.numeric_version != self._image_config.built_with_version:
+            built_with_str = '.'.join(str(v) for v in self._image_config.built_with_version)
+            die('Image "%(image_name)s" was built with Karton %(built_with)s, but the current '
+                'version is %(current)s.\n'
+                '\n'
+                'You need to rebuild the image with:\n'
+                '\n'
+                '    karton build %(image_name)s' %
+                dict(
+                    image_name=self.image_name,
+                    built_with=built_with_str,
+                    current=version.__version__,
+                    ))
+
+    def _check_build_time(self):
+        '''
+        Check if the currently running image was started before the last rebuild of the
+        image and, if that is true, print a warning.
+
+        It's an error to call this method if the image is not running.
+        '''
+        start_time = self._get_container_info('start-time', 0.0)
+        if start_time < self._image_config.build_time:
+            info('WARNING: Image "%(image_name)s" was re-built after the currently running '
+                 'image was started.\n'
+                 '\n'
+                 'Your command will still be run, but, if you want to make sure that your '
+                 'latest changes to the image are picked up, then you should stop the '
+                 'currently running one with:\n'
+                 '\n'
+                 '    karton stop %(image_name)s'
+                 '\n' %
+                 dict(
+                     image_name=self.image_name,
+                     ))
+
     def _run_main_container(self):
         '''
         Actually start the Docker container for the image.
@@ -513,6 +558,8 @@ class Image(object):
                 '\n'
                 '    karton build %(image_name)s' %
                 dict(image_name=self.image_name))
+
+        self._die_if_old_build_version()
 
         args = [
             'run',
@@ -558,6 +605,7 @@ class Image(object):
 
         return {
             'id': new_container_id,
+            'start-time': time.time(),
             }
 
     def build(self):
@@ -578,6 +626,10 @@ class Image(object):
                     ['build', '--tag', self._image_config.image_name, dest_path])
             except proc.CalledProcessError as exc:
                 die('Failed to run "karton build" command:\n%s' % exc)
+
+            self._image_config.built_with_version = version.numeric_version
+            self._image_config.build_time = time.time()
+            self._image_config.save()
 
         finally:
             builder.cleanup()
@@ -647,6 +699,9 @@ class Image(object):
 
         container_id = self._get_container_id()
         assert container_id
+
+        self._die_if_old_build_version()
+        self._check_build_time()
 
         if cd_mode == Image.CD_NO:
             verbose('Using the home directory as working directory (as requested).')

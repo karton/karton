@@ -12,6 +12,7 @@ from karton import (
     )
 
 from mixin_dockerfile import DockerfileMixin
+from testutils import OverwriteVersion
 from tracked import TrackedTestCase
 
 
@@ -129,7 +130,8 @@ class DockerCheckTestCase(DockerfileMixin,
         self.run_karton(['image', 'import', self._image_name, import_info.definition_dir])
 
     def try_run(self):
-        self.run_karton(['run', '--no-cd', self._image_name, 'true'], ignore_fail=True)
+        with OverwriteVersion():
+            self.run_karton(['run', '--no-cd', self._image_name, 'true'], ignore_fail=True)
 
     def test_no_docker(self):
         self.try_run()
