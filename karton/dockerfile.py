@@ -188,6 +188,21 @@ class DefinitionProperties(object):
             os.path.join(os.path.dirname(self._definition_file_path),
                          path))
 
+    def _check_not_home_dir(self, host_path):
+        '''
+        Throw a DefinitionError if `host_path` is the host home directory.
+        '''
+        host_path = os.path.normpath(host_path)
+        host_home = os.path.normpath(self._host_system.user_home)
+
+        if host_path == host_home:
+            raise DefinitionError(
+                self._definition_file_path,
+                'The home directory can only be shared by using:\n'
+                '\n'
+                '    props.share_whole_home = True'
+                )
+
     def get_path_mappings(self):
         '''
         The list of resources shared between host and guest.
@@ -206,10 +221,12 @@ class DefinitionProperties(object):
 
         for rel_path, consistency in self._shared_home_paths:
             host_path = os.path.join(self._host_system.user_home, rel_path)
+            self._check_not_home_dir(host_path)
             image_path = os.path.join(self.user_home, rel_path)
             resources.append((host_path, image_path, consistency))
 
         for host_path, image_path, consistency in self._shared_paths:
+            self._check_not_home_dir(host_path)
             resources.append((host_path, image_path, consistency))
 
         return resources
@@ -361,7 +378,31 @@ class DefinitionProperties(object):
 
     @image_home_path_on_host.setter
     def image_home_path_on_host(self, path):
+        self._check_not_home_dir(path)
         self._image_home_path_on_host = path
+
+    @props_property
+    def share_whole_home(self):
+        '''
+        Whether the whole host home directory is shared as home directory in the image.
+
+        Note that this means that configuration files (like all of your dot-files) modified in
+        the image will be modified in the host as well.
+        '''
+        return self._image_home_path_on_host == self._host_system.user_home
+
+    @share_whole_home.setter
+    def share_whole_home(self, share):
+        if share == self.share_whole_home:
+            return
+
+        if not share:
+            raise DefinitionError(
+                    self._definition_file_path,
+                    'Cannot reset shared_whole_home after setting it. '
+                    'Just set a different image_home_path_on_host.')
+
+        self._image_home_path_on_host = self._host_system.user_home
 
     @props_property
     def packages(self):

@@ -189,3 +189,59 @@ class DockerfileTestCase(DockerfileMixin,
         # passed to the docker run command with -v.
         self.assertEqual(get_content(setup_image_default),
                          get_content(setup_image_cached))
+
+    def test_setup_wrong_share_home(self):
+        def setup_share_path(props):
+            props.share_path(self.session.host_system.user_home)
+
+        def setup_share_empty_path_in_home(props):
+            props.share_path_in_home('')
+
+        def setup_share_dot_path_in_home(props):
+            props.share_path_in_home('.')
+
+        def setup_share_double_dot_path_in_home(props):
+            props.share_path_in_home('foo/..')
+
+        def setup_set_image_home_path_on_host(props):
+            props.image_home_path_on_host = self.session.host_system.user_home
+
+        all_setups = (
+                setup_share_path,
+                setup_share_empty_path_in_home,
+                setup_share_dot_path_in_home,
+                setup_share_double_dot_path_in_home,
+                setup_set_image_home_path_on_host,
+                )
+
+        for setup_image in all_setups:
+            build_info = self.make_builder(setup_image, 'new-image-' + setup_image.__name__)
+            with self.assert_raises_regex(dockerfile.DefinitionError,
+                                          'The home directory can only be shared by using'):
+                build_info.builder.generate()
+
+    def test_setup_correct_share_home(self):
+        def setup_image(props):
+            self.assertFalse(props.share_whole_home)
+
+            self.assertNotEqual(props.image_home_path_on_host, self.session.host_system.user_home)
+            props.share_whole_home = True
+            self.assertEqual(props.image_home_path_on_host, self.session.host_system.user_home)
+
+            # We do it again to check this doesn't break (as changing the value after setting it to
+            # True doesn't work, but settting to the same value should be fine).
+            props.share_whole_home = True
+            self.assertEqual(props.image_home_path_on_host, self.session.host_system.user_home)
+
+        build_info = self.make_builder(setup_image)
+        build_info.builder.generate()
+
+    def test_reset_share_whole_home(self):
+        def setup_image(props):
+            props.share_whole_home = True
+            props.share_whole_home = False
+
+        build_info = self.make_builder(setup_image)
+        with self.assert_raises_regex(dockerfile.DefinitionError,
+                                      'Cannot reset shared_whole_home after setting it'):
+            build_info.builder.generate()
