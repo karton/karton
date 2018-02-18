@@ -200,19 +200,19 @@ class DockerfileTestCase(DockerfileMixin,
         def setup_share_dot_path_in_home(props):
             props.share_path_in_home('.')
 
-        def setup_share_double_dot_path_in_home(props):
+        def setup_share_2dots_path_in_home(props):
             props.share_path_in_home('foo/..')
 
-        def setup_set_image_home_path_on_host(props):
+        def setup_set_home_path_on_host(props):
             props.image_home_path_on_host = self.session.host_system.user_home
 
         all_setups = (
-                setup_share_path,
-                setup_share_empty_path_in_home,
-                setup_share_dot_path_in_home,
-                setup_share_double_dot_path_in_home,
-                setup_set_image_home_path_on_host,
-                )
+            setup_share_path,
+            setup_share_empty_path_in_home,
+            setup_share_dot_path_in_home,
+            setup_share_2dots_path_in_home,
+            setup_set_home_path_on_host,
+            )
 
         for setup_image in all_setups:
             build_info = self.make_builder(setup_image, 'new-image-' + setup_image.__name__)

@@ -398,9 +398,9 @@ class DefinitionProperties(object):
 
         if not share:
             raise DefinitionError(
-                    self._definition_file_path,
-                    'Cannot reset shared_whole_home after setting it. '
-                    'Just set a different image_home_path_on_host.')
+                self._definition_file_path,
+                'Cannot reset shared_whole_home after setting it. '
+                'Just set a different image_home_path_on_host.')
 
         self._image_home_path_on_host = self._host_system.user_home
 
