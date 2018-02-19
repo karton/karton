@@ -233,3 +233,60 @@ class DockerfileTestCase(DockerfileMixin,
         with self.assert_raises_regex(dockerfile.DefinitionError,
                                       'Cannot reset shared_whole_home after setting it'):
             build_info.builder.generate()
+
+    def test_run_at_build_commands(self):
+        run_times = (
+            dockerfile.DefinitionProperties.RUN_AT_BUILD_START,
+            dockerfile.DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS,
+            dockerfile.DefinitionProperties.RUN_AT_BUILD_END,
+            )
+
+        def make_run_string(when, i):
+            return 'RUNNING-%d-AT-%s' % (i, when)
+
+        def setup_image(props):
+            for i, when in enumerate(run_times):
+                self.assertEqual(len(props.commands_to_run(when)), 0)
+                props.run_command(when, make_run_string(when, i))
+                self.assertEqual(len(props.commands_to_run(when)), 1)
+
+        build_info = self.make_builder(setup_image)
+        build_info.builder.generate()
+        content = build_info.read_content()
+
+        last_index = -1
+        for i, when  in enumerate(run_times):
+            run_string = make_run_string(when, i)
+
+            self.assertIn(run_string, content)
+
+            index = content.find(run_string)
+            self.assertTrue(index > last_index)
+
+            last_index = index
+
+    def test_run_non_at_build_commands(self):
+        # These commands shouldn't affect the Dockerfile.
+        run_times = (
+            dockerfile.DefinitionProperties.RUN_AT_START,
+            dockerfile.DefinitionProperties.RUN_BEFORE_COMMAND,
+            dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
+            dockerfile.DefinitionProperties.RUN_AT_STOP,
+            )
+
+        def setup_empty_image(props):
+            pass
+
+        def setup_image_with_commands(props):
+            for when in run_times:
+                self.assertEqual(len(props.commands_to_run(when)), 0)
+                props.run_command(when, when)
+                self.assertEqual(len(props.commands_to_run(when)), 1)
+
+        def get_content(setup_image):
+            build_info = self.make_builder(setup_image, 'new-image-' + setup_image.__name__)
+            build_info.builder.generate()
+            return build_info.read_content()
+
+        self.assertEqual(get_content(setup_empty_image),
+                         get_content(setup_image_with_commands))

@@ -9,6 +9,7 @@ import sys
 
 from karton import (
     dockerctl,
+    dockerfile,
     )
 
 from mixin_karton import KartonMixin
@@ -267,6 +268,53 @@ class DockerMixin(KartonMixin):
         props.share_path(os.path.join(self.tmp_dir, 'shared-delegated'),
                          '/shared-delegated',
                          props.CONSISTENCY_DELEGATED)
+
+    @make_image('ubuntu-gcc')
+    def build_ubuntu_latest_with_commands(self, props=None):
+        props.distro = 'ubuntu'
+
+        at_build_run_times_and_prefix = (
+            (dockerfile.DefinitionProperties.RUN_AT_BUILD_START, None),
+            (dockerfile.DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS, None),
+            (dockerfile.DefinitionProperties.RUN_AT_BUILD_END, 'sudo'),
+            )
+
+        for when, prefix in at_build_run_times_and_prefix:
+            args = []
+            if prefix:
+                args.append(prefix)
+            args.extend(['touch', '/%s' % when])
+
+            props.run_command(when, *args)
+
+        later_run_times = (
+            dockerfile.DefinitionProperties.RUN_AT_START,
+            dockerfile.DefinitionProperties.RUN_BEFORE_COMMAND,
+            dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
+            dockerfile.DefinitionProperties.RUN_AT_STOP,
+            )
+
+        for when in later_run_times:
+            props.run_command(when, 'echo', 'RUNNING %s' % when)
+
+        # Test multiple commands work and that we escape things correctly as well.
+        props.run_command(dockerfile.DefinitionProperties.RUN_AT_BUILD_END,
+                          'sudo',
+                          'mkdir',
+                          '/this has spaces')
+        props.run_command(dockerfile.DefinitionProperties.RUN_AT_BUILD_END,
+                          'sudo',
+                          'touch',
+                          '/this has spaces/a file with spaces')
+        props.run_command(dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
+                          'echo',
+                          r'ANOTHER AFTER. escape? (\)')
+
+        # Test that commands returning non-0 after the build is done don't make
+        # the command fail.
+        props.run_command(dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
+                          'false')
+
 
     # We cannot skip the build stage as we need to generate some on-disk content.
     @make_image('ubuntu-shared-dirs')

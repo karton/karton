@@ -4,10 +4,12 @@
 
 import os
 import sys
+import textwrap
 import time
 import unittest
 
 from karton import (
+    dockerfile,
     pathutils,
     )
 
@@ -306,3 +308,76 @@ class RunTestCase(DockerMixin,
             assert_karton_pwd('--no-cd', home_dir)
             assert_karton_pwd('--auto-cd', shared_image_subdir_path)
             assert_karton_pwd(None, shared_image_subdir_path)
+
+    def test_at_build_commands(self):
+        image_name = self.build_ubuntu_latest_with_commands()
+
+        run_times = (
+            dockerfile.DefinitionProperties.RUN_AT_BUILD_START,
+            dockerfile.DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS,
+            dockerfile.DefinitionProperties.RUN_AT_BUILD_END,
+            )
+
+        for when in run_times:
+            self.run_karton([
+                'run',
+                '--no-cd',
+                image_name,
+                'test',
+                '-e',
+                '/%s' % when,
+                ])
+
+        self.run_karton([
+            'run',
+            '--no-cd',
+            image_name,
+            'ls',
+            '/this has spaces/',
+            ])
+        self.assertIn('\na file with spaces\n', self.current_text)
+
+
+    def test_non_at_build_commands(self):
+        image_name = self.build_ubuntu_latest_with_commands()
+
+        command_text = 'ACTUAL-COMMAND-OUTPUT'
+
+        self.run_karton(['run', '--no-cd', image_name, 'echo', command_text])
+        self.assertEqual(
+            self.current_text,
+            textwrap.dedent('''\
+                RUNNING %(start)s
+                RUNNING %(before)s
+                %(actual)s
+                RUNNING %(after)s
+                ANOTHER AFTER. escape? (\\)
+                ''') % dict(
+                    start=dockerfile.DefinitionProperties.RUN_AT_START,
+                    before=dockerfile.DefinitionProperties.RUN_BEFORE_COMMAND,
+                    actual=command_text,
+                    after=dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
+                    ))
+
+        # Same, but:
+        # - The container is already started, so the RUN_AT_START output should not be there.
+        # - We run a command which returns false.
+        self.run_karton(['run', '--no-cd', image_name, 'false'],
+                        ignore_fail=True)
+        self.assertEqual(
+            self.current_text,
+            textwrap.dedent('''\
+                RUNNING %(before)s
+                RUNNING %(after)s
+                ANOTHER AFTER. escape? (\\)
+                ''') % dict(
+                    before=dockerfile.DefinitionProperties.RUN_BEFORE_COMMAND,
+                    after=dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
+                    ))
+
+        self.run_karton([
+            'stop',
+            image_name,
+            ])
+        self.assertEqual('RUNNING %s' % dockerfile.DefinitionProperties.RUN_AT_STOP,
+                         self.current_text.strip())

@@ -239,6 +239,22 @@ class ImageConfig(object):
     def build_time(self, build_time):
         self._content['build-time'] = build_time
 
+    @property
+    def run_commands(self):
+        '''
+        A dictionary of commands to run at different points in the lifetime of a running image.
+
+        The valid keys are `'start'`, `'before'`, `'after'`, `'stop'`.
+
+        Values are lists of strings (the first element of a list is the program to execute, the
+        others are the arguments to that program).
+        '''
+        return collections.defaultdict(list, self._content.get('run-commands', {}))
+
+    @run_commands.setter
+    def run_commands(self, commands):
+        self._content['run-commands'] = commands
+
 
 class GlobalConfig(object):
     '''

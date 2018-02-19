@@ -658,6 +658,7 @@ class Image(object):
                               container_file,
                               indent=4,
                               separators=(',', ': '))
+                self.exec_commands_for_time('start')
             else:
                 verbose('Docker container with ID <%s> already running.' % container_id)
 
@@ -669,6 +670,8 @@ class Image(object):
         '''
         container_id = self._get_container_id()
         assert container_id
+
+        self.exec_commands_for_time('stop')
 
         verbose('Stopping Docker container with ID <%s>.' % container_id)
 
@@ -686,9 +689,13 @@ class Image(object):
             verbose('Cannot delete running Docker container ID file at "%s": %s.' %
                     (self._running_container_info_path, exc))
 
-    def exec_command(self, cmd_args, cd_mode=CD_AUTO):
+    def exec_command_only(self, cmd_args, cd_mode=CD_AUTO):
         '''
         Run a command in the (already running) image.
+
+        If the user configured any extra commands to run before or after commands (see
+        `DefinitionProperties.run_command`), those are *not* run.
+        To run those as well see `exec_command`.
 
         cmd_args:
             The command line to execute in the image.
@@ -757,6 +764,39 @@ class Image(object):
             os.remove(serialized_data_filename)
 
         return exit_code
+
+    def exec_command(self, cmd_args, cd_mode=CD_AUTO):
+        '''
+        Run a command in the (already running) image.
+
+        If the user configured any extra commands to run before or after commands (see
+        `DefinitionProperties.run_command`), those are run as well.
+        To avoid running those as well, see `exec_command_only`.
+
+        cmd_args:
+            The command line to execute in the image.
+        Return value:
+            The command's exit code.
+        '''
+        self.exec_commands_for_time('before')
+        result = self.exec_command_only(cmd_args, cd_mode)
+        self.exec_commands_for_time('after')
+
+        return result
+
+    def exec_commands_for_time(self, when):
+        '''
+        Execute a command specified in the definition file for the specified time.
+
+        See `DefinitionProperties.run_command` for details.
+
+        when:
+            The time during the lifetime of the image we are currently at.
+        cmd_args:
+            The command line to execute in the image.
+        '''
+        for cmd in self._image_config.run_commands[when]:
+            self.exec_command_only(cmd, Image.CD_NO)
 
     @staticmethod
     def _check_pid_running(pid):
