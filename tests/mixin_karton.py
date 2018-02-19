@@ -165,7 +165,8 @@ class KartonMixin(TempDirMixin,
                 with redirector:
                     program.run_karton(self.session, [prog] + arguments)
             finally:
-                self.current_text = redirector.content
+                # No idea why we get \r\n new lines...
+                self.current_text = redirector.content.replace('\r\n', '\n')
 
         except log.ExitDueToFailure as exc:
             self._last_exit_code = exc.code
