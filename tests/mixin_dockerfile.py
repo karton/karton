@@ -21,11 +21,6 @@ def setup_image(props):
 '''
 
 
-DockerfileBuildInfo = collections.namedtuple(
-    'DockerfileBuildInfo',
-    ['builder', 'dockerfile_dir', 'dockerfile_path'])
-
-
 ImageCreateInfo = collections.namedtuple(
     'ImageCreateInfo',
     ['definition_parent_dir', 'future_definition_dir', 'future_definition_path'])
@@ -34,6 +29,24 @@ ImageCreateInfo = collections.namedtuple(
 ImageImportInfo = collections.namedtuple(
     'ImageImportInfo',
     ['definition_dir', 'definition_path'])
+
+
+DockerfileBuildInfoBase = collections.namedtuple(
+    'DockerfileBuildInfo',
+    ['builder', 'dockerfile_dir', 'dockerfile_path'])
+
+
+class DockerfileBuildInfo(DockerfileBuildInfoBase):
+
+    def read_content(self):
+        '''
+        Read the content of the Dockerfile.
+
+        Return value:
+            A string with the Dockerfile content.
+        '''
+        with open(self.dockerfile_path) as dockerfile_file:
+            return dockerfile_file.read()
 
 
 class FakeDefinitionModule(object):

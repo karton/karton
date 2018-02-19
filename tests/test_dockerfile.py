@@ -34,9 +34,7 @@ class DockerfileTestCase(DockerfileMixin,
         self.assertTrue(os.path.exists(build_info.dockerfile_path))
         self.assertTrue(setup_image.called)
 
-        with open(build_info.dockerfile_path) as dockerfile_file:
-            content = dockerfile_file.read()
-
+        content = build_info.read_content()
         self.assertIn('\nFROM ubuntu:latest\n', content)
         self.assertNotIn('MAINTAINER', content)
 
@@ -64,9 +62,7 @@ class DockerfileTestCase(DockerfileMixin,
 
         build_info = self.make_builder(setup_image)
         build_info.builder.generate()
-
-        with open(build_info.dockerfile_path) as dockerfile_file:
-            content = dockerfile_file.read()
+        content = build_info.read_content()
 
         for value, expected_text in new_values.values():
             if expected_text is None:
@@ -91,9 +87,7 @@ class DockerfileTestCase(DockerfileMixin,
             build_info = self.make_builder(setup_image, image_name)
             build_info.builder.generate()
 
-            with open(build_info.dockerfile_path) as dockerfile_file:
-                content = dockerfile_file.read()
-
+            content = build_info.read_content()
             self.assertIn(name, content)
 
     def test_error_definition_error(self):
@@ -148,9 +142,7 @@ class DockerfileTestCase(DockerfileMixin,
 
         build_info = self.make_builder(setup_outer)
         build_info.builder.generate()
-
-        with open(build_info.dockerfile_path) as dockerfile_file:
-            content = dockerfile_file.read()
+        content = build_info.read_content()
 
         self.assertIn('inner-user', content)
         self.assertNotIn('outer-user', content)
@@ -179,11 +171,7 @@ class DockerfileTestCase(DockerfileMixin,
         def get_content(setup_image):
             build_info = self.make_builder(setup_image, 'new-image-' + setup_image.__name__)
             build_info.builder.generate()
-
-            with open(build_info.dockerfile_path) as dockerfile_file:
-                content = dockerfile_file.read()
-
-            return content
+            return build_info.read_content()
 
         # The different consistency should not affect the Dockerfile as it's
         # passed to the docker run command with -v.
