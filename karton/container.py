@@ -736,12 +736,38 @@ class Image(object):
 
         full_args = [
             'exec',
+            ]
+
+        # Environment variables.
+        new_cmd_args_index = 0
+        for new_cmd_args_index, arg in enumerate(cmd_args):
+            if '=' in  arg:
+                env_name, env_value = arg.split('=', 1)
+                full_args.extend([
+                    '--env',
+                    '%s=%s' % (env_name, env_value),
+                    ])
+
+                if new_cmd_args_index == len(cmd_args) - 1:
+                    die('foo')
+
+                continue
+
+            if arg == '--':
+                # Skip this and stop processing.
+                new_cmd_args_index += 1
+
+            break
+
+        cmd_args = cmd_args[new_cmd_args_index:]
+
+        full_args.extend([
             '-it',
             container_id,
             '/karton/command_runner.py',
             container_dir,
             do_sync_opt,
-            ]
+            ])
         full_args.extend(cmd_args)
 
         for arg in cmd_args:

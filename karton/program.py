@@ -375,7 +375,10 @@ def run_karton(session, arguments):
         'run',
         do_run,
         help='run a  program inside the image',
-        description='Runs a program or command inside the image (starting the image if necessary).')
+        description='Runs a program or command inside the image (starting the image if '
+        'necessary). '
+        'Envionrment variable can preceed the command to run, for instance '
+        '"karton run IMAGE-NAME VAR=VALUE COMMAND".')
 
     # This needs to be argparse.REMAINDER so options are passed down to the command
     # instead of being eaten by the karton command itself.

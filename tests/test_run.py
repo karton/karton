@@ -381,3 +381,33 @@ class RunTestCase(DockerMixin,
             ])
         self.assertEqual('RUNNING %s' % dockerfile.DefinitionProperties.RUN_AT_STOP,
                          self.current_text.strip())
+
+    def test_env(self):
+        image_name = self.build_ubuntu_latest_with_gcc()
+
+        def get_env(*args):
+            cmd = ['run', '--no-cd', image_name]
+            cmd.extend(args)
+            cmd.append('env')
+            self.run_karton(cmd)
+            return self.current_text
+
+        self.assertIn('\nA=42\n', get_env('A=42'))
+        self.assertIn('\nA=42\n', get_env('B=12', 'A=42'))
+        self.assertIn('\nA=42\n', get_env('B=12', 'A=42', 'C=hello'))
+        self.assertIn('\nA=hello world\n', get_env('B=12', 'A=hello world', 'C=hello'))
+        self.assertIn('\nA=hello\\ world\n', get_env('B=12', 'A=hello\\ world', 'C=hello'))
+        self.assertIn('\nA="hello" \'world\'\n', get_env('B=12', 'A="hello" \'world\'', 'C=hello'))
+        self.assertIn('\nLongVariableName=42\n', get_env('LongVariableName=42'))
+        self.assertIn('\nUSER=testUser\n', get_env())
+        self.assertIn('\nUSER=testUser\n', get_env('A=42'))
+        self.assertIn('\nUSER=otherUser\n', get_env('A=42', 'USER=otherUser'))
+
+        # When an argument without "=" in it is found, we need to stop processing.
+        self.run_karton(['run', '--no-cd', image_name, 'A=12', 'echo', 'B=NotAVariable'])
+        self.assertEqual('B=NotAVariable\n', self.current_text)
+
+        # Stopping variable processing with "--".
+        self.run_karton(['run', '--no-cd', image_name, 'A=12', '--', 'A=not an env', 'true'],
+                        ignore_fail=True)
+        self.assertIn('Cannot execute "A=not an env".', self.current_text)
