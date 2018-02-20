@@ -9,7 +9,7 @@ import time
 import unittest
 
 from karton import (
-    dockerfile,
+    defprops,
     pathutils,
     )
 
@@ -313,9 +313,9 @@ class RunTestCase(DockerMixin,
         image_name = self.build_ubuntu_latest_with_commands()
 
         run_times = (
-            dockerfile.DefinitionProperties.RUN_AT_BUILD_START,
-            dockerfile.DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS,
-            dockerfile.DefinitionProperties.RUN_AT_BUILD_END,
+            defprops.DefinitionProperties.RUN_AT_BUILD_START,
+            defprops.DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS,
+            defprops.DefinitionProperties.RUN_AT_BUILD_END,
             )
 
         for when in run_times:
@@ -353,10 +353,10 @@ class RunTestCase(DockerMixin,
                 RUNNING %(after)s
                 ANOTHER AFTER. escape? (\\)
                 ''') % dict(
-                    start=dockerfile.DefinitionProperties.RUN_AT_START,
-                    before=dockerfile.DefinitionProperties.RUN_BEFORE_COMMAND,
+                    start=defprops.DefinitionProperties.RUN_AT_START,
+                    before=defprops.DefinitionProperties.RUN_BEFORE_COMMAND,
                     actual=command_text,
-                    after=dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
+                    after=defprops.DefinitionProperties.RUN_AFTER_COMMAND,
                     ))
 
         # Same, but:
@@ -371,15 +371,15 @@ class RunTestCase(DockerMixin,
                 RUNNING %(after)s
                 ANOTHER AFTER. escape? (\\)
                 ''') % dict(
-                    before=dockerfile.DefinitionProperties.RUN_BEFORE_COMMAND,
-                    after=dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
+                    before=defprops.DefinitionProperties.RUN_BEFORE_COMMAND,
+                    after=defprops.DefinitionProperties.RUN_AFTER_COMMAND,
                     ))
 
         self.run_karton([
             'stop',
             image_name,
             ])
-        self.assertEqual('RUNNING %s' % dockerfile.DefinitionProperties.RUN_AT_STOP,
+        self.assertEqual('RUNNING %s' % defprops.DefinitionProperties.RUN_AT_STOP,
                          self.current_text.strip())
 
     def test_env(self):

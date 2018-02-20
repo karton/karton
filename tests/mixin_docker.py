@@ -8,8 +8,8 @@ import subprocess
 import sys
 
 from karton import (
+    defprops,
     dockerctl,
-    dockerfile,
     )
 
 from mixin_karton import KartonMixin
@@ -274,9 +274,9 @@ class DockerMixin(KartonMixin):
         props.distro = 'ubuntu'
 
         at_build_run_times_and_prefix = (
-            (dockerfile.DefinitionProperties.RUN_AT_BUILD_START, None),
-            (dockerfile.DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS, None),
-            (dockerfile.DefinitionProperties.RUN_AT_BUILD_END, 'sudo'),
+            (defprops.DefinitionProperties.RUN_AT_BUILD_START, None),
+            (defprops.DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS, None),
+            (defprops.DefinitionProperties.RUN_AT_BUILD_END, 'sudo'),
             )
 
         for when, prefix in at_build_run_times_and_prefix:
@@ -288,31 +288,31 @@ class DockerMixin(KartonMixin):
             props.run_command(when, *args)
 
         later_run_times = (
-            dockerfile.DefinitionProperties.RUN_AT_START,
-            dockerfile.DefinitionProperties.RUN_BEFORE_COMMAND,
-            dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
-            dockerfile.DefinitionProperties.RUN_AT_STOP,
+            defprops.DefinitionProperties.RUN_AT_START,
+            defprops.DefinitionProperties.RUN_BEFORE_COMMAND,
+            defprops.DefinitionProperties.RUN_AFTER_COMMAND,
+            defprops.DefinitionProperties.RUN_AT_STOP,
             )
 
         for when in later_run_times:
             props.run_command(when, 'echo', 'RUNNING %s' % when)
 
         # Test multiple commands work and that we escape things correctly as well.
-        props.run_command(dockerfile.DefinitionProperties.RUN_AT_BUILD_END,
+        props.run_command(defprops.DefinitionProperties.RUN_AT_BUILD_END,
                           'sudo',
                           'mkdir',
                           '/this has spaces')
-        props.run_command(dockerfile.DefinitionProperties.RUN_AT_BUILD_END,
+        props.run_command(defprops.DefinitionProperties.RUN_AT_BUILD_END,
                           'sudo',
                           'touch',
                           '/this has spaces/a file with spaces')
-        props.run_command(dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
+        props.run_command(defprops.DefinitionProperties.RUN_AFTER_COMMAND,
                           'echo',
                           r'ANOTHER AFTER. escape? (\)')
 
         # Test that commands returning non-0 after the build is done don't make
         # the command fail.
-        props.run_command(dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
+        props.run_command(defprops.DefinitionProperties.RUN_AFTER_COMMAND,
                           'false')
 
 

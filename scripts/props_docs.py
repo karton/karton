@@ -85,7 +85,7 @@ def process(md_out_path):
     lines = subprocess.check_output([
         'python',
         '-c',
-        'from karton import dockerfile; help(dockerfile.DefinitionProperties)',
+        'from karton import defprops; help(defprops.DefinitionProperties)',
         ]).strip().split('\n')
 
     while not lines[0].startswith(START_PIPE):

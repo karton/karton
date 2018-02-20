@@ -6,7 +6,7 @@ import os
 import textwrap
 
 from karton import (
-    dockerfile,
+    defprops,
     )
 
 from mixin_dockerfile import DockerfileMixin
@@ -95,7 +95,7 @@ class DockerfileTestCase(DockerfileMixin,
             props.distro = "invalid"
 
         build_info = self.make_builder(setup_image)
-        with self.assert_raises_regex(dockerfile.DefinitionError, 'Invalid distro'):
+        with self.assert_raises_regex(defprops.DefinitionError, 'Invalid distro'):
             build_info.builder.generate()
 
     def test_error_other(self):
@@ -104,7 +104,7 @@ class DockerfileTestCase(DockerfileMixin,
 
         build_info = self.make_builder(setup_image)
         # Normal exceptions are transformed into a DefinitionError.
-        with self.assertRaises(dockerfile.DefinitionError):
+        with self.assertRaises(defprops.DefinitionError):
             build_info.builder.generate()
 
     def _test_import(self, make_relative):
@@ -204,7 +204,7 @@ class DockerfileTestCase(DockerfileMixin,
 
         for setup_image in all_setups:
             build_info = self.make_builder(setup_image, 'new-image-' + setup_image.__name__)
-            with self.assert_raises_regex(dockerfile.DefinitionError,
+            with self.assert_raises_regex(defprops.DefinitionError,
                                           'The home directory can only be shared by using'):
                 build_info.builder.generate()
 
@@ -230,15 +230,15 @@ class DockerfileTestCase(DockerfileMixin,
             props.share_whole_home = False
 
         build_info = self.make_builder(setup_image)
-        with self.assert_raises_regex(dockerfile.DefinitionError,
+        with self.assert_raises_regex(defprops.DefinitionError,
                                       'Cannot reset shared_whole_home after setting it'):
             build_info.builder.generate()
 
     def test_run_at_build_commands(self):
         run_times = (
-            dockerfile.DefinitionProperties.RUN_AT_BUILD_START,
-            dockerfile.DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS,
-            dockerfile.DefinitionProperties.RUN_AT_BUILD_END,
+            defprops.DefinitionProperties.RUN_AT_BUILD_START,
+            defprops.DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS,
+            defprops.DefinitionProperties.RUN_AT_BUILD_END,
             )
 
         def make_run_string(when, i):
@@ -268,10 +268,10 @@ class DockerfileTestCase(DockerfileMixin,
     def test_run_non_at_build_commands(self):
         # These commands shouldn't affect the Dockerfile.
         run_times = (
-            dockerfile.DefinitionProperties.RUN_AT_START,
-            dockerfile.DefinitionProperties.RUN_BEFORE_COMMAND,
-            dockerfile.DefinitionProperties.RUN_AFTER_COMMAND,
-            dockerfile.DefinitionProperties.RUN_AT_STOP,
+            defprops.DefinitionProperties.RUN_AT_START,
+            defprops.DefinitionProperties.RUN_BEFORE_COMMAND,
+            defprops.DefinitionProperties.RUN_AFTER_COMMAND,
+            defprops.DefinitionProperties.RUN_AT_STOP,
             )
 
         def setup_empty_image(props):
