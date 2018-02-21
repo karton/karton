@@ -689,6 +689,57 @@ class Image(object):
             verbose('Cannot delete running Docker container ID file at "%s": %s.' %
                     (self._running_container_info_path, exc))
 
+    @staticmethod
+    def _get_env_and_cmd_args(cmd_args):
+        # Environment variables.
+        env_args = []
+        new_cmd_args_index = 0
+        for new_cmd_args_index, arg in enumerate(cmd_args):
+            if '=' in  arg:
+                env_name, env_value = arg.split('=', 1)
+                env_args.extend([
+                    '--env',
+                    '%s=%s' % (env_name, env_value),
+                    ])
+
+                if new_cmd_args_index == len(cmd_args) - 1:
+                    die('foo')
+
+                continue
+
+            if arg == '--':
+                # Skip this and stop processing.
+                new_cmd_args_index += 1
+
+            break
+
+        return env_args, cmd_args[new_cmd_args_index:]
+
+    def _serialize_execution_data(self, cmd_args):
+        for arg in cmd_args:
+            # I don't think it should happen, but...
+            assert '\0' not in arg
+
+        serialized_data = '\0'.join(cmd_args)
+        serialized_data_basename = self._RUNNING_COMMAND_PREFIX + str(os.getpid())
+        serialized_data_filename = os.path.join(self._image_data_dir, serialized_data_basename)
+        verbose('Registering execution in "%s".' % serialized_data_filename)
+
+        return serialized_data_filename, serialized_data
+
+    def _exec_with_prepared_args(self, orig_cmd_args, actual_docker_args):
+        serialized_data_filename, serialized_data = self._serialize_execution_data(orig_cmd_args)
+        with open(serialized_data_filename, 'w') as serialized_data_file:
+            serialized_data_file.write(serialized_data)
+
+        try:
+            exit_code = self.docker.call(actual_docker_args)
+        finally:
+            verbose('Command finished, removing "%s".' % serialized_data_filename)
+            os.remove(serialized_data_filename)
+
+        return exit_code
+
     def exec_command_only(self, cmd_args, cd_mode=CD_AUTO):
         '''
         Run a command in the (already running) image.
@@ -728,38 +779,17 @@ class Image(object):
         if container_dir is None:
             container_dir = self._image_config.user_home
 
+        full_args = ['exec']
+
         # On macOS, HyperKit has some clock syncing problems.
         # Docker has workarounds for a few problems, like the clock being out of sync after a
         # resume, but that doesn't solve the problem completely, so we ask the command runner
         # to fix the clock using hwclock.
         do_sync_opt = 'sync' if self._image_config.auto_clock_sync else 'nosync'
 
-        full_args = [
-            'exec',
-            ]
+        env_args, cmd_args = self._get_env_and_cmd_args(cmd_args)
 
-        # Environment variables.
-        new_cmd_args_index = 0
-        for new_cmd_args_index, arg in enumerate(cmd_args):
-            if '=' in  arg:
-                env_name, env_value = arg.split('=', 1)
-                full_args.extend([
-                    '--env',
-                    '%s=%s' % (env_name, env_value),
-                    ])
-
-                if new_cmd_args_index == len(cmd_args) - 1:
-                    die('foo')
-
-                continue
-
-            if arg == '--':
-                # Skip this and stop processing.
-                new_cmd_args_index += 1
-
-            break
-
-        cmd_args = cmd_args[new_cmd_args_index:]
+        full_args.extend(env_args)
 
         full_args.extend([
             '-it',
@@ -770,26 +800,7 @@ class Image(object):
             ])
         full_args.extend(cmd_args)
 
-        for arg in cmd_args:
-            # I don't think it should happen, but...
-            assert '\0' not in arg
-
-        serialized_data = '\0'.join(cmd_args)
-        serialized_data_basename = self._RUNNING_COMMAND_PREFIX + str(os.getpid())
-        serialized_data_filename = os.path.join(self._image_data_dir, serialized_data_basename)
-        verbose('Registering execution in "%s".' % serialized_data_filename)
-
-        try:
-            with open(serialized_data_filename, 'w') as serialized_data_file:
-                serialized_data_file.write(serialized_data)
-
-            exit_code = self.docker.call(full_args)
-
-        finally:
-            verbose('Command finished, removing "%s".' % serialized_data_filename)
-            os.remove(serialized_data_filename)
-
-        return exit_code
+        return self._exec_with_prepared_args(cmd_args, full_args)
 
     def exec_command(self, cmd_args, cd_mode=CD_AUTO):
         '''
