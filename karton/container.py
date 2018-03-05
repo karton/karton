@@ -791,11 +791,13 @@ class Image(object):
         do_sync_opt = 'sync' if self._image_config.auto_clock_sync else 'nosync'
 
         env_args, cmd_args = self._get_env_and_cmd_args(cmd_args)
-
         full_args.extend(env_args)
 
+        if sys.stdin.isatty():
+            full_args.append('--tty')
+
         full_args.extend([
-            '-it',
+            '--interactive',
             container_id,
             '/karton/command_runner.py',
             container_dir,
