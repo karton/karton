@@ -395,6 +395,10 @@ class RunTestCase(DockerMixin,
         self.assertIn('\nA=42\n', get_env('A=42'))
         self.assertIn('\nA=42\n', get_env('B=12', 'A=42'))
         self.assertIn('\nA=42\n', get_env('B=12', 'A=42', 'C=hello'))
+        self.assertIn('\nA0=42\n', get_env('A0=42'))
+        self.assertIn('\nA_0=42\n', get_env('A_0=42'))
+        self.assertIn('\n_0=42\n', get_env('_0=42'))
+        self.assertIn('\nA=42=123\n', get_env('A=42=123'))
         self.assertIn('\nA=hello world\n', get_env('B=12', 'A=hello world', 'C=hello'))
         self.assertIn('\nA=hello\\ world\n', get_env('B=12', 'A=hello\\ world', 'C=hello'))
         self.assertIn('\nA="hello" \'world\'\n', get_env('B=12', 'A="hello" \'world\'', 'C=hello'))
@@ -410,4 +414,19 @@ class RunTestCase(DockerMixin,
         # Stopping variable processing with "--".
         self.run_karton(['run', '--no-cd', image_name, 'A=12', '--', 'A=not an env', 'true'],
                         ignore_fail=True)
+        self.assert_exit_fail()
         self.assertIn('Cannot execute "A=not an env".', self.current_text)
+
+        # Check invalid variable names which shouldn't be detected as variables.
+        invalid_vars = [
+            './A=12',
+            '0A=12',
+            'A-=12',
+            'A-B=12',
+            '0=0',
+            ]
+        for var in invalid_vars:
+            self.run_karton(['run', '--no-cd', image_name, var, 'true'],
+                            ignore_fail=True)
+            self.assert_exit_fail()
+            self.assertIn('Cannot execute "%s".' % var, self.current_text)

@@ -6,6 +6,7 @@ import errno
 import glob
 import json
 import os
+import re
 import sys
 import tempfile
 import textwrap
@@ -691,12 +692,14 @@ class Image(object):
 
     @staticmethod
     def _get_env_and_cmd_args(cmd_args):
-        # Environment variables.
+        env_re = re.compile('([a-z_][a-z0-9_]*)=(.*)', re.IGNORECASE)
         env_args = []
         new_cmd_args_index = 0
         for new_cmd_args_index, arg in enumerate(cmd_args):
-            if '=' in  arg:
-                env_name, env_value = arg.split('=', 1)
+            match = env_re.match(arg)
+            if match is not None:
+                env_name = match.group(1)
+                env_value = match.group(2)
                 env_args.extend([
                     '--env',
                     '%s=%s' % (env_name, env_value),
