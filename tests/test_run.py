@@ -121,6 +121,26 @@ class RunTestCase(DockerMixin,
         self.assertNotIn(props.test_file_content, self.current_text)
         self.assertIn(new_content, self.current_text)
 
+    def test_copy(self):
+        image_name = self.build_ubuntu_devel_with_shared_dirs()
+        props = self.cached_props[image_name]
+
+        self.run_karton(['run', '--no-cd', image_name, 'cat',
+                         props.test_file_in_copied_dir_image])
+        self.assertIn(props.test_file_content, self.current_text)
+
+        self.run_karton(['run', '--no-cd', image_name, 'cat', props.test_copied_file_image])
+        self.assertIn(props.test_file_content, self.current_text)
+
+        # The file is copied, so changes on the host are not propagated.
+        new_content = 'This is some new content on the host'
+        with open(props.test_copied_file_host, 'w') as test_file:
+            test_file.write(new_content)
+
+        self.run_karton(['run', '--no-cd', image_name, 'cat', props.test_copied_file_image])
+        self.assertIn(props.test_file_content, self.current_text)
+        self.assertNotIn(new_content, self.current_text)
+
     def run_compilation_test(self, image_name, special_flags, expected_pointer_size,
                              expected_file_output):
         props = self.cached_props[image_name]

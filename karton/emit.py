@@ -211,6 +211,24 @@ class Emitter(object):
                 user_home=self._props.user_home,
                 ))
 
+    def _emit_copy_files(self):
+        for i, (src_path, dest_path) in enumerate(self._props.copied):
+            # Docker can only copy resources from inside its context, so we
+            # first need to copy the file or directory.
+            context_src_path = '/res-%d-%s' % (i, os.path.basename(src_path))
+
+            pathutils.copy_path(src_path,
+                                self._dst_dir + context_src_path)
+
+            self._emit(
+                r'''
+                COPY %(src)s %(dest)s
+                '''
+                % dict(
+                    src=context_src_path,
+                    dest=dest_path,
+                    ))
+
     def generate_content(self):
         '''
         Generate the `Dockerfile` content.
@@ -226,6 +244,7 @@ class Emitter(object):
         self._emit_container_code()
         self._emit_user_creation()
         # After this point everything will be run as the normal user, not root!
+        self._emit_copy_files()
         self._emit_run_for_time(DefinitionProperties.RUN_AT_BUILD_END)
 
         content = ''.join(self._lines).strip() + '\n'

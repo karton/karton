@@ -321,21 +321,41 @@ class DockerMixin(KartonMixin):
     def build_ubuntu_devel_with_shared_dirs(self, props=None):
         props.distro = 'ubuntu:devel'
 
+        # Shared directory.
         props.test_shared_dir_host = os.path.join(self.tmp_dir, 'test-shared-directory')
         props.test_shared_dir_image = '/test-shared-directory'
         props.share_path(props.test_shared_dir_host, props.test_shared_dir_image)
 
+        # Shared file.
         props.test_shared_file_host = os.path.join(self.tmp_dir, 'test-shared-file')
         props.test_shared_file_image = '/etc/test-shared-file'
-        # Also verify we deal correctly with relative paths
+        # Also verify we deal correctly with relative paths.
         relative_test_shared_file_host = os.path.relpath(
             props.test_shared_file_host,
             os.path.dirname(props.definition_file_path))
         props.share_path(relative_test_shared_file_host, props.test_shared_file_image)
-
         props.test_file_content = 'Hello world!'
         with open(props.test_shared_file_host, 'w') as test_file:
             test_file.write(props.test_file_content)
+
+        # Copied directory.
+        props.test_copied_dir_host = os.path.join(props.definition_file_dir, 'test-copied-dir')
+        os.mkdir(props.test_copied_dir_host)
+        props.test_file_in_copied_dir_host = os.path.join(props.test_copied_dir_host,
+                                                          'file-in-copied-dir')
+        with open(props.test_file_in_copied_dir_host, 'w') as test_file:
+            test_file.write(props.test_file_content)
+        props.test_copied_dir_image = '/this-does-not-exist/copied-dir'
+        props.test_file_in_copied_dir_image = os.path.join(
+                props.test_copied_dir_image, os.path.basename(props.test_file_in_copied_dir_host))
+        props.copy(props.test_copied_dir_host, props.test_copied_dir_image)
+
+        # Copied file.
+        props.test_copied_file_host = os.path.join(props.definition_file_dir, 'test-copied-file')
+        with open(props.test_copied_file_host, 'w') as test_file:
+            test_file.write(props.test_file_content)
+        props.test_copied_file_image = '/etc/the-copied-file'
+        props.copy(props.test_copied_file_host, props.test_copied_file_image)
 
     @make_image('debian-no-sudo')
     def build_debian_latest_without_sudo(self, props=None):

@@ -83,6 +83,7 @@ class DefinitionProperties(object):
 
         self._shared_home_paths = []
         self._shared_paths = []
+        self._copied = []
         self._image_home_path_on_host = os.path.join(
             runtime.Session.configuration_dir(), 'home-dirs', self._image_name)
         self._username = host_system.username
@@ -128,9 +129,7 @@ class DefinitionProperties(object):
         if path.startswith('/'):
             return path
 
-        return os.path.normpath(
-            os.path.join(os.path.dirname(self._definition_file_path),
-                         path))
+        return os.path.normpath(os.path.join(self.definition_file_dir, path))
 
     def _check_not_home_dir(self, host_path):
         '''
@@ -228,6 +227,37 @@ class DefinitionProperties(object):
         self._check_consistency_valid(consistency, allow_none=True)
         self._shared_paths.append((host_path, image_path, consistency))
 
+    def copy(self, src_path, dest_path):
+        '''
+        Copy a file or directory from the host into the image.
+
+        All the files will be owned by root.
+
+        src_path:
+            The path to copy into the image.
+            It can be an absolute path or a path relative to the current definition file.
+        dest_path:
+            The absolute path in the image where to copy the file or directory.
+        '''
+        src_path = self.abspath(src_path)
+
+        if not dest_path.startswith('/'):
+            raise DefinitionError(
+                self._definition_file_path,
+                'The destination path must be absolute.')
+
+        self._copied.append((src_path, dest_path))
+
+    @props_property
+    def copied(self):
+        '''
+        A list of tuples representing the files or directories copied into the image.
+
+        The first element of the tuple is the absolute path in the host of the file or
+        directory; the second is the absolute path in the image.
+        '''
+        return list(self._copied)
+
     def import_definition(self, other_definition_directory):
         '''
         Import an existing definition file.
@@ -254,6 +284,13 @@ class DefinitionProperties(object):
         The path to the current definition file.
         '''
         return self._definition_file_path
+
+    @props_property
+    def definition_file_dir(self):
+        '''
+        The path of the directory containing the current definition file.
+        '''
+        return os.path.dirname(self._definition_file_path)
 
     @props_property
     def image_name(self):
