@@ -39,7 +39,7 @@ def copy_path(src, dst):
     '''
     try:
         shutil.copyfile(src, dst)
-    except OSError as exc:
+    except IOError as exc:
         if exc.errno == errno.EISDIR:
             shutil.copytree(src, dst)
         else:
