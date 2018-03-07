@@ -23,6 +23,32 @@ If it's already absolute, then nothing is done.
 </dd>
 </dl>
 
+`commands_to_run(when)`
+-----------------------
+Return a list of commands to run at a specific time.
+
+<dl>
+<dt><code>when</code>:</dt>
+<dd>The time when to run the commands, see <code>run_command</code> for details.
+</dd>
+</dl>
+
+`copy(src_path, dest_path)`
+---------------------------
+Copy a file or directory from the host into the image.
+
+All the files will be owned by root.
+
+<dl>
+<dt><code>src_path</code>:</dt>
+<dd>The path to copy into the image.
+It can be an absolute path or a path relative to the current definition file.
+</dd>
+<dt><code>dest_path</code>:</dt>
+<dd>The absolute path in the image where to copy the file or directory.
+</dd>
+</dl>
+
 `get_path_mappings()`
 ---------------------
 The list of resources shared between host and guest.
@@ -36,6 +62,7 @@ could change some of these values.
 The first element of the tuple is the location of the shared directory or file on
 the host.
 The second is the location inside the image.
+The third is the consistency.
 </dd>
 </dl>
 
@@ -50,8 +77,47 @@ It can be an absolute path or a path relative to the current definition file.
 </dd>
 </dl>
 
-`share_path(host_path, image_path=None)`
-----------------------------------------
+`run_command(when, *args)`
+--------------------------
+Run a shell command at the specified point.
+
+Commands can be run at different stages of the build phase, when running a command, etc:
+
+- `DefinitionProperties.RUN_AT_BUILD_START`:
+  during the build phase, before any setup or packages are installed.
+- `DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS`:
+  during the build phase, after the base system is setup (including Python), but extra
+  packages are not installed yet.
+- `DefinitionProperties.RUN_AT_BUILD_END`:
+  during the build phase, at the very end of the Dockerfile.
+- `DefinitionProperties.RUN_AT_START`:
+  when the image is started, i.e. when `karton start IMAGE_NAME` is used or when it's
+  automatically started because of `karton run IMAGE_NAME COMMAND ARGS`.
+- `DefinitionProperties.RUN_BEFORE_COMMAND`:
+  before executing a command, i.e. just before launching `COMMAND ARGS` when doing
+  `karton run IMAGE_NAME COMMAND ARGS`.
+- `DefinitionProperties.RUN_AFTER_COMMAND`:
+  after executing a command, i.e. just after launching `COMMAND ARGS` when doing
+  `karton run IMAGE_NAME COMMAND ARGS`.
+  Note that this command is executed even if the invoked command failed.
+- `DefinitionProperties.RUN_AT_STOP`:
+  before stopping an image, i.e. when doing `karton stop IMAGE_NAME`.
+
+Note that, if commands run during the build phase fail (return non-zero), then the build
+will abort.
+On the other hand, the return code of commands run later is ignored.
+
+<dl>
+<dt><code>when</code>:</dt>
+<dd>When to run the command.
+</dd>
+<dt><code>*args</code>:</dt>
+<dd>The command to run and its arguments.
+</dd>
+</dl>
+
+`share_path(host_path, image_path=None, consistency=None)`
+----------------------------------------------------------
 Share the directory or file at `host_path` with the image where it will be
 accessible as `image_path`.
 
@@ -69,10 +135,17 @@ definition file.
 or None to use the same path in both host and container.
 Defaults to <code>None</code>.
 </dd>
+<dt><code>consistency</code>:</dt>
+<dd>The consistency level to use to share this path. See <code>default_consistency</code>
+for details.
+Use <code>None</code> if you want to use the default consistency as set by the
+<code>default_consistency</code> property.
+This is ignored on Linux.
+</dd>
 </dl>
 
-`share_path_in_home(relative_path)`
------------------------------------
+`share_path_in_home(relative_path, consistency=None)`
+-----------------------------------------------------
 Share the directory or file at `relative_path` between host and image.
 
 The path should be relative to the home directory and will be shared in
@@ -84,6 +157,13 @@ image and host match, but this can be changed by setting `user_home`.
 <dt><code>relative_path</code>:</dt>
 <dd>The path, relative to the home directory, to share between host and
 image.
+</dd>
+<dt><code>consistency</code>:</dt>
+<dd>The consistency level to use to share this path. See <code>default_consistency</code>
+for details.
+Use <code>None</code> if you want to use the default consistency as set by the
+<code>default_consistency</code> property.
+This is ignored on Linux.
 </dd>
 </dl>
 
@@ -111,9 +191,54 @@ Note that not every distro is supported on every architecture.
 In particular, the Docker support for ARM is experimental and may break at any
 point (and it actually does, quite often).
 
+`copied`
+--------
+A list of tuples representing the files or directories copied into the image.
+
+The first element of the tuple is the absolute path in the host of the file or
+directory; the second is the absolute path in the image.
+
 `deb_based`
 -----------
 Whether the currently selected distro is based on Debian (i.e. it's Debian or Ubuntu).
+
+`default_consistency`
+---------------------
+Content shared between images and host need to be kept consistent.
+If you modify a file on the host it must be updated also in the image
+and vice versa.
+
+On MacOS, if you don't need perfect instant consistency between the
+two, you can selected a different level of consistency allowing some
+delay in updating either the host or image.
+This slight delay allows for increased performances.
+
+On Linux, this option is ignored.
+
+You can select a per-path level of consistency with the `consistency`
+argument to `share_path` and `share_path_in_home`.
+
+If you have multiple paths to share, you can specify a default consistency
+to use with the `default_consistency` property.
+
+Valid values are:
+
+- `DefinitionProperties.CONSISTENCY_CONSISTENT` (the default):
+   perfect consistency, i.e. host and image alway have an identical view
+   of the file system content.
+- `DefinitionProperties.CONSISTENCY_CACHED`:
+   The host's view is authoritative, i.e. updates from the host can be
+   delayed before appearing in the image.
+- `DefinitionProperties.CONSISTENCY_DELEGATED`:
+   The image's view is authoritative, i.e. updates from the image can be
+   delayed before appearing in the host.
+
+See the [Docker documentation](https://docs.docker.com/docker-for-mac/osxfs-caching/)
+for more details.
+
+`definition_file_dir`
+---------------------
+The path of the directory containing the current definition file.
 
 `definition_file_path`
 ----------------------
@@ -186,6 +311,13 @@ explicitly install everything you need.
 Whether the currently selected distro is based on RPM packages (i.e. it's CentOS or
 Fedora).
 
+`share_whole_home`
+------------------
+Whether the whole host home directory is shared as home directory in the image.
+
+Note that this means that configuration files (like all of your dot-files) modified in
+the image will be modified in the host as well.
+
 `sudo`
 ------
 Whether to install the `sudo` command and whether passwordless `sudo` should
@@ -199,6 +331,12 @@ Possible values are:
   install `sudo` but require a password.
 - `DefinitionProperties.SUDO_NO`:
   don't install `sudo`.
+
+`uid`
+-----
+The uid of the normal non-root user.
+
+This defaults to the same uid used on the host.
 
 `user_home`
 -----------
