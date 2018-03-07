@@ -1,3 +1,22 @@
+Karton 1.0.0 - 2018-03-07 Marco Barisione <marco@barisione.org>
+
+    * Add a way of setting the FS consistency on macOS (to make disk access
+      faster).
+    * Try harder to sync the image and host clock.
+    * Add DefinitionProperties.run_command to run a command at various points
+      during the image lifetime.
+    * Add DefinitionProperties.copy to copy files and directories into an
+      image when building it. (#6)
+    * Add DefinitionProperties.share_whole_home to share the whole home
+      directory.
+    * Allow to set environment variables on the command line. (#5)
+    * Add --no-cache to the build command to avoid using Docker's cached
+      layers when building an image. (#7)
+    * Warn the user if they are using outdated images.
+    * Fix a problem with Fedora images and yum.
+    * Add DefinitionProperties.uid. (#4)
+    * Work correctly when stdin is not a TTY. (#8)
+
 Karton 0.1.1 - 2017-08-15 Marco Barisione <marco@barisione.org>
 
     * Remove a stray quote which made image generation fail with recent

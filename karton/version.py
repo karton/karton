@@ -5,7 +5,7 @@
 from __future__ import print_function
 
 
-__version__ = '0.1.1'
+__version__ = '1.0.0'
 
 #pylint: disable=invalid-name
 numeric_version = tuple(int(v) for v in __version__.split('.'))
