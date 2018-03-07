@@ -123,7 +123,7 @@ def do_stop(parsed_args, image):
 
 
 def do_build(parsed_args, image):
-    image.command_build()
+    image.command_build(parsed_args.no_cache)
 
 
 def do_status(parsed_args, image):
@@ -436,11 +436,17 @@ def run_karton(session, arguments):
     json_arg.add_to_parser(status_parser)
 
     # "build" command.
-    add_image_command(
+    build_command = add_image_command(
         'build',
         do_build,
         help='build the image from its definition',
         description='Builds (or rebuilds) the image from its definition.')
+
+    build_command.add_argument(
+        '--no-cache',
+        action='store_true',
+        help='do not use the Docker cached data when building the image (thus rebuilding '
+        'the image from scratch)')
 
     # "image" command.
     image_parser = add_command_with_sub_commands(

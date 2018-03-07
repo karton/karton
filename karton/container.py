@@ -90,12 +90,16 @@ class Image(object):
 
         self._cached_container_content = None
 
-    def command_build(self):
+    def command_build(self, no_cache):
         '''
         Build the image.
+
+        no_cache:
+            If true, then Docker cached layers are not used to build the image.
+            This effectively forces a full rebuild of the image.
         '''
         try:
-            self.build()
+            self.build(no_cache)
         except dockerfile.DefinitionError as exc:
             die(str(exc))
 
@@ -609,7 +613,7 @@ class Image(object):
             'start-time': time.time(),
             }
 
-    def build(self):
+    def build(self, no_cache):
         dest_path_base = os.path.join(self._session.data_dir, 'builder')
         pathutils.makedirs(dest_path_base)
         dest_path = tempfile.mkdtemp(prefix=self._image_config.image_name + '-',
@@ -622,9 +626,13 @@ class Image(object):
         try:
             builder.generate()
 
+            args = ['build']
+            if no_cache:
+                args.append('--no-cache')
+            args.extend(['--tag', self._image_config.image_name, dest_path])
+
             try:
-                self._session.docker.check_call(
-                    ['build', '--tag', self._image_config.image_name, dest_path])
+                self._session.docker.check_call(args)
             except proc.CalledProcessError as exc:
                 die('Failed to run "karton build" command:\n%s' % exc)
 
