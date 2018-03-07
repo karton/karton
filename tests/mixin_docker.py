@@ -347,7 +347,7 @@ class DockerMixin(KartonMixin):
             test_file.write(props.test_file_content)
         props.test_copied_dir_image = '/this-does-not-exist/copied-dir'
         props.test_file_in_copied_dir_image = os.path.join(
-                props.test_copied_dir_image, os.path.basename(props.test_file_in_copied_dir_host))
+            props.test_copied_dir_image, os.path.basename(props.test_file_in_copied_dir_host))
         props.copy(props.test_copied_dir_host, props.test_copied_dir_image)
 
         # Copied file.
