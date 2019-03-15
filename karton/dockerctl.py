@@ -41,6 +41,23 @@ class Docker(object):
     # Another, unexpected, error happened while trying to use a Docker command.
     _DOCKER_OTHER_ERROR = 10
 
+    def _can_use_podman(self):
+        '''
+        Try running Podman to check its availability.
+
+
+        Return value:
+            True if Podman is available; False otherwise.
+        '''
+        try:
+            proc.check_output(
+                ['podman', 'version'],
+                stderr=proc.DEVNULL)
+        except OSError:
+            return False
+        else:
+            return True
+
     def _try_docker(self):
         '''
         Try running Docker to check its availability.
@@ -140,6 +157,11 @@ class Docker(object):
 
         if status == self._DOCKER_SUCCESS:
             return
+
+        elif self._can_use_podman():
+            verbose("Found 'podman'; using it instead of docker")
+            self._docker_command = ['podman']
+            return self._DOCKER_SUCCESS
 
         elif status == self._DOCKER_NO_COMMAND:
             if sys.platform == 'darwin':
