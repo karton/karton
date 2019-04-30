@@ -74,7 +74,7 @@ class Docker(object):
             json_output = proc.check_output(
                 self._docker_command + ['version', '--format', '{{ json . }}'],
                 stderr=proc.DEVNULL)
-        except OSError as exc:
+        except OSError:
             return self._DOCKER_NO_COMMAND
         except proc.CalledProcessError as exc:
             # The most common case for this is that the server cannot be contacted, so
