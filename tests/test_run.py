@@ -3,6 +3,7 @@
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
 import os
+import re
 import sys
 import textwrap
 import time
@@ -142,7 +143,7 @@ class RunTestCase(DockerMixin,
         self.assertNotIn(new_content, self.current_text)
 
     def run_compilation_test(self, image_name, special_flags, expected_pointer_size,
-                             expected_file_output):
+                             expected_file_output_re):
         props = self.cached_props[image_name]
 
         host_dir = props.image_home_path_on_host
@@ -190,7 +191,7 @@ class RunTestCase(DockerMixin,
             'file',
             os.path.join(image_dir, exe_filename),
             ])
-        self.assertIn(expected_file_output, self.current_text)
+        self.assert_regex(self.current_text, re.compile(expected_file_output_re))
 
     def test_gcc(self):
         image_name = self.build_ubuntu_latest_with_gcc()
@@ -198,7 +199,7 @@ class RunTestCase(DockerMixin,
             image_name,
             None,
             8,
-            'ELF 64-bit LSB executable, x86-64')
+            'ELF 64-bit .* x86-64')
 
     def test_gcc_x32(self):
         image_name = self.build_ubuntu_old_with_gcc_x32()
@@ -206,7 +207,7 @@ class RunTestCase(DockerMixin,
             image_name,
             ['-m32'],
             4,
-            'ELF 32-bit LSB  executable, Intel 80386')
+            'ELF 32-bit .* Intel 80386')
 
     def test_sudo(self):
         with_sudo_image_name = self.build_ubuntu_latest_with_gcc()
@@ -241,7 +242,7 @@ class RunTestCase(DockerMixin,
             image_name,
             None,
             8,
-            'ELF 64-bit LSB executable, ARM aarch64')
+            'ELF 64-bit .* ARM aarch64')
 
     def test_armv7(self):
         image_name = self.build_current_armv7_with_gcc()
@@ -249,7 +250,7 @@ class RunTestCase(DockerMixin,
             image_name,
             None,
             4,
-            'ELF 32-bit LSB executable, ARM, EABI5')
+            'ELF 32-bit .* ARM, EABI5')
 
     # This test tests a workaround for OS X. It would not work on Linux as setting the
     # time in the container also sets it on the host.
