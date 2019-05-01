@@ -15,7 +15,9 @@ class ExitDueToFailure(SystemExit):
     Raised by the `die` function to exit the program.
     '''
 
-    def __init__(self, exit_code=1):
+    # Despite what pylint says, this method is not useless as it has a different default
+    # exit code.
+    def __init__(self, exit_code=1): # pylint: disable=useless-super-delegation
         '''
         Initialize an `ExitDueToFailure` instance.
 
