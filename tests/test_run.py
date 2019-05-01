@@ -355,8 +355,8 @@ class RunTestCase(DockerMixin,
             'ls',
             '/this has spaces/',
             ])
-        self.assertIn('\na file with spaces\n', self.current_text)
-
+        self.assertTrue('\na file with spaces\n' in self.current_text or
+                        "\n'a file with spaces'\n" in self.current_text)
 
     def test_non_at_build_commands(self):
         image_name = self.build_ubuntu_latest_with_commands()
