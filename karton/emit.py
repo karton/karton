@@ -121,7 +121,7 @@ class Emitter(object):
             self._emit('MAINTAINER %s' % self._props.maintainer)
             self._emit()
 
-    def _emit_addittional_archs(self):
+    def _emit_additional_archs(self):
         if self._props.additional_archs:
             archs_run = ['RUN \\']
             for i, arch in enumerate(self._props.additional_archs):
@@ -235,7 +235,7 @@ class Emitter(object):
         '''
         self._emit_intro()
         self._emit_run_for_time(DefinitionProperties.RUN_AT_BUILD_START)
-        self._emit_addittional_archs()
+        self._emit_additional_archs()
         self._emit_system_packages()
         self._emit_run_for_time(DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS)
         self._emit_install(*self._props.packages)
