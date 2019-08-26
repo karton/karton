@@ -147,7 +147,7 @@ class DockerCheckTestCase(DockerfileMixin,
         self.assertIn('Unexpected error while launching Docker.', self.current_text)
 
     # We need this to overwite the normal dockerctl.Docker behaviour.
-    #pylint: disable=protected-access
+    # pylint: disable=protected-access
 
     def test_group_unavailable(self):
         self.docker.set_versions('1.2.3-X', None)

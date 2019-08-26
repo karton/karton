@@ -242,7 +242,7 @@ class DockerMixin(KartonMixin):
             self.fail('Unsupported distro "%s"' % current_distro)
 
     # This is needed because pylint gets confused by decorators.
-    #pylint: disable=no-self-use
+    # pylint: disable=no-self-use
 
     @make_image('ubuntu-gcc')
     def build_ubuntu_latest_with_gcc(self, props=None):
@@ -316,7 +316,6 @@ class DockerMixin(KartonMixin):
         # the command fail.
         props.run_command(defprops.DefinitionProperties.RUN_AFTER_COMMAND,
                           'false')
-
 
     # We cannot skip the build stage as we need to generate some on-disk content.
     @make_image('ubuntu-shared-dirs')

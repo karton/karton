@@ -278,7 +278,6 @@ class AliasManager(object):
             if choice is not None:
                 return choice
 
-
     @staticmethod
     def _print_alias(alias):
         '''

@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 
 __version__ = '1.0.0'
 
-#pylint: disable=invalid-name
+# pylint: disable=invalid-name
 numeric_version = tuple(int(v) for v in __version__.split('.'))
 
 if __name__ == '__main__':

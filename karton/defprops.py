@@ -41,6 +41,7 @@ class DefinitionError(Exception):
 
 _g_props_all_properties = {}
 
+
 def props_property(fget, *args, **kwargs):
     _g_props_all_properties[compat.get_func_name(fget)] = fget
     return property(fget, *args, **kwargs)
@@ -572,7 +573,7 @@ class DefinitionProperties(object):
             ]
         if allow_none:
             valid_values.append(None)
-        if consistency not in  valid_values:
+        if consistency not in valid_values:
             raise DefinitionError(self._definition_file_path,
                                   'Invalid consistency value: "%s"' % consistency)
 

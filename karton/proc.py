@@ -12,8 +12,10 @@ from .log import verbose
 
 CalledProcessError = subprocess.CalledProcessError
 
+
 class _DevNull(object):
     pass
+
 
 DEVNULL = _DevNull()
 

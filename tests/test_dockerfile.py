@@ -257,7 +257,7 @@ class DockerfileTestCase(DockerfileMixin,
         content = build_info.read_content()
 
         last_index = -1
-        for i, when  in enumerate(run_times):
+        for i, when in enumerate(run_times):
             run_string = make_run_string(when, i)
 
             self.assertIn(run_string, content)

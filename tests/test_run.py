@@ -37,6 +37,7 @@ int main(int argc,
 }
 '''
 
+
 class RunTestCase(DockerMixin,
                   DockerfileMixin,
                   TrackedTestCase):
@@ -369,7 +370,8 @@ class RunTestCase(DockerMixin,
         self.run_karton(['run', '--no-cd', image_name, 'echo', command_text])
         self.assertEqual(
             self.current_text,
-            textwrap.dedent('''\
+            textwrap.dedent(
+                '''\
                 RUNNING %(start)s
                 RUNNING %(before)s
                 %(actual)s
@@ -389,7 +391,8 @@ class RunTestCase(DockerMixin,
                         ignore_fail=True)
         self.assertEqual(
             self.current_text,
-            textwrap.dedent('''\
+            textwrap.dedent(
+                '''\
                 RUNNING %(before)s
                 RUNNING %(after)s
                 ANOTHER AFTER. escape? (\\)
