@@ -2,7 +2,6 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
-import os
 import sys
 
 from distutils.core import setup
