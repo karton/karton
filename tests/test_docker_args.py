@@ -2,8 +2,10 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
-from mixin_fake_docker import FakeDockerMixin
-from tracked import TrackedTestCase
+from __future__ import absolute_import, division, print_function
+
+from .mixin_fake_docker import FakeDockerMixin
+from .tracked import TrackedTestCase
 
 
 class DockerArgsTestCase(FakeDockerMixin,

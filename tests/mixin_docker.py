@@ -2,6 +2,8 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+from __future__ import absolute_import, division, print_function
+
 import os
 import platform
 import subprocess
@@ -12,7 +14,7 @@ from karton import (
     dockerctl,
     )
 
-from mixin_karton import KartonMixin
+from .mixin_karton import KartonMixin
 
 
 def make_image(main_image_name):

@@ -2,6 +2,8 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+from __future__ import absolute_import, division, print_function
+
 import imp
 import os
 import shutil

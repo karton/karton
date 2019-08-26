@@ -2,6 +2,8 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+from __future__ import absolute_import, division, print_function
+
 import os
 import subprocess
 
@@ -9,10 +11,10 @@ from karton import (
     pathutils,
     )
 
-import testutils
-from mixin_docker import DockerMixin
-from mixin_dockerfile import DockerfileMixin
-from tracked import TrackedTestCase
+from . import testutils
+from .mixin_docker import DockerMixin
+from .mixin_dockerfile import DockerfileMixin
+from .tracked import TrackedTestCase
 
 
 def bin_dir(method):

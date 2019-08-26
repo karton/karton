@@ -2,6 +2,8 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+from __future__ import absolute_import, division, print_function
+
 import errno
 import fcntl
 import time
@@ -135,7 +137,7 @@ def _test_self():
     '''
     import os
     import tempfile
-    from log import info, set_verbose
+    from .log import info, set_verbose
 
     set_verbose(True)
 

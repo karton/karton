@@ -4,12 +4,16 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+from __future__ import absolute_import, division, print_function
+
 import json
 import os
 import sys
 import unittest
 
-import tracked
+from . import (
+    tracked,
+    )
 
 
 # Keep this ordered from the fast and more low level ones to the ones which
@@ -110,19 +114,18 @@ def main(argv):
         # No test name was explicitly passed, so we just run everything.
         filtered_argv.extend(ALL_TESTS)
 
+    # Make all the modules available to unittest, otherwise it doesn't know how to import them.
+    for module in ALL_TESTS:
+        __import__('tests.{}'.format(module))
+
     # We use an environment variable as it's the most convenient way of setting the option
     # when executing make.
     if os.environ.get('V'):
         # Add -v after the script name.
         filtered_argv.insert(1, '-v')
 
-    # To avoid adding "tests." in front of all the modules, we just change directory to the
-    # test one and add the top-level directory to the paths so karton can be imported easily.
-    os.chdir('tests')
-    sys.path.insert(0, '..')
-
     # Let unittest run the tests as normal.
-    test_program = unittest.main(module=None, exit=False, argv=filtered_argv)
+    test_program = unittest.main(module='tests', exit=False, argv=filtered_argv)
     result = test_program.result
 
     if json_result_path:

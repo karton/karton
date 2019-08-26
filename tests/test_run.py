@@ -2,6 +2,8 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+from __future__ import absolute_import, division, print_function
+
 import os
 import re
 import sys
@@ -14,10 +16,10 @@ from karton import (
     pathutils,
     )
 
-from mixin_docker import DockerMixin
-from mixin_dockerfile import DockerfileMixin
-from testutils import WorkDir
-from tracked import TrackedTestCase
+from .mixin_docker import DockerMixin
+from .mixin_dockerfile import DockerfileMixin
+from .testutils import WorkDir
+from .tracked import TrackedTestCase
 
 
 TEST_C_SOURCE = '''\

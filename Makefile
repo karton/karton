@@ -67,12 +67,12 @@ check-python-all: check-python2 check-python3
 .PHONY: check-python2
 check-python2:
 	@mkdir -p test-results/ 2> /dev/null
-	python2 ./tests/run.py --save-json-results test-results/local.json
+	python2 -m tests.run --save-json-results test-results/local.json
 
 .PHONY: check-python3
 check-python3:
 	@mkdir -p test-results/ 2> /dev/null
-	python3 ./tests/run.py --save-json-results test-results/local-python3.json
+	python3 -m tests.run --save-json-results test-results/local-python3.json
 
 .PHONY: check-inception
 check-inception: dist

@@ -7,7 +7,7 @@
 # This is a quick, hacky and poorly written script to generate some nice
 # looking Markdown documentation for DefinitionProperties.
 
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import re
 import subprocess

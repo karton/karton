@@ -2,6 +2,8 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+from __future__ import absolute_import, division, print_function
+
 import json
 import os
 import pipes
@@ -11,9 +13,9 @@ from karton import (
     dockerctl,
     )
 
-from mixin_dockerfile import DockerfileMixin
-from testutils import OverwriteVersion
-from tracked import TrackedTestCase
+from .mixin_dockerfile import DockerfileMixin
+from .testutils import OverwriteVersion
+from .tracked import TrackedTestCase
 
 
 class FakeDocker(dockerctl.Docker):

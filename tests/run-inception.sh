@@ -98,7 +98,7 @@ if [ "$run_sanity_only" = "true" ]; then
     echo "NOT RUN" > ../test-results.json
 else
     touch ../test-results.json
-    if python ./tests/run.py $maybe_verbose $save_result $tests_to_run; then
+    if python -m tests.run $maybe_verbose $save_result $tests_to_run; then
         do_sanity_check="true"
     fi
     # Run sanity checks only if all tests were run.
@@ -202,7 +202,7 @@ EOF
 
 for target in $chosen_targets; do
     echo "TESTING ON TARGET $target"
-    ./inception/inception.py \
+    python -m inception.inception \
         --add "$package_path" _ \
         --save-back "test-results/inception-$target.json"  "test-results.json" \
         --save-back "test-results/sanity-$target.log"  "sanity-results.log" \

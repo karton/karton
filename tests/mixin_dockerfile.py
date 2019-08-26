@@ -2,6 +2,8 @@
 #
 # Released under the terms of the GNU LGPL license version 2.1 or later.
 
+from __future__ import absolute_import, division, print_function
+
 import collections
 import os
 import sys
@@ -11,7 +13,7 @@ from karton import (
     pathutils,
     )
 
-from mixin_karton import KartonMixin
+from .mixin_karton import KartonMixin
 
 
 PROXY_DEFINITION_CONTENT = '''\
