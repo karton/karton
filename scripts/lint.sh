@@ -15,6 +15,8 @@ fi
 
 pylint \
     --rcfile=scripts/pylintrc \
+    --reports=n \
+    --score=n \
     karton/*.py \
     karton/container-code/*.py \
     tests/*.py \
