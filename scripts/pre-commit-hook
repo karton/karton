@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Install with:
+#     ./scripts/pre-commit-hook --install
+
+readonly bash_source="${BASH_SOURCE[0]:-$0}"
+
+function error_exit() {
+    for str in "$@"; do
+        echo -n "$str" >&2
+    done
+    echo >&2
+
+    exit 1
+}
+
+if [[ $1 == --install ]]; then
+    readonly scripts_dir=$(dirname "$bash_source")
+    readonly top_dir=$(realpath "$scripts_dir/..")
+    cd "$top_dir/.git/hooks" || error_exit "Cannot change directory to hooks directory"
+    rm pre-commit 2> /dev/null
+    exec ln -s ../../scripts/"$(basename "$bash_source")" pre-commit
+fi
+
+readonly hooks_dir=$(dirname "$bash_source")
+readonly top_dir=$(realpath "$hooks_dir/../..")
+
+cd "$top_dir" || error_exit "Cannot change directory to $top_dir"
+
+declare changed_py_files=()
+while IFS= read -r -d $'\0' file; do
+    if [[ $file == *.py ]]; then
+        changed_py_files+=("$file")
+    fi
+done < <(git diff -z --staged --name-only)
+
+if [ "${#changed_py_files[@]}" -gt 0 ]; then
+    if ! "./scripts/lint.sh" "${changed_py_files[@]}"; then
+        echo >&2
+        echo "Linting failed!" >&2
+        echo "Fix the warnings before committing or commit with --no-verify." >&2
+        exit 1
+    fi
+fi
