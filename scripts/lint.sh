@@ -1,17 +1,19 @@
 #! /bin/bash
 
-if [ -e "../scripts/lint.sh" ]; then
-    cd ..
-fi
+readonly bash_source="${BASH_SOURCE[0]:-$0}"
+readonly scripts_dir=$(dirname "$bash_source")
+readonly top_dir=$(realpath "$scripts_dir/..")
 
-if [ -e "../karton/karton.py" ]; then
-    cd ..
-fi
+function error_exit() {
+    for str in "$@"; do
+        echo -n "$str" >&2
+    done
+    echo >&2
 
-if [ ! -e "./scripts/lint.sh" ]; then
-    echo "You should run $0 from the top-level Karton dir." >&2
     exit 1
-fi
+}
+
+cd "$top_dir" || error_exit "Cannot change directory to $top_dir"
 
 pylint \
     --rcfile=scripts/pylintrc \
