@@ -205,7 +205,7 @@ def run(image_name, commands, added_files, added_scripts, save_back_files):
 
         # Set the right permissions for scripts.
         for _, container_path_on_host in iter_host_paths(added_scripts):
-            os.chmod(container_path_on_host, 0755)
+            os.chmod(container_path_on_host, 0o755)
 
         # Prepare the script which will run the commands.
         command_string = ' '.join([quote(arg) for arg in commands])
@@ -213,7 +213,7 @@ def run(image_name, commands, added_files, added_scripts, save_back_files):
             commands=command_string,
             )
         with open(os.path.join(inception_priv_dir, 'runner'), 'w') as runner_file:
-            os.fchmod(runner_file.fileno(), 0755)
+            os.fchmod(runner_file.fileno(), 0o755)
             runner_file.write(content)
 
         # Run the script/commands.
