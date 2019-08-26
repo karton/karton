@@ -15,12 +15,23 @@ function error_exit() {
 
 cd "$top_dir" || error_exit "Cannot change directory to $top_dir"
 
+if [[ $# = 0 ]]; then
+    declare py_files=()
+    # --full-name means we get the path relative to the top directory.
+    # -z means that the file names are \0 separated.
+    while IFS= read -r -d $'\0'; do
+        if [[ "$REPLY" = *.py ]]; then
+            py_files+=("$REPLY")
+        fi
+    done < <(git ls-files --full-name -z)
+else
+    py_files=("$@")
+fi
+
+[[ ${#py_files[@]} != 0 ]] || error_exit "No Python files in the repository?"
+
 pylint \
     --rcfile=scripts/pylintrc \
     --reports=n \
     --score=n \
-    karton/*.py \
-    karton/container-code/*.py \
-    tests/*.py \
-    inception/*.py \
-    scripts/*.py
+    "${py_files[@]}"
