@@ -105,7 +105,7 @@ def prepare():
 
     # Ask for the version.
 
-    latest_version, _ = parse_changelog().items()[0]
+    latest_version, _ = list(parse_changelog().items())[0]
 
     while True:
         version = ask('Which version do you want to release (the latest one is %s)?' %
@@ -168,7 +168,7 @@ def push():
         except subprocess.CalledProcessError as exc:
             die('Couldn\'t execute command "%s": %s.' % (' '.join(args), exc))
 
-    version, entry = parse_changelog().items()[0]
+    version, entry = list(parse_changelog().items())[0]
     assert 'FILL ME!' not in entry
 
     ask('We are going to release Karton %s!\nPress ENTER to see the diff.' % version,

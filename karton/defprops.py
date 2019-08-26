@@ -111,7 +111,7 @@ class DefinitionProperties(object):
                 repr(self._host_system),
             )
             ]
-        for prop_name, getter in _g_props_all_properties.iteritems():
+        for prop_name, getter in _g_props_all_properties.items():
             res.append('    %s = %s' % (prop_name, repr(getter(self))))
         return '\n'.join(res)
 
@@ -521,7 +521,7 @@ class DefinitionProperties(object):
             raise DefinitionError(
                 self._definition_file_path,
                 'Invalid architecture "%s", only these architectures are supported: %s.' %
-                (architecture, self._ARCHITECTURES.keys()))
+                (architecture, ', '.join(self._ARCHITECTURES.keys())))
 
         self._architecture = architecture
 

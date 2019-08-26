@@ -217,7 +217,9 @@ def main():
 
         print_counts()
 
-        def target_cmp((target1, target_details1), (target2, target_details2)):
+        def target_cmp(target_info1, target_info2):
+            target1, target_details1 = target_info1
+            target2, target_details2 = target_info2
             # Sort items in summary['targets'] by putting local results first.
             def index_for_target(target):
                 if target.startswith('local'):
@@ -225,8 +227,13 @@ def main():
                 else:
                     return 1
 
-            return cmp((index_for_target(target1), target1, target_details1),
-                       (index_for_target(target2), target2, target_details2))
+            def _cmp(cmp1, cmp2):
+                return (cmp1 > cmp2) - (cmp1 < cmp2)
+
+            cmp_value_1 = (index_for_target(target1), target1, target_details1)
+            cmp_value_2 = (index_for_target(target2), target2, target_details2)
+            return _cmp(cmp_value_1, cmp_value_2)
+
 
         for target, target_details in sorted(summary['targets'].items(), target_cmp):
             target_ok = \

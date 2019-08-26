@@ -611,7 +611,7 @@ def run_karton(session, arguments):
     try:
         command.callback(parsed_args, session)
     except ArgumentParserError as exc:
-        parser.error(exc.message)
+        parser.error(str(exc))
 
 
 def main(session, arguments):
