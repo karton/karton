@@ -143,8 +143,10 @@ class Emitter(object):
 
         if self._props.sudo != DefinitionProperties.SUDO_NO:
             self._emit_install('sudo')
-
-        self._emit_install('python')
+            
+        # Fix: https://github.com/karton/karton/issues/15
+        # note: can be python2.7 or 3
+        self._emit_install('python2.7')
 
     def _emit_install_clean(self):
         if self._props.deb_based:
