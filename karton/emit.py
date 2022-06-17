@@ -144,7 +144,7 @@ class Emitter(object):
         if self._props.sudo != DefinitionProperties.SUDO_NO:
             self._emit_install('sudo')
 
-        self._emit_install('python')
+        self._emit_install('python3')
 
     def _emit_install_clean(self):
         if self._props.deb_based:
