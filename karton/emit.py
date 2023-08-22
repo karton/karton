@@ -123,7 +123,7 @@ class Emitter(object):
             self._emit('MAINTAINER %s' % self._props.maintainer)
             self._emit()
 
-    def _emit_addittional_archs(self):
+    def _emit_additional_archs(self):
         if self._props.additional_archs:
             archs_run = ['RUN \\']
             for i, arch in enumerate(self._props.additional_archs):
@@ -198,20 +198,31 @@ class Emitter(object):
                     ))
 
     def _emit_user_creation(self):
-        self._emit(
-            r'''
-            RUN \
-                mkdir -p $(dirname %(user_home)s) && \
-                useradd -m -s /bin/bash --home-dir %(user_home)s --uid %(uid)s %(username)s && \
-                chown %(username)s %(user_home)s
-            ENV USER %(username)s
-            USER %(username)s
-            '''
-            % dict(
-                username=self._props.username,
-                uid=self._props.uid,
-                user_home=self._props.user_home,
-                ))
+        if self._props.uid == 0:
+            self._emit(
+                r"""
+                RUN \
+                    mkdir -p $(dirname %(user_home)s)
+                ENV HOME $(user_home)s
+                """
+                % dict(
+                    user_home=self._props.user_home,
+                    ))
+        else:
+            self._emit(
+                r'''
+                RUN \
+                    mkdir -p $(dirname %(user_home)s) && \
+                    useradd -m -s /bin/bash --home-dir %(user_home)s --uid %(uid)s %(username)s && \
+                    chown %(username)s %(user_home)s
+                ENV USER %(username)s
+                USER %(username)s
+                '''
+                % dict(
+                    username=self._props.username,
+                    uid=self._props.uid,
+                    user_home=self._props.user_home,
+                    ))
 
     def _emit_copy_files(self):
         for i, (src_path, dest_path) in enumerate(self._props.copied):
@@ -237,7 +248,7 @@ class Emitter(object):
         '''
         self._emit_intro()
         self._emit_run_for_time(DefinitionProperties.RUN_AT_BUILD_START)
-        self._emit_addittional_archs()
+        self._emit_additional_archs()
         self._emit_system_packages()
         self._emit_run_for_time(DefinitionProperties.RUN_AT_BUILD_BEFORE_USER_PKGS)
         self._emit_install(*self._props.packages)
